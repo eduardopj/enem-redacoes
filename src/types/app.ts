@@ -1,0 +1,74 @@
+export type EssayStatus = 'pendente' | 'processando' | 'corrigida';
+
+export type Teacher = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+export type Student = {
+  id: string;
+  teacherId: string;
+  name: string;
+  className: string;
+};
+
+export type ThemeItem = {
+  id: string;
+  teacherId?: string;
+  title: string;
+  category: string;
+};
+
+export type Essay = {
+  id: string;
+  teacherId: string;
+  studentId: string;
+  themeTitle: string;
+  imageName?: string;
+  imageUri?: string;
+  documentName?: string;
+  documentUri?: string;
+  status: EssayStatus;
+  totalScore?: number;
+  transcription?: string;
+  transcriptionNotes?: string;
+  transcriptionConfidence?: 'alta' | 'media' | 'baixa';
+  writingMode?: 'manuscrita' | 'digitada' | 'mista' | 'indefinida';
+  legibility?: {
+    applicable: boolean;
+    level: 'boa' | 'media' | 'baixa' | 'nao_se_aplica';
+    observation: string;
+    illegibleExcerpt: string;
+  };
+  themeAdequacy?: {
+    level: 'adequado' | 'tangencial' | 'inadequado';
+    observation: string;
+  };
+  scoreReliability?: {
+    level: 'alta' | 'media' | 'baixa';
+    observation: string;
+  };
+  competencies?: {
+    c1: number;
+    c2: number;
+    c3: number;
+    c4: number;
+    c5: number;
+  };
+  competencyFeedbacks?: {
+    c1: { diagnosis: string; positive: string; improvement: string };
+    c2: { diagnosis: string; positive: string; improvement: string };
+    c3: { diagnosis: string; positive: string; improvement: string };
+    c4: { diagnosis: string; positive: string; improvement: string };
+    c5: { diagnosis: string; positive: string; improvement: string };
+  };
+  strengths?: string[];
+  weaknesses?: string[];
+  improvements?: string[];
+  generalObservation?: string;
+  congratulations?: string;
+  feedback?: string;
+  createdAt?: string;
+  correctedAt?: string;
+};

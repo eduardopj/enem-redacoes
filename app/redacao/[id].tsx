@@ -1,0 +1,331 @@
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { AppHeader, Button, Card, CorrectionProgress, ScreenContainer, StaggerItem, StatusBadge } from '@/components/ui';
+import { useAppStore } from '@/store/app-store';
+import { theme } from '@/theme';
+import { useAppTheme } from '@/theme/ThemeContext';
+import { Image } from 'expo-image';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, AppState, StyleSheet, Text, View } from 'react-native';
+
+function parseStep(feedback: string | undefined): 1 | 2 | 3 | 4 {
+  if (!feedback) return 1;
+  const match = feedback.match(/ETAPA\s+(\d)/i);
+  const n = match ? parseInt(match[1], 10) : 1;
+  return (n >= 1 && n <= 4 ? n : 1) as 1 | 2 | 3 | 4;
+}
+
+export default function RedacaoDetalheScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { colors } = useAppTheme();
+  const students = useAppStore((state) => state.students);
+  const essays = useAppStore((state) => state.essays);
+  const evaluateEssayWithOpenAI = useAppStore((state) => state.evaluateEssayWithOpenAI);
+  const retryQueue = useAppStore((state) => state.retryQueue);
+  const processRetryQueue = useAppStore((state) => state.processRetryQueue);
+
+  const [retrying, setRetrying] = useState(false);
+  const prevStatusRef = useRef<string | undefined>(undefined);
+
+  const essay = useMemo(() => essays.find((item) => item.id === id), [essays, id]);
+
+  const studentName = useMemo(() => {
+    if (!essay) return '';
+    return students.find((student) => student.id === essay.studentId)?.name ?? 'Aluno';
+  }, [essay, students]);
+
+  // Auto-navigate to resultado when correction completes
+  useEffect(() => {
+    if (!essay) return;
+    const prev = prevStatusRef.current;
+    prevStatusRef.current = essay.status;
+    if (prev === 'processando' && essay.status === 'corrigida') {
+      router.replace(`/resultado/${essay.id}`);
+    }
+  }, [essay?.status]);
+
+  // AppState listener: retry queue when app comes to foreground
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active' && retryQueue.length > 0) {
+        processRetryQueue();
+      }
+    });
+    return () => subscription.remove();
+  }, [retryQueue.length]);
+
+  if (!essay) {
+    return (
+      <ProtectedRoute>
+        <ScreenContainer showBack>
+          <AppHeader title="Detalhe da redação" subtitle="Redação não encontrada." />
+          <Card>
+            <Text style={[styles.emptyText, { color: colors.mutedText }]}>
+              Redação não encontrada.
+            </Text>
+          </Card>
+        </ScreenContainer>
+      </ProtectedRoute>
+    );
+  }
+
+  const isProcessing = essay.status === 'processando';
+  const isCorrected = essay.status === 'corrigida';
+  const hasError = essay.status === 'pendente' && essay.feedback?.startsWith('Erro na correção:');
+  const isInRetryQueue = retryQueue.includes(essay.id);
+  const currentStep = parseStep(essay.feedback);
+
+  const handleRetry = async () => {
+    try {
+      setRetrying(true);
+      await evaluateEssayWithOpenAI(essay.id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Falha ao corrigir com OpenAI.';
+      const isNetwork =
+        message.includes('Network request failed') ||
+        message.includes('connect') ||
+        message.includes('backend');
+      Alert.alert(
+        'Erro na correção',
+        isNetwork
+          ? `${message}\n\nA redação foi adicionada à fila automática e será reprocessada quando a conexão for restabelecida.`
+          : message
+      );
+    } finally {
+      setRetrying(false);
+    }
+  };
+
+  return (
+    <ProtectedRoute>
+      <ScreenContainer showBack>
+        <AppHeader
+          eyebrow="REDAÇÃO"
+          title="Acompanhar correção"
+          subtitle="Veja o envio, o status e o próximo passo."
+        />
+
+        {/* Info */}
+        <StaggerItem index={0}>
+          <Card>
+            <View style={styles.headerTop}>
+              <View style={styles.headerInfo}>
+                <Text style={[styles.studentName, { color: colors.text }]}>{studentName}</Text>
+                <Text style={[styles.themeText, { color: colors.mutedText }]}>{essay.themeTitle}</Text>
+              </View>
+              <StatusBadge status={essay.status} />
+            </View>
+
+            <View style={[styles.infoGroup, { borderTopColor: colors.border }]}>
+              <InfoRow label="Imagem" value={essay.imageName ?? 'Não enviada'} colors={colors} />
+              <InfoRow label="Arquivo" value={essay.documentName ?? 'Não enviado'} colors={colors} />
+              <InfoRow
+                label="Confiabilidade"
+                value={essay.scoreReliability?.level ?? 'Aguardando análise'}
+                colors={colors}
+              />
+            </View>
+          </Card>
+        </StaggerItem>
+
+        {/* Preview da imagem */}
+        {essay.imageUri ? (
+          <StaggerItem index={1}>
+            <Card>
+              <Text style={[styles.blockTitle, { color: colors.softText }]}>PRÉVIA</Text>
+              <Image
+                source={{ uri: essay.imageUri }}
+                style={[styles.previewImage, { borderColor: colors.border }]}
+                contentFit="contain"
+              />
+            </Card>
+          </StaggerItem>
+        ) : null}
+
+        {/* Fila de retry offline */}
+        {isInRetryQueue && !isProcessing ? (
+          <StaggerItem index={2}>
+            <Card style={[styles.queueCard, { borderColor: colors.warning }]}>
+              <View style={styles.queueRow}>
+                <View style={[styles.queueDot, { backgroundColor: colors.warning }]} />
+                <Text style={[styles.queueText, { color: colors.softText }]}>
+                  Na fila de reprocessamento — será corrigida automaticamente quando a conexão for restabelecida.
+                </Text>
+              </View>
+            </Card>
+          </StaggerItem>
+        ) : null}
+
+        {/* Estado: processando */}
+        {isProcessing ? (
+          <StaggerItem index={2}>
+            <CorrectionProgress currentStep={currentStep} feedback={essay.feedback} />
+          </StaggerItem>
+        ) : null}
+
+        {/* Estado: erro */}
+        {hasError ? (
+          <StaggerItem index={2}>
+            <Card>
+              <Text style={[styles.errorTitle, { color: colors.danger }]}>Falha na correção</Text>
+              <Text style={[styles.errorText, { color: colors.mutedText }]}>{essay.feedback}</Text>
+            </Card>
+          </StaggerItem>
+        ) : null}
+
+        {/* Estado: pendente — CTA para iniciar correção */}
+        {!isCorrected && !isProcessing ? (
+          <StaggerItem index={3}>
+            <View style={[styles.aiCta, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={styles.aiCtaHeader}>
+                <View style={[styles.aiCtaBadge, { backgroundColor: colors.accent + '18' }]}>
+                  <Text style={[styles.aiCtaBadgeText, { color: colors.accent }]}>🤖 CORREÇÃO COM IA</Text>
+                </View>
+              </View>
+              <Text style={[styles.aiCtaTitle, { color: colors.text }]}>
+                Pronto para analisar
+              </Text>
+              <Text style={[styles.aiCtaDesc, { color: colors.mutedText }]}>
+                A IA irá transcrever o manuscrito, identificar o tema, pontuar as 5 competências e gerar um parecer pedagógico completo.
+              </Text>
+              <View style={[styles.aiCtaSteps, { borderColor: colors.border, backgroundColor: colors.input }]}>
+                {['Leitura da imagem', 'Avaliação temática', 'Pontuação das competências', 'Parecer pedagógico'].map((s, i) => (
+                  <View key={i} style={[styles.aiCtaStep, i < 3 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
+                    <View style={[styles.aiCtaStepNum, { backgroundColor: colors.border }]}>
+                      <Text style={[styles.aiCtaStepNumText, { color: colors.softText }]}>{i + 1}</Text>
+                    </View>
+                    <Text style={[styles.aiCtaStepLabel, { color: colors.softText }]}>{s}</Text>
+                  </View>
+                ))}
+              </View>
+              <Button
+                title="Corrigir com IA agora"
+                leftIcon="sparkles-outline"
+                onPress={handleRetry}
+                loading={retrying}
+              />
+            </View>
+          </StaggerItem>
+        ) : null}
+
+        {/* Estado: corrigido */}
+        {isCorrected ? (
+          <>
+            <StaggerItem index={3}>
+              <Card>
+                <Text style={[styles.blockTitle, { color: colors.softText }]}>RESUMO</Text>
+                <View style={styles.summaryGrid}>
+                  <SummaryChip
+                    label="NOTA"
+                    value={String(essay.totalScore ?? '--')}
+                    color={colors.accent}
+                    colors={colors}
+                  />
+                  <SummaryChip
+                    label="TEMA"
+                    value={essay.themeAdequacy?.level ?? '--'}
+                    color={colors.success}
+                    colors={colors}
+                  />
+                  <SummaryChip
+                    label="TRANSCRIÇÃO"
+                    value={essay.transcriptionConfidence ?? '--'}
+                    color={colors.info}
+                    colors={colors}
+                  />
+                </View>
+                {essay.scoreReliability?.observation ? (
+                  <Text style={[styles.resumeObs, { color: colors.mutedText, borderTopColor: colors.border }]}>
+                    {essay.scoreReliability.observation}
+                  </Text>
+                ) : null}
+              </Card>
+            </StaggerItem>
+
+            <StaggerItem index={4}>
+              <Button
+                title="Ver resultado completo"
+                leftIcon="analytics-outline"
+                onPress={() => router.push(`/resultado/${essay.id}`)}
+              />
+            </StaggerItem>
+          </>
+        ) : null}
+      </ScreenContainer>
+    </ProtectedRoute>
+  );
+}
+
+function InfoRow({ label, value, colors }: { label: string; value: string; colors: any }) {
+  return (
+    <View style={styles.row}>
+      <Text style={[styles.rowLabel, { color: colors.mutedText }]}>{label}</Text>
+      <Text style={[styles.rowValue, { color: colors.text }]}>{value}</Text>
+    </View>
+  );
+}
+
+function SummaryChip({ label, value, color, colors }: {
+  label: string; value: string; color: string; colors: any;
+}) {
+  return (
+    <View style={[styles.chip, { backgroundColor: color + '14', borderColor: color + '30' }]}>
+      <Text style={[styles.chipLabel, { color: colors.softText }]}>{label}</Text>
+      <Text style={[styles.chipValue, { color }]}>{value}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  headerInfo: { flex: 1, gap: theme.spacing.xxs },
+  studentName: { ...theme.typography.h3 },
+  themeText: { ...theme.typography.body },
+  infoGroup: {
+    gap: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+    borderTopWidth: 1,
+  },
+  row: { gap: theme.spacing.xs, paddingBottom: theme.spacing.sm, borderBottomWidth: 1 },
+  rowLabel: { ...theme.typography.monoLabel },
+  rowValue: { ...theme.typography.title },
+  blockTitle: { ...theme.typography.monoLabel, marginBottom: theme.spacing.sm },
+  previewImage: { width: '100%', height: 300, borderWidth: 1 },
+  errorTitle: { ...theme.typography.title, marginBottom: theme.spacing.xs },
+  errorText: { ...theme.typography.body, lineHeight: 24 },
+  emptyText: { ...theme.typography.body },
+  // Retry queue
+  queueCard: { borderWidth: 1 },
+  queueRow: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm },
+  queueDot: { width: 8, height: 8, borderRadius: 4, marginTop: 6 },
+  queueText: { flex: 1, ...theme.typography.bodySmall, lineHeight: 20 },
+  // AI CTA
+  aiCta: {
+    borderWidth: 1,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.lg,
+    gap: theme.spacing.md,
+  },
+  aiCtaHeader: { alignItems: 'flex-start' },
+  aiCtaBadge: { paddingHorizontal: theme.spacing.sm, paddingVertical: theme.spacing.xxs, borderRadius: theme.radius.pill },
+  aiCtaBadgeText: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.4 },
+  aiCtaTitle: { ...theme.typography.h3 },
+  aiCtaDesc: { ...theme.typography.body, lineHeight: 24 },
+  aiCtaSteps: { borderWidth: 1, borderRadius: theme.radius.md, overflow: 'hidden' },
+  aiCtaStep: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, padding: theme.spacing.sm },
+  aiCtaStepNum: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  aiCtaStepNumText: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700' },
+  aiCtaStepLabel: { ...theme.typography.bodySmall },
+  // Summary chips
+  summaryGrid: { flexDirection: 'row', gap: theme.spacing.sm, marginBottom: theme.spacing.sm },
+  chip: { flex: 1, borderWidth: 1, borderRadius: theme.radius.md, padding: theme.spacing.sm, gap: 4, alignItems: 'center' },
+  chipLabel: { ...theme.typography.monoLabel, fontSize: 9 },
+  chipValue: { fontSize: 16, fontWeight: '700' },
+  resumeObs: { ...theme.typography.bodySmall, lineHeight: 20, paddingTop: theme.spacing.sm, borderTopWidth: 1, marginTop: theme.spacing.xs },
+});

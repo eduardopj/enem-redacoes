@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "enem-redacoes",
+    "slug": "enem-redacoes",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "enemredacoes",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

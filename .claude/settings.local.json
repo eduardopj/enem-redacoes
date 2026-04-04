@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la /c/Users/eduar/Documents/Projetos/enem-ia/v2/enem-redacoes/app/*.tsx)",
+      "Bash(ls -la /c/Users/eduar/Documents/Projetos/enem-ia/v2/enem-redacoes/app/*/)"
+    ]
+  }
+}

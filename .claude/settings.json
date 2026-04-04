@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find src/components/ui -name \"*.tsx\" -exec basename {} \\\\;)",
+      "Bash(sed 's/\\\\.tsx$//')"
+    ]
+  }
+}
