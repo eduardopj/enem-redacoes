@@ -9,6 +9,8 @@ type KpiCardProps = {
   value: string;
   helper?: string;
   icon?: keyof typeof Ionicons.glyphMap;
+  iconBg?: string;
+  iconColor?: string;
 };
 
 export function KpiCard({
@@ -16,38 +18,54 @@ export function KpiCard({
   value,
   helper,
   icon = 'stats-chart-outline',
+  iconBg,
+  iconColor,
 }: KpiCardProps) {
   const { colors } = useAppTheme();
 
   return (
     <Card>
-      <View style={styles.header}>
+      <View style={styles.inner}>
+        <View style={[styles.iconWrap, { backgroundColor: iconBg ?? colors.accent + '14' }]}>
+          <Ionicons name={icon} size={20} color={iconColor ?? colors.accent} />
+        </View>
         <Text style={[styles.value, { color: colors.text }]}>{value}</Text>
-        <Ionicons name={icon} size={20} color={colors.accent} />
+        <Text style={[styles.label, { color: colors.mutedText }]}>{label}</Text>
+        {helper ? <Text style={[styles.helper, { color: colors.mutedText }]}>{helper}</Text> : null}
       </View>
-
-      <Text style={[styles.label, { color: colors.softText }]}>{label}</Text>
-      {helper ? <Text style={[styles.helper, { color: colors.mutedText }]}>{helper}</Text> : null}
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    minHeight: 72,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.sm,
+  inner: {
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  iconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
   },
   value: {
-    ...theme.typography.metric,
+    fontSize: 36,
+    fontWeight: '700',
+    lineHeight: 42,
+    letterSpacing: -0.8,
+    textAlign: 'center',
   },
   label: {
-    ...theme.typography.monoLabel,
-    marginBottom: theme.spacing.xs,
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
+    textAlign: 'center',
   },
   helper: {
-    ...theme.typography.bodySmall,
+    fontSize: 12,
+    lineHeight: 16,
+    textAlign: 'center',
   },
 });

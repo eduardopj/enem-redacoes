@@ -53,8 +53,8 @@ export default function AlunosScreen() {
     <ProtectedRoute>
       <ScreenContainer showBack>
         <AppHeader
-          eyebrow="ALUNOS"
-          title="Base do professor"
+          eyebrow="Alunos"
+          title="Base de alunos"
           subtitle="Cadastre, visualize e gerencie seus alunos."
         />
 
@@ -129,8 +129,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
-    borderWidth: 1,
-    borderRadius: theme.radius.md,
+    borderWidth: 1.5,
+    borderRadius: 14,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
   },

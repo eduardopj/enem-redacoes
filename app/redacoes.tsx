@@ -6,7 +6,6 @@ import {
   EssayCard,
   ScreenContainer,
   StaggerItem,
-  StatusBadge,
 } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
@@ -14,7 +13,7 @@ import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 type FilterStatus = 'todas' | 'pendente' | 'processando' | 'corrigida';
 type SortMode = 'data' | 'nota_asc' | 'nota_desc';
@@ -95,7 +94,7 @@ export default function RedacoesScreen() {
     <ProtectedRoute>
       <ScreenContainer showBack>
         <AppHeader
-          eyebrow="REDAÇÕES"
+          eyebrow="Redações"
           title="Pipeline de correção"
           subtitle="Filtre, acompanhe, abra e gerencie os envios."
         />
@@ -146,24 +145,34 @@ export default function RedacoesScreen() {
             </View>
 
             {/* Filtros de status */}
-            <View style={styles.filterRow}>
-              {(['todas', 'pendente', 'processando', 'corrigida'] as FilterStatus[]).map((f) => (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterRow}
+            >
+              {(
+                [
+                  { key: 'todas', label: 'Todas' },
+                  { key: 'corrigida', label: 'Corrigidas' },
+                  { key: 'processando', label: 'Processando' },
+                  { key: 'pendente', label: 'Pendentes' },
+                ] as { key: FilterStatus; label: string }[]
+              ).map(({ key, label }) => (
                 <FilterChip
-                  key={f}
-                  label={f === 'todas' ? 'Todas' : f === 'pendente' ? 'Pendentes' : f === 'processando' ? 'Processando' : 'Corrigidas'}
-                  active={filter === f}
-                  onPress={() => setFilter(f)}
+                  key={key}
+                  label={label}
+                  active={filter === key}
+                  onPress={() => setFilter(key)}
                 />
               ))}
-            </View>
+            </ScrollView>
 
-            {/* Ordenação + legenda */}
+            {/* Contagem + Ordenação */}
             <View style={styles.toolbarRow}>
-              <View style={styles.statusLegend}>
-                <StatusBadge status="pendente" />
-                <StatusBadge status="processando" />
-                <StatusBadge status="corrigida" />
-              </View>
+              <Text style={[styles.resultCount, { color: colors.mutedText }]}>
+                {filteredEssays.length}{' '}
+                {filteredEssays.length === 1 ? 'redação' : 'redações'}
+              </Text>
               <Pressable
                 onPress={cycleSortMode}
                 style={[styles.sortBtn, { borderColor: colors.border, backgroundColor: colors.input }]}
@@ -236,8 +245,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
-    borderWidth: 1,
-    borderRadius: theme.radius.md,
+    borderWidth: 1.5,
+    borderRadius: 14,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
   },
@@ -248,45 +257,41 @@ const styles = StyleSheet.create({
   },
   filterRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: theme.spacing.sm,
+    paddingVertical: 2,
   },
   chip: {
-    borderWidth: 1,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: 8,
-    borderRadius: theme.radius.sm,
+    borderWidth: 1.5,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 999,
   },
   chipText: {
-    ...theme.typography.monoLabel,
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.1,
   },
   toolbarRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: theme.spacing.sm,
   },
-  statusLegend: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-    flex: 1,
+  resultCount: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   sortBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    borderWidth: 1,
-    borderRadius: theme.radius.sm,
-    paddingHorizontal: theme.spacing.sm,
+    borderWidth: 1.5,
+    borderRadius: 999,
+    paddingHorizontal: 12,
     paddingVertical: 7,
   },
   sortLabel: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    fontSize: 11,
+    fontWeight: '600',
   },
   list: {
     gap: theme.spacing.md,

@@ -26,8 +26,6 @@ export async function correctEssayWithOpenAI(
   const mimeType = getMimeTypeFromUri(input.imageUri);
   const endpoint = `${OPENAI_CONFIG.backendUrl}/openai/correct-essay`;
 
-  console.log('Enviando para endpoint:', endpoint);
-
   try {
     const response = await fetch(endpoint, {
       method: 'POST',

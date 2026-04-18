@@ -73,7 +73,7 @@ export default function TemasScreen() {
     <ProtectedRoute>
       <ScreenContainer showBack>
         <AppHeader
-          eyebrow="TEMAS"
+          eyebrow="Temas"
           title={isSelectionMode ? 'Escolher tema da redação' : 'Biblioteca de temas'}
           subtitle={
             isSelectionMode
@@ -153,8 +153,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
-    borderWidth: 1,
-    borderRadius: theme.radius.md,
+    borderWidth: 1.5,
+    borderRadius: 14,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
   },

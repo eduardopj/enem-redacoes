@@ -19,57 +19,57 @@ const fonts = {
 };
 
 const lightColors = {
-  background: '#F6F4ED',
-  text: '#1A1A1A',
-  accent: '#E59B24',
-  input: '#EBE8DF',
-  border: '#E1DECE',
+  background: '#F0F2FA',
+  text: '#1B2559',
+  accent: '#4E76F8',
+  input: '#F5F7FD',
+  border: '#E4E7F2',
   surface: '#FFFFFF',
 
-  mutedText: '#666054',
-  softText: '#4A453C',
+  mutedText: '#8E9AB8',
+  softText: '#4A5878',
 
-  black: '#151515',
+  black: '#1B2559',
   white: '#FFFFFF',
 
-  success: '#1F8A57',
-  successSoft: '#E8F4ED',
+  success: '#22C55E',
+  successSoft: '#DCFCE7',
 
-  warning: '#B97708',
-  warningSoft: '#FBF1D8',
+  warning: '#F59E0B',
+  warningSoft: '#FEF3C7',
 
-  info: '#2268B5',
-  infoSoft: '#E8F0FB',
+  info: '#3B82F6',
+  infoSoft: '#DBEAFE',
 
-  danger: '#C84C3A',
-  dangerSoft: '#FCEAE7',
+  danger: '#EF4444',
+  dangerSoft: '#FEE2E2',
 };
 
 const darkColors = {
-  background: '#1A1814',
-  text: '#F0EDE6',
-  accent: '#E59B24',
-  input: '#2A2620',
-  border: '#3A352C',
-  surface: '#222018',
+  background: '#0D0F1C',
+  text: '#E8ECF8',
+  accent: '#6B8EFF',
+  input: '#1E2136',
+  border: '#2A2F4A',
+  surface: '#181A2E',
 
-  mutedText: '#9A9080',
-  softText: '#C8C0B0',
+  mutedText: '#5C6585',
+  softText: '#8895B8',
 
-  black: '#151515',
+  black: '#0D0F1C',
   white: '#FFFFFF',
 
-  success: '#2DA864',
-  successSoft: '#1A3526',
+  success: '#4ADE80',
+  successSoft: '#14532D',
 
-  warning: '#D4891A',
-  warningSoft: '#3A2A10',
+  warning: '#FBBF24',
+  warningSoft: '#78350F',
 
-  info: '#4B88D4',
-  infoSoft: '#1A2840',
+  info: '#60A5FA',
+  infoSoft: '#1E3A5F',
 
-  danger: '#E85A46',
-  dangerSoft: '#3A1A16',
+  danger: '#F87171',
+  dangerSoft: '#7F1D1D',
 };
 
 export type AppColors = typeof lightColors;
@@ -78,11 +78,11 @@ export const theme = {
   colors: lightColors,
 
   radius: {
-    xs: 2,
-    sm: 4,
-    md: 4,
-    lg: 4,
-    xl: 4,
+    xs: 6,
+    sm: 10,
+    md: 14,
+    lg: 18,
+    xl: 24,
     pill: 999,
   },
 
@@ -102,25 +102,37 @@ export const theme = {
   shadows: {
     card: Platform.select({
       ios: {
-        shadowColor: '#1A1A1A',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.06,
-        shadowRadius: 0,
+        shadowColor: '#1B2559',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.07,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 3,
+      },
+      default: {},
+    }),
+    hard: Platform.select({
+      ios: {
+        shadowColor: '#1B2559',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
       },
       android: {
         elevation: 2,
       },
       default: {},
     }),
-    hard: Platform.select({
+    strong: Platform.select({
       ios: {
-        shadowColor: '#1A1A1A',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 0,
+        shadowColor: '#4E76F8',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.18,
+        shadowRadius: 20,
       },
       android: {
-        elevation: 1,
+        elevation: 6,
       },
       default: {},
     }),
@@ -129,80 +141,91 @@ export const theme = {
   typography: {
     hero: {
       fontFamily: fonts.display,
-      fontSize: 44,
-      lineHeight: 46,
+      fontSize: 40,
+      lineHeight: 44,
       fontWeight: '700' as const,
-      letterSpacing: -1.2,
+      letterSpacing: -1.0,
     },
     h1: {
       fontFamily: fonts.display,
-      fontSize: 34,
+      fontSize: 32,
       lineHeight: 38,
-      fontWeight: '700' as const,
-      letterSpacing: -0.8,
-    },
-    h2: {
-      fontFamily: fonts.display,
-      fontSize: 28,
-      lineHeight: 32,
       fontWeight: '700' as const,
       letterSpacing: -0.6,
     },
+    h2: {
+      fontFamily: fonts.display,
+      fontSize: 26,
+      lineHeight: 32,
+      fontWeight: '700' as const,
+      letterSpacing: -0.4,
+    },
     h3: {
       fontFamily: fonts.display,
-      fontSize: 22,
+      fontSize: 20,
       lineHeight: 26,
       fontWeight: '600' as const,
-      letterSpacing: -0.3,
+      letterSpacing: -0.2,
     },
     metric: {
       fontFamily: fonts.display,
-      fontSize: 52,
+      fontSize: 48,
       lineHeight: 52,
       fontWeight: '700' as const,
-      letterSpacing: -1.6,
+      letterSpacing: -1.4,
     },
     title: {
       fontFamily: fonts.body,
-      fontSize: 18,
+      fontSize: 17,
       lineHeight: 24,
       fontWeight: '600' as const,
     },
     body: {
       fontFamily: fonts.body,
       fontSize: 15,
-      lineHeight: 24,
+      lineHeight: 22,
       fontWeight: '400' as const,
     },
     bodySmall: {
       fontFamily: fonts.body,
       fontSize: 13,
-      lineHeight: 20,
+      lineHeight: 18,
       fontWeight: '400' as const,
     },
-    monoLabel: {
-      fontFamily: fonts.mono,
-      fontSize: 10,
-      lineHeight: 14,
-      fontWeight: '700' as const,
-      textTransform: 'uppercase' as const,
-      letterSpacing: 1.6,
+    label: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      lineHeight: 16,
+      fontWeight: '600' as const,
+      letterSpacing: 0.2,
     },
-    monoButton: {
-      fontFamily: fonts.mono,
+    caption: {
+      fontFamily: fonts.body,
       fontSize: 11,
       lineHeight: 14,
-      fontWeight: '700' as const,
-      textTransform: 'uppercase' as const,
-      letterSpacing: 1.8,
+      fontWeight: '500' as const,
+    },
+    // Keep monoLabel for backward compat
+    monoLabel: {
+      fontFamily: fonts.body,
+      fontSize: 11,
+      lineHeight: 14,
+      fontWeight: '600' as const,
+      letterSpacing: 0.4,
+    },
+    monoButton: {
+      fontFamily: fonts.body,
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: '600' as const,
+      letterSpacing: 0.2,
     },
     monoStatus: {
-      fontFamily: fonts.mono,
-      fontSize: 10,
+      fontFamily: fonts.body,
+      fontSize: 11,
       lineHeight: 14,
-      fontWeight: '700' as const,
-      textTransform: 'uppercase' as const,
-      letterSpacing: 1.6,
+      fontWeight: '600' as const,
+      letterSpacing: 0.2,
     },
   },
 };

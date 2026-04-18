@@ -34,27 +34,26 @@ export default function LoginScreen() {
   };
 
   return (
-    <ScreenContainer showHomeButton={false}>
+    <ScreenContainer showHomeButton={false} showFooter={false}>
       <View style={styles.page}>
+
+        {/* Logo / hero */}
         <StaggerItem index={0}>
           <View style={styles.hero}>
-            <Text style={[styles.kicker, { color: colors.accent }]}>ACESSO DO PROFESSOR</Text>
-            <Text style={[styles.title, { color: colors.text }]}>Entrar</Text>
+            <View style={[styles.logoWrap, { backgroundColor: colors.accent }]}>
+              <Ionicons name="school" size={32} color="#fff" />
+            </View>
+            <Text style={[styles.appName, { color: colors.text }]}>ENEM IA</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Bem-vindo de volta</Text>
             <Text style={[styles.subtitle, { color: colors.mutedText }]}>
-              Acesse seu painel e continue o fluxo de correção.
+              Acesse seu painel e continue corrigindo.
             </Text>
           </View>
         </StaggerItem>
 
+        {/* Form */}
         <StaggerItem index={1}>
           <Card>
-            <View style={styles.topBadge}>
-              <Ionicons name="sparkles-outline" size={18} color={colors.accent} />
-              <Text style={[styles.topBadgeText, { color: colors.softText }]}>
-                AMBIENTE DO PROFESSOR
-              </Text>
-            </View>
-
             <View style={styles.form}>
               <Controller
                 control={control}
@@ -110,6 +109,14 @@ export default function LoginScreen() {
             </View>
           </Card>
         </StaggerItem>
+
+        {/* Footer hint */}
+        <StaggerItem index={2}>
+          <Text style={[styles.hint, { color: colors.mutedText }]}>
+            Correção de redações ENEM com inteligência artificial
+          </Text>
+        </StaggerItem>
+
       </View>
     </ScreenContainer>
   );
@@ -118,20 +125,46 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   page: {
     gap: theme.spacing.xl,
-    paddingTop: theme.spacing.xs,
+    paddingTop: theme.spacing.md,
   },
   hero: {
-    gap: theme.spacing.xs,
-  },
-  kicker: { ...theme.typography.monoLabel },
-  title: { ...theme.typography.hero },
-  subtitle: { ...theme.typography.body, lineHeight: 24 },
-  topBadge: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.lg,
+    gap: 8,
   },
-  topBadgeText: { ...theme.typography.monoLabel },
-  form: { gap: theme.spacing.lg },
+  logoWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    shadowColor: '#4E76F8',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  appName: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 2,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    letterSpacing: -0.4,
+    lineHeight: 34,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  form: { gap: theme.spacing.md },
+  hint: {
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
 });

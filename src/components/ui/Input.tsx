@@ -33,23 +33,29 @@ export const Input = forwardRef<TextInput, InputProps>(
   ) => {
     const { colors } = useAppTheme();
     const hasError = !!errorText;
+    const [focused, setFocused] = useState(false);
     const [visible, setVisible] = useState(false);
     const isPassword = useMemo(() => !!secureTextEntry, [secureTextEntry]);
 
     return (
       <View style={styles.wrapper}>
-        {label ? <Text style={[styles.label, { color: colors.softText }]}>{label}</Text> : null}
+        {label ? (
+          <Text style={[styles.label, { color: colors.softText }]}>{label}</Text>
+        ) : null}
 
-        <View style={[
-          styles.field,
-          { borderColor: colors.border, backgroundColor: colors.input },
-          hasError && { borderColor: colors.danger },
-        ]}>
+        <View
+          style={[
+            styles.field,
+            { borderColor: colors.border, backgroundColor: colors.input },
+            focused && { borderColor: colors.accent, backgroundColor: colors.surface },
+            hasError && { borderColor: colors.danger },
+          ]}
+        >
           {leftIcon ? (
             <Ionicons
               name={leftIcon}
               size={18}
-              color={hasError ? colors.danger : colors.softText}
+              color={hasError ? colors.danger : focused ? colors.accent : colors.mutedText}
               style={styles.leftIcon}
             />
           ) : null}
@@ -59,6 +65,8 @@ export const Input = forwardRef<TextInput, InputProps>(
             style={[styles.input, { color: colors.text }, style]}
             placeholderTextColor={colors.mutedText}
             secureTextEntry={isPassword ? !visible : false}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
             {...props}
           />
 
@@ -67,14 +75,18 @@ export const Input = forwardRef<TextInput, InputProps>(
               <Ionicons
                 name={visible ? 'eye-off-outline' : 'eye-outline'}
                 size={18}
-                color={colors.softText}
+                color={colors.mutedText}
               />
             </Pressable>
           ) : null}
         </View>
 
-        {errorText ? <Text style={[styles.error, { color: colors.danger }]}>{errorText}</Text> : null}
-        {!errorText && helperText ? <Text style={[styles.helper, { color: colors.mutedText }]}>{helperText}</Text> : null}
+        {errorText ? (
+          <Text style={[styles.helper, { color: colors.danger }]}>{errorText}</Text>
+        ) : null}
+        {!errorText && helperText ? (
+          <Text style={[styles.helper, { color: colors.mutedText }]}>{helperText}</Text>
+        ) : null}
       </View>
     );
   }
@@ -84,17 +96,19 @@ Input.displayName = 'Input';
 
 const styles = StyleSheet.create({
   wrapper: {
-    gap: theme.spacing.xs,
+    gap: 6,
   },
   label: {
-    ...theme.typography.monoLabel,
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.1,
   },
   field: {
-    minHeight: 56,
+    minHeight: 54,
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: theme.radius.sm,
+    borderWidth: 1.5,
+    borderRadius: theme.radius.md,
     paddingHorizontal: theme.spacing.md,
   },
   leftIcon: {
@@ -103,15 +117,12 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     ...theme.typography.body,
-    minHeight: 56,
+    minHeight: 54,
   },
   eye: {
     paddingLeft: theme.spacing.sm,
   },
   helper: {
-    ...theme.typography.bodySmall,
-  },
-  error: {
     ...theme.typography.bodySmall,
   },
 });

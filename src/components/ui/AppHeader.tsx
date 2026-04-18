@@ -15,22 +15,50 @@ type AppHeaderProps = {
 export function AppHeader({ eyebrow, title, subtitle, showLogout }: AppHeaderProps) {
   const { colors } = useAppTheme();
   const logout = useAppStore((state) => state.logout);
+  const currentTeacher = useAppStore((state) => state.currentTeacher);
 
   const handleLogout = () => {
     logout();
     router.replace('/');
   };
 
+  const initials = currentTeacher?.name
+    ? currentTeacher.name
+        .replace(/^Professor\s+/i, '')
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase()
+    : 'P';
+
   return (
     <View style={styles.container}>
       <View style={styles.row}>
-        <View style={styles.textGroup}>
-          {eyebrow ? <Text style={[styles.eyebrow, { color: colors.accent }]}>{eyebrow}</Text> : null}
-          <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
-          {subtitle ? <Text style={[styles.subtitle, { color: colors.mutedText }]}>{subtitle}</Text> : null}
+        {/* Avatar */}
+        <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
+          <Text style={styles.avatarText}>{initials}</Text>
         </View>
+
+        {/* Text */}
+        <View style={styles.textGroup}>
+          {eyebrow ? (
+            <Text style={[styles.eyebrow, { color: colors.mutedText }]}>{eyebrow}</Text>
+          ) : null}
+          <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+          {subtitle ? (
+            <Text style={[styles.subtitle, { color: colors.mutedText }]}>{subtitle}</Text>
+          ) : null}
+        </View>
+
+        {/* Actions */}
         {showLogout ? (
-          <Pressable onPress={handleLogout} style={[styles.logoutBtn, { borderColor: colors.border }]} hitSlop={8}>
+          <Pressable
+            onPress={handleLogout}
+            style={[styles.actionBtn, { backgroundColor: colors.surface }]}
+            hitSlop={8}
+          >
             <Ionicons name="log-out-outline" size={18} color={colors.mutedText} />
           </Pressable>
         ) : null}
@@ -42,34 +70,61 @@ export function AppHeader({ eyebrow, title, subtitle, showLogout }: AppHeaderPro
 const styles = StyleSheet.create({
   container: {
     paddingTop: theme.spacing.xs,
+    paddingBottom: theme.spacing.xs,
   },
   row: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    alignItems: 'center',
     gap: theme.spacing.md,
+  },
+  avatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    shadowColor: '#4E76F8',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  avatarText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   textGroup: {
     flex: 1,
-    gap: theme.spacing.xs,
+    gap: 2,
   },
   eyebrow: {
-    ...theme.typography.monoLabel,
+    fontSize: 11,
+    fontWeight: '500',
+    letterSpacing: 0.3,
   },
   title: {
-    ...theme.typography.h2,
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+    lineHeight: 28,
   },
   subtitle: {
-    ...theme.typography.body,
-    lineHeight: 24,
+    fontSize: 13,
+    lineHeight: 18,
   },
-  logoutBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 4,
-    borderWidth: 1,
+  actionBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
+    shadowColor: '#1B2559',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
 });

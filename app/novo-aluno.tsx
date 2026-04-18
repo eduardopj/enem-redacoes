@@ -46,7 +46,7 @@ export default function NovoAlunoScreen() {
     <ProtectedRoute>
       <ScreenContainer showBack>
         <AppHeader
-          eyebrow="NOVO ALUNO"
+          eyebrow="Novo aluno"
           title="Cadastrar aluno"
           subtitle="Primeiro o professor cadastra o aluno. Depois vincula a redação a ele."
         />
@@ -58,7 +58,7 @@ export default function NovoAlunoScreen() {
               name="name"
               render={({ field: { onChange, onBlur, value } }) => (
                 <Input
-                  label="NOME DO ALUNO"
+                  label="Nome do aluno"
                   placeholder="Ex.: Ana Clara Souza"
                   leftIcon="person-outline"
                   onBlur={onBlur}
@@ -74,7 +74,7 @@ export default function NovoAlunoScreen() {
               name="className"
               render={({ field: { onChange, onBlur, value } }) => (
                 <Input
-                  label="TURMA"
+                  label="Turma"
                   placeholder="Ex.: 3º Informática A"
                   leftIcon="school-outline"
                   onBlur={onBlur}

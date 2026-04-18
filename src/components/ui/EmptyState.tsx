@@ -22,8 +22,10 @@ export function EmptyState({
   const { colors } = useAppTheme();
 
   return (
-    <View style={[styles.box, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-      <Ionicons name={icon} size={28} color={colors.accent} />
+    <View style={[styles.box, { backgroundColor: colors.surface }]}>
+      <View style={[styles.iconWrap, { backgroundColor: colors.accent + '14' }]}>
+        <Ionicons name={icon} size={28} color={colors.accent} />
+      </View>
       <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
       <Text style={[styles.description, { color: colors.mutedText }]}>{description}</Text>
 
@@ -38,18 +40,29 @@ export function EmptyState({
 
 const styles = StyleSheet.create({
   box: {
-    borderWidth: 1,
-    borderRadius: theme.radius.sm,
+    borderRadius: theme.radius.lg,
     padding: theme.spacing.xl,
     alignItems: 'center',
     gap: theme.spacing.sm,
+    ...theme.shadows.card,
+  },
+  iconWrap: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
   },
   title: {
-    ...theme.typography.h3,
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: -0.2,
     textAlign: 'center',
   },
   description: {
-    ...theme.typography.body,
+    fontSize: 14,
+    lineHeight: 20,
     textAlign: 'center',
   },
   action: {

@@ -13,26 +13,35 @@ export function SectionHeader({ eyebrow, title, subtitle }: SectionHeaderProps) 
 
   return (
     <View style={styles.container}>
-      {eyebrow ? <Text style={[styles.eyebrow, { color: colors.accent }]}>{eyebrow}</Text> : null}
+      {eyebrow ? (
+        <Text style={[styles.eyebrow, { color: colors.accent }]}>{eyebrow}</Text>
+      ) : null}
       <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
-      {subtitle ? <Text style={[styles.subtitle, { color: colors.mutedText }]}>{subtitle}</Text> : null}
+      {subtitle ? (
+        <Text style={[styles.subtitle, { color: colors.mutedText }]}>{subtitle}</Text>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    gap: theme.spacing.sm,
+    gap: 6,
     paddingTop: theme.spacing.xs,
   },
   eyebrow: {
-    ...theme.typography.monoLabel,
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   title: {
-    ...theme.typography.h1,
+    fontSize: 30,
+    fontWeight: '700',
+    lineHeight: 36,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    ...theme.typography.body,
-    lineHeight: 24,
+    fontSize: 15,
+    lineHeight: 22,
   },
 });

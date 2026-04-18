@@ -44,6 +44,16 @@ export type OpenAICorrectionResult = {
   generalObservation: string;
   congratulations: string;
   feedback: string;
+  studentDirectMessage: string;
+  improvementPotential: string;
+  vocabularyAnalysis: {
+    frequentWords: string[];
+    synonymSuggestions: {
+      word: string;
+      alternatives: string[];
+      context: string;
+    }[];
+  };
 };
 
 export type OpenAIServiceInput = {

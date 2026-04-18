@@ -34,27 +34,23 @@ export default function CadastroScreen() {
   };
 
   return (
-    <ScreenContainer showBack showHomeButton={false}>
+    <ScreenContainer showBack showHomeButton={false} showFooter={false}>
       <View style={styles.page}>
+
         <StaggerItem index={0}>
           <View style={styles.hero}>
-            <Text style={[styles.kicker, { color: colors.accent }]}>NOVA CONTA</Text>
+            <View style={[styles.logoWrap, { backgroundColor: colors.accent }]}>
+              <Ionicons name="person-add" size={28} color="#fff" />
+            </View>
             <Text style={[styles.title, { color: colors.text }]}>Criar conta</Text>
             <Text style={[styles.subtitle, { color: colors.mutedText }]}>
-              Cadastre-se para acessar o painel e corrigir redações com IA.
+              Cadastre-se para corrigir redações com IA.
             </Text>
           </View>
         </StaggerItem>
 
         <StaggerItem index={1}>
           <Card>
-            <View style={styles.topBadge}>
-              <Ionicons name="person-add-outline" size={18} color={colors.accent} />
-              <Text style={[styles.topBadgeText, { color: colors.softText }]}>
-                CADASTRO DO PROFESSOR
-              </Text>
-            </View>
-
             <View style={styles.form}>
               <Controller
                 control={control}
@@ -155,20 +151,36 @@ export default function CadastroScreen() {
 const styles = StyleSheet.create({
   page: {
     gap: theme.spacing.xl,
-    paddingTop: theme.spacing.xs,
+    paddingTop: theme.spacing.md,
   },
   hero: {
-    gap: theme.spacing.xs,
-  },
-  kicker: { ...theme.typography.monoLabel },
-  title: { ...theme.typography.hero },
-  subtitle: { ...theme.typography.body, lineHeight: 24 },
-  topBadge: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.lg,
+    gap: 8,
   },
-  topBadgeText: { ...theme.typography.monoLabel },
-  form: { gap: theme.spacing.lg },
+  logoWrap: {
+    width: 68,
+    height: 68,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    shadowColor: '#4E76F8',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    letterSpacing: -0.4,
+    lineHeight: 34,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  form: { gap: theme.spacing.md },
 });

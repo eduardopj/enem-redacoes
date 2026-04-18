@@ -56,8 +56,6 @@ type AppState = {
   deleteTheme: (themeId: string) => void;
   deleteEssay: (essayId: string) => void;
   updateEssayStatus: (essayId: string, status: EssayStatus, totalScore?: number) => void;
-  simulateProcessEssay: (essayId: string) => void;
-  simulateFinishEssay: (essayId: string) => void;
   evaluateEssayWithOpenAI: (essayId: string) => Promise<void>;
   addToRetryQueue: (essayId: string) => void;
   removeFromRetryQueue: (essayId: string) => void;
@@ -234,59 +232,6 @@ export const useAppStore = create<AppState>()(
           ),
         })),
 
-      simulateProcessEssay: (essayId) =>
-        set((state) => ({
-          essays: state.essays.map((essay) =>
-            essay.id === essayId ? { ...essay, status: 'processando' } : essay
-          ),
-        })),
-
-      simulateFinishEssay: (essayId) =>
-        set((state) => ({
-          essays: state.essays.map((essay) =>
-            essay.id === essayId
-              ? {
-                  ...essay,
-                  status: 'corrigida',
-                  correctedAt: new Date().toISOString(),
-                  totalScore: 920,
-                  transcription: 'Transcrição simulada.',
-                  transcriptionNotes: 'Sem observações adicionais.',
-                  transcriptionConfidence: 'alta',
-                  writingMode: 'manuscrita',
-                  legibility: {
-                    applicable: true,
-                    level: 'boa',
-                    observation: 'Boa legibilidade geral.',
-                    illegibleExcerpt: '',
-                  },
-                  themeAdequacy: {
-                    level: 'adequado',
-                    observation: 'A redação atende ao tema proposto.',
-                  },
-                  scoreReliability: {
-                    level: 'alta',
-                    observation: 'A leitura da imagem permitiu avaliação estável.',
-                  },
-                  competencies: { c1: 180, c2: 180, c3: 180, c4: 180, c5: 200 },
-                  competencyFeedbacks: {
-                    c1: { diagnosis: 'Bom domínio da norma padrão.', positive: 'Boa construção sintática.', improvement: 'Revisar pontuação fina.' },
-                    c2: { diagnosis: 'Atende bem ao tema.', positive: 'Boa aderência temática.', improvement: 'Aprofundar repertório.' },
-                    c3: { diagnosis: 'Argumentação consistente.', positive: 'Boa progressão textual.', improvement: 'Aprofundar alguns pontos.' },
-                    c4: { diagnosis: 'Coesão satisfatória.', positive: 'Conectivos funcionais.', improvement: 'Variar mecanismos coesivos.' },
-                    c5: { diagnosis: 'Intervenção adequada.', positive: 'Há proposta viável.', improvement: 'Detalhar melhor os meios.' },
-                  },
-                  strengths: ['Boa organização das ideias.', 'Boa aderência ao tema.'],
-                  weaknesses: ['Ainda há espaço para aprofundar a argumentação.'],
-                  improvements: ['Aprimorar repertório e detalhamento.', 'Refinar coesão fina.'],
-                  generalObservation: 'A redação é boa, consistente e bem estruturada.',
-                  congratulations: 'Parabéns pelo bom desempenho.',
-                  feedback: 'Boa organização e boa aderência ao tema. Vale aprofundar argumentos.',
-                }
-              : essay
-          ),
-        })),
-
       addToRetryQueue: (essayId) =>
         set((state) => ({
           retryQueue: state.retryQueue.includes(essayId)
@@ -393,6 +338,9 @@ export const useAppStore = create<AppState>()(
                     generalObservation: result.generalObservation,
                     congratulations: result.congratulations,
                     feedback: result.feedback,
+                    studentDirectMessage: result.studentDirectMessage,
+                    improvementPotential: result.improvementPotential,
+                    vocabularyAnalysis: result.vocabularyAnalysis,
                   }
                 : item
             ),
@@ -429,7 +377,16 @@ export const useAppStore = create<AppState>()(
         retryQueue: state.retryQueue,
       }),
       onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+        if (state) {
+          // Se o app fechou enquanto uma redação estava processando,
+          // reset para 'pendente' para que o professor possa tentar novamente.
+          state.essays = state.essays.map((essay) =>
+            essay.status === 'processando'
+              ? { ...essay, status: 'pendente', feedback: undefined }
+              : essay
+          );
+          state.setHasHydrated(true);
+        }
       },
     }
   )

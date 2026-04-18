@@ -69,6 +69,16 @@ export type Essay = {
   generalObservation?: string;
   congratulations?: string;
   feedback?: string;
+  studentDirectMessage?: string;
+  improvementPotential?: string;
+  vocabularyAnalysis?: {
+    frequentWords: string[];
+    synonymSuggestions: {
+      word: string;
+      alternatives: string[];
+      context: string;
+    }[];
+  };
   createdAt?: string;
   correctedAt?: string;
 };

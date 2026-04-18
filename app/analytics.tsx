@@ -4,17 +4,22 @@ import { useAppStore } from '@/store/app-store';
 import { useAppTheme } from '@/theme/ThemeContext';
 import {
   getClassStats,
+  getCompetencyFocusTip,
   getCompetencyLabel,
   getScoreColor,
   getScoreLabel,
   getStudentStats,
+  getTrend,
+  getTrendColor,
+  getTrendIcon,
 } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-// Paleta de cores por competência
+const NATIONAL_AVG = 624;
+
 const COMP_COLORS: Record<string, string> = {
   c1: '#3B82F6',
   c2: '#8B5CF6',
@@ -23,14 +28,20 @@ const COMP_COLORS: Record<string, string> = {
   c5: '#F43F5E',
 };
 
-function scoreGradientColor(score: number): string {
-  if (score >= 900) return '#16A34A';
-  if (score >= 800) return '#22C55E';
-  if (score >= 700) return '#84CC16';
-  if (score >= 600) return '#EAB308';
-  if (score >= 500) return '#F97316';
-  if (score >= 400) return '#EF4444';
-  return '#DC2626';
+function cellBg(score: number): string {
+  if (score >= 160) return '#16A34A22';
+  if (score >= 120) return '#22C55E18';
+  if (score >= 80)  return '#EAB30818';
+  if (score > 0)   return '#EF444418';
+  return 'transparent';
+}
+
+function cellColor(score: number): string {
+  if (score >= 160) return '#16A34A';
+  if (score >= 120) return '#22C55E';
+  if (score >= 80)  return '#CA8A04';
+  if (score > 0)   return '#EF4444';
+  return '#94A3B8';
 }
 
 export default function AnalyticsScreen() {
@@ -56,7 +67,6 @@ export default function AnalyticsScreen() {
 
   const correctedEssays = teacherEssays.filter((e) => e.status === 'corrigida');
 
-  // Estatísticas por aluno
   const studentStats = useMemo(
     () =>
       teacherStudents
@@ -66,13 +76,20 @@ export default function AnalyticsScreen() {
     [teacherStudents, essays]
   );
 
+  const needAttention = useMemo(
+    () => studentStats.filter((item) => (item.stats.averageScore ?? 0) < NATIONAL_AVG),
+    [studentStats]
+  );
+
+  const topPerformer = studentStats[0] ?? null;
+
   const compKeys = ['c1', 'c2', 'c3', 'c4', 'c5'];
 
   if (correctedEssays.length === 0) {
     return (
       <ProtectedRoute>
         <ScreenContainer showBack>
-          <AppHeader eyebrow="ANÁLISE" title="Análise da Turma" subtitle="Dados consolidados por competência e aluno." />
+          <AppHeader eyebrow="Análise" title="Análise da Turma" subtitle="Dados consolidados por competência e aluno." />
           <Card>
             <View style={styles.emptyWrap}>
               <Ionicons name="bar-chart-outline" size={40} color={colors.mutedText} />
@@ -90,29 +107,120 @@ export default function AnalyticsScreen() {
   return (
     <ProtectedRoute>
       <ScreenContainer showBack>
-        <AppHeader eyebrow="ANÁLISE" title="Análise da Turma" subtitle="Dados consolidados por competência e aluno." />
+        <AppHeader eyebrow="Análise" title="Análise da Turma" subtitle="Dados consolidados por competência e aluno." />
 
         {/* ── KPIs gerais ── */}
         <Card>
-          <Text style={[styles.sectionLabel, { color: colors.softText }]}>VISÃO GERAL</Text>
+          <Text style={[styles.sectionLabel, { color: colors.softText }]}>Visão geral</Text>
           <View style={styles.kpiRow}>
-            <KpiBlock label="REDAÇÕES" value={correctedEssays.length} colors={colors} />
+            <KpiBlock label="Redações" value={correctedEssays.length} colors={colors} />
             <View style={[styles.kpiDivider, { backgroundColor: colors.border }]} />
-            <KpiBlock label="ALUNOS" value={studentStats.length} colors={colors} />
+            <KpiBlock label="Alunos" value={studentStats.length} colors={colors} />
             <View style={[styles.kpiDivider, { backgroundColor: colors.border }]} />
             <KpiBlock
-              label="MÉDIA"
+              label="Média"
               value={classStats.classAverage ?? '--'}
               valueColor={classStats.classAverage ? getScoreColor(classStats.classAverage, colors) : colors.text}
               sub={classStats.classAverage ? getScoreLabel(classStats.classAverage) : ''}
               colors={colors}
             />
+            <View style={[styles.kpiDivider, { backgroundColor: colors.border }]} />
+            <KpiBlock
+              label="Melhor"
+              value={classStats.classHighest ?? '--'}
+              valueColor={classStats.classHighest ? getScoreColor(classStats.classHighest, colors) : colors.text}
+              colors={colors}
+            />
+          </View>
+          {classStats.classAverage !== null && (
+            <View style={[styles.avgCompRow, { borderTopColor: colors.border }]}>
+              <Ionicons
+                name={classStats.classAverage >= NATIONAL_AVG ? 'trending-up' : 'trending-down'}
+                size={14}
+                color={classStats.classAverage >= NATIONAL_AVG ? colors.success : colors.danger}
+              />
+              <Text style={[styles.avgCompText, { color: classStats.classAverage >= NATIONAL_AVG ? colors.success : colors.danger }]}>
+                {classStats.classAverage >= NATIONAL_AVG
+                  ? `+${classStats.classAverage - NATIONAL_AVG} pts acima da média nacional (${NATIONAL_AVG})`
+                  : `${classStats.classAverage - NATIONAL_AVG} pts abaixo da média nacional (${NATIONAL_AVG})`}
+              </Text>
+            </View>
+          )}
+        </Card>
+
+        {/* ── Insights da Turma ── */}
+        <Card>
+          <Text style={[styles.sectionLabel, { color: colors.softText }]}>Insights da turma</Text>
+          <View style={{ gap: 10 }}>
+
+            {/* Top performer */}
+            {topPerformer && (
+              <Pressable
+                onPress={() => router.push(`/aluno/${topPerformer.student.id}` as any)}
+                style={[styles.insightRow, { backgroundColor: colors.accent + '0F', borderColor: colors.accent + '30' }]}
+              >
+                <View style={[styles.insightIcon, { backgroundColor: colors.accent + '18' }]}>
+                  <Ionicons name="trophy-outline" size={18} color={colors.accent} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.insightTitle, { color: colors.text }]}>
+                    Top: {topPerformer.student.name.split(' ')[0]}
+                  </Text>
+                  <Text style={[styles.insightSub, { color: colors.mutedText }]}>
+                    Média {topPerformer.stats.averageScore} · {topPerformer.student.className}
+                  </Text>
+                </View>
+                {topPerformer.stats.scores.length >= 2 && (
+                  <Ionicons
+                    name={getTrendIcon(getTrend(topPerformer.stats.scores))}
+                    size={16}
+                    color={getTrendColor(getTrend(topPerformer.stats.scores), colors)}
+                  />
+                )}
+                <Ionicons name="chevron-forward" size={14} color={colors.mutedText} />
+              </Pressable>
+            )}
+
+            {/* Weakest class competency */}
+            {classStats.weakestClassCompetency && (
+              <View style={[styles.insightRow, { backgroundColor: colors.warningSoft + '80', borderColor: colors.warning + '30' }]}>
+                <View style={[styles.insightIcon, { backgroundColor: colors.warning + '20' }]}>
+                  <Ionicons name="bulb-outline" size={18} color={colors.warning} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.insightTitle, { color: colors.text }]}>
+                    Foco coletivo: {getCompetencyLabel(classStats.weakestClassCompetency, true)}
+                  </Text>
+                  <Text style={[styles.insightSub, { color: colors.mutedText }]}>
+                    {getCompetencyFocusTip(classStats.weakestClassCompetency)}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Students needing attention */}
+            {needAttention.length > 0 && (
+              <View style={[styles.insightRow, { backgroundColor: colors.dangerSoft + '60', borderColor: colors.danger + '25' }]}>
+                <View style={[styles.insightIcon, { backgroundColor: colors.danger + '15' }]}>
+                  <Ionicons name="alert-circle-outline" size={18} color={colors.danger} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.insightTitle, { color: colors.text }]}>
+                    {needAttention.length} aluno{needAttention.length > 1 ? 's' : ''} abaixo da média nacional
+                  </Text>
+                  <Text style={[styles.insightSub, { color: colors.mutedText }]}>
+                    {needAttention.slice(0, 3).map((i) => i.student.name.split(' ')[0]).join(', ')}
+                    {needAttention.length > 3 ? ` e mais ${needAttention.length - 3}` : ''} — média nacional: {NATIONAL_AVG}
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
         </Card>
 
         {/* ── Médias por competência ── */}
         <Card>
-          <Text style={[styles.sectionLabel, { color: colors.softText }]}>MÉDIA POR COMPETÊNCIA — TURMA</Text>
+          <Text style={[styles.sectionLabel, { color: colors.softText }]}>Média por competência</Text>
           <View style={styles.compList}>
             {compKeys.map((k) => {
               const val = classStats.avgCompetencies[k] ?? 0;
@@ -144,7 +252,7 @@ export default function AnalyticsScreen() {
         {/* ── Distribuição de notas ── */}
         {correctedEssays.length > 0 && (
           <Card>
-            <Text style={[styles.sectionLabel, { color: colors.softText }]}>DISTRIBUIÇÃO DE NOTAS</Text>
+            <Text style={[styles.sectionLabel, { color: colors.softText }]}>Distribuição de notas</Text>
             <ScoreDistribution essays={correctedEssays} colors={colors} />
           </Card>
         )}
@@ -152,12 +260,15 @@ export default function AnalyticsScreen() {
         {/* ── Ranking de alunos ── */}
         {studentStats.length > 0 && (
           <Card>
-            <Text style={[styles.sectionLabel, { color: colors.softText }]}>RANKING DE ALUNOS</Text>
+            <Text style={[styles.sectionLabel, { color: colors.softText }]}>Ranking de alunos</Text>
             <View>
               {studentStats.map((item, i) => {
                 const avg = item.stats.averageScore ?? 0;
                 const scoreColor = getScoreColor(avg, colors);
                 const pct = (avg / 1000) * 100;
+                const trend = getTrend(item.stats.scores);
+                const trendColor = getTrendColor(trend, colors);
+                const belowAvg = avg < NATIONAL_AVG;
                 return (
                   <Pressable
                     key={item.student.id}
@@ -173,14 +284,24 @@ export default function AnalyticsScreen() {
                     <View style={styles.rankInfo}>
                       <View style={styles.rankNameRow}>
                         <Text style={[styles.rankName, { color: colors.text }]}>{item.student.name}</Text>
+                        {belowAvg && (
+                          <View style={[styles.attentionTag, { backgroundColor: colors.dangerSoft }]}>
+                            <Text style={[styles.attentionTagText, { color: colors.danger }]}>Atenção</Text>
+                          </View>
+                        )}
                         <Text style={[styles.rankClass, { color: colors.mutedText }]}>{item.student.className}</Text>
                       </View>
                       <View style={[styles.progressTrack, { backgroundColor: colors.input }]}>
                         <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: scoreColor }]} />
                       </View>
-                      <Text style={[styles.rankMeta, { color: colors.mutedText }]}>
-                        {item.stats.correctedEssays} redaç{item.stats.correctedEssays === 1 ? 'ão' : 'ões'} · {getScoreLabel(avg)}
-                      </Text>
+                      <View style={styles.rankMetaRow}>
+                        <Text style={[styles.rankMeta, { color: colors.mutedText }]}>
+                          {item.stats.correctedEssays} redaç{item.stats.correctedEssays === 1 ? 'ão' : 'ões'} · {getScoreLabel(avg)}
+                        </Text>
+                        {item.stats.scores.length >= 2 && (
+                          <Ionicons name={getTrendIcon(trend)} size={12} color={trendColor} />
+                        )}
+                      </View>
                     </View>
                     <Text style={[styles.rankScore, { color: scoreColor }]}>{avg}</Text>
                   </Pressable>
@@ -193,37 +314,59 @@ export default function AnalyticsScreen() {
         {/* ── Competências por aluno ── */}
         {studentStats.length > 0 && (
           <Card>
-            <Text style={[styles.sectionLabel, { color: colors.softText }]}>COMPETÊNCIAS POR ALUNO</Text>
+            <Text style={[styles.sectionLabel, { color: colors.softText }]}>Competências por aluno</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={{ gap: 16, paddingBottom: 4 }}>
+              <View style={{ gap: 0, paddingBottom: 4 }}>
                 {/* Header */}
-                <View style={[styles.tableRow, { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
-                  <Text style={[styles.tableNameCell, { color: colors.mutedText }]}>ALUNO</Text>
+                <View style={[styles.tableRow, { borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: 8, marginBottom: 4 }]}>
+                  <Text style={[styles.tableNameCell, { color: colors.mutedText }]}>Aluno</Text>
                   {compKeys.map((k) => (
-                    <View key={k} style={[styles.tableCell, { alignItems: 'center' }]}>
+                    <View key={k} style={[styles.tableCell, { alignItems: 'center', justifyContent: 'center' }]}>
                       <View style={[styles.compDot, { backgroundColor: COMP_COLORS[k] }]} />
                       <Text style={[styles.tableCellLabel, { color: colors.mutedText }]}>{k.toUpperCase()}</Text>
                     </View>
                   ))}
                 </View>
                 {studentStats.map((item) => (
-                  <View key={item.student.id} style={styles.tableRow}>
+                  <Pressable
+                    key={item.student.id}
+                    onPress={() => router.push(`/aluno/${item.student.id}` as any)}
+                    style={[styles.tableRow, { paddingVertical: 6 }]}
+                  >
                     <Text style={[styles.tableNameCell, { color: colors.text }]} numberOfLines={1}>
                       {item.student.name.split(' ')[0]}
                     </Text>
                     {compKeys.map((k) => {
                       const val = item.stats.avgCompetencies[k] ?? 0;
-                      const color = val > 0 ? (COMP_COLORS[k] ?? '#3B82F6') : colors.mutedText;
+                      const bg = cellBg(val);
+                      const fg = val > 0 ? cellColor(val) : colors.mutedText;
                       return (
-                        <Text key={k} style={[styles.tableCell, styles.tableCellValue, { color }]}>
-                          {val > 0 ? val : '—'}
-                        </Text>
+                        <View key={k} style={[styles.tableCell, { alignItems: 'center', justifyContent: 'center' }]}>
+                          <View style={[styles.cellPill, { backgroundColor: bg }]}>
+                            <Text style={[styles.tableCellValue, { color: fg }]}>
+                              {val > 0 ? val : '—'}
+                            </Text>
+                          </View>
+                        </View>
                       );
                     })}
-                  </View>
+                  </Pressable>
                 ))}
               </View>
             </ScrollView>
+            <View style={[styles.tableLegend, { borderTopColor: colors.border }]}>
+              {[
+                { label: '≥160', color: '#16A34A' },
+                { label: '≥120', color: '#22C55E' },
+                { label: '≥80', color: '#CA8A04' },
+                { label: '<80', color: '#EF4444' },
+              ].map((l) => (
+                <View key={l.label} style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: l.color }]} />
+                  <Text style={[styles.legendLabel, { color: colors.mutedText }]}>{l.label}</Text>
+                </View>
+              ))}
+            </View>
           </Card>
         )}
       </ScreenContainer>
@@ -280,7 +423,7 @@ function ScoreDistribution({ essays, colors }: { essays: any[]; colors: any }) {
 }
 
 const styles = StyleSheet.create({
-  sectionLabel: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.6, marginBottom: 12 },
+  sectionLabel: { fontSize: 15, fontWeight: '700', letterSpacing: -0.1, marginBottom: 14 },
   emptyWrap: { alignItems: 'center', gap: 12, paddingVertical: 24 },
   emptyTitle: { fontSize: 18, fontWeight: '700' },
   emptyText: { fontSize: 14, lineHeight: 22, textAlign: 'center' },
@@ -288,9 +431,16 @@ const styles = StyleSheet.create({
   kpiRow: { flexDirection: 'row', gap: 0 },
   kpiBlock: { flex: 1, gap: 2, alignItems: 'center' },
   kpiDivider: { width: 1, marginVertical: 4 },
-  kpiLabel: { fontFamily: 'monospace', fontSize: 9, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.4, textAlign: 'center' },
-  kpiValue: { fontSize: 30, lineHeight: 34, fontWeight: '700', letterSpacing: -0.8, textAlign: 'center' },
-  kpiSub: { fontSize: 11, lineHeight: 16, textAlign: 'center' },
+  kpiLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.1, textAlign: 'center' },
+  kpiValue: { fontSize: 26, lineHeight: 30, fontWeight: '700', letterSpacing: -0.8, textAlign: 'center' },
+  kpiSub: { fontSize: 10, lineHeight: 14, textAlign: 'center' },
+  avgCompRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 10, marginTop: 10, borderTopWidth: 1 },
+  avgCompText: { fontSize: 12, fontWeight: '600', lineHeight: 18 },
+  // Insights
+  insightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, borderRadius: 12, borderWidth: 1, padding: 12 },
+  insightIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
+  insightTitle: { fontSize: 14, fontWeight: '700', lineHeight: 20, marginBottom: 2 },
+  insightSub: { fontSize: 12, lineHeight: 18 },
   // Competencies
   compList: { gap: 12 },
   compRow: { gap: 6 },
@@ -300,31 +450,39 @@ const styles = StyleSheet.create({
   compVal: { fontSize: 15, fontWeight: '700' },
   compTrack: { height: 8, borderRadius: 4, overflow: 'hidden' },
   compFill: { height: '100%', borderRadius: 4 },
-  weakTag: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  weakTagText: { fontSize: 9, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
+  weakTag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  weakTagText: { fontSize: 10, fontWeight: '700' },
   // Distribution
   distList: { gap: 10 },
   distRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  distLabel: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700', width: 70 },
+  distLabel: { fontSize: 11, fontWeight: '600', width: 70 },
   distTrack: { flex: 1, height: 10, borderRadius: 5, overflow: 'hidden' },
   distFill: { height: '100%', borderRadius: 5 },
-  distCount: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', width: 24, textAlign: 'right' },
+  distCount: { fontSize: 12, fontWeight: '700', width: 24, textAlign: 'right' },
   // Ranking
   rankRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
   rankBadge: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   rankText: { fontSize: 12, fontWeight: '700' },
   rankInfo: { flex: 1, gap: 4 },
-  rankNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  rankNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   rankName: { fontSize: 15, fontWeight: '600' },
   rankClass: { fontSize: 11 },
+  rankMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   rankMeta: { fontSize: 11, lineHeight: 16 },
   rankScore: { fontSize: 22, fontWeight: '700', minWidth: 44, textAlign: 'right' },
   progressTrack: { height: 4, borderRadius: 2, overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 2 },
+  attentionTag: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 },
+  attentionTagText: { fontSize: 9, fontWeight: '700' },
   // Table
-  tableRow: { flexDirection: 'row', alignItems: 'center', gap: 0, paddingBottom: 10 },
+  tableRow: { flexDirection: 'row', alignItems: 'center' },
   tableNameCell: { width: 90, fontSize: 13, fontWeight: '600' },
   tableCell: { width: 52, flexDirection: 'row', alignItems: 'center', gap: 4 },
-  tableCellLabel: { fontFamily: 'monospace', fontSize: 9, fontWeight: '700', letterSpacing: 1 },
-  tableCellValue: { fontSize: 14, fontWeight: '700', textAlign: 'center', width: 52 },
+  tableCellLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.2 },
+  tableCellValue: { fontSize: 13, fontWeight: '700', textAlign: 'center' },
+  cellPill: { borderRadius: 8, paddingHorizontal: 6, paddingVertical: 3, minWidth: 38, alignItems: 'center' },
+  tableLegend: { flexDirection: 'row', gap: 14, paddingTop: 10, marginTop: 10, borderTopWidth: 1, flexWrap: 'wrap' },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendLabel: { fontSize: 11, fontWeight: '600' },
 });

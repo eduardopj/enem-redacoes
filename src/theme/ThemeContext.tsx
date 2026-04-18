@@ -20,15 +20,13 @@ export function ThemeProvider({ children }: PropsWithChildren) {
   // Padrão fixo: light mode. O sistema operacional não influencia.
   // Só muda via toggle manual pelo usuário.
   const [mode, setMode] = useState<ThemeMode>('light');
-  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    // Lê a preferência salva em background — não bloqueia a renderização inicial.
     AsyncStorage.getItem(THEME_STORAGE_KEY).then((stored) => {
       if (stored === 'light' || stored === 'dark') {
         setMode(stored);
       }
-      // Se não há override: permanece 'light'
-      setHydrated(true);
     });
   }, []);
 
@@ -40,8 +38,6 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     setMode(next);
     AsyncStorage.setItem(THEME_STORAGE_KEY, next);
   }, [isDark]);
-
-  if (!hydrated) return null;
 
   return (
     <ThemeContext.Provider value={{ theme: builtTheme, colors: builtTheme.colors, isDark, mode, toggleTheme }}>

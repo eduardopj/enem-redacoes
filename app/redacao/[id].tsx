@@ -3,6 +3,7 @@ import { AppHeader, Button, Card, CorrectionProgress, ScreenContainer, StaggerIt
 import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -100,7 +101,7 @@ export default function RedacaoDetalheScreen() {
     <ProtectedRoute>
       <ScreenContainer showBack>
         <AppHeader
-          eyebrow="REDAÇÃO"
+          eyebrow="Redação"
           title="Acompanhar correção"
           subtitle="Veja o envio, o status e o próximo passo."
         />
@@ -132,7 +133,7 @@ export default function RedacaoDetalheScreen() {
         {essay.imageUri ? (
           <StaggerItem index={1}>
             <Card>
-              <Text style={[styles.blockTitle, { color: colors.softText }]}>PRÉVIA</Text>
+              <Text style={[styles.blockTitle, { color: colors.softText }]}>Prévia</Text>
               <Image
                 source={{ uri: essay.imageUri }}
                 style={[styles.previewImage, { borderColor: colors.border }]}
@@ -166,9 +167,30 @@ export default function RedacaoDetalheScreen() {
         {/* Estado: erro */}
         {hasError ? (
           <StaggerItem index={2}>
-            <Card>
-              <Text style={[styles.errorTitle, { color: colors.danger }]}>Falha na correção</Text>
-              <Text style={[styles.errorText, { color: colors.mutedText }]}>{essay.feedback}</Text>
+            <Card style={[styles.errorCard, { borderColor: colors.danger + '40' }]}>
+              <View style={styles.errorHeader}>
+                <View style={[styles.errorIconWrap, { backgroundColor: colors.danger + '14' }]}>
+                  <Ionicons name="alert-circle-outline" size={20} color={colors.danger} />
+                </View>
+                <Text style={[styles.errorTitle, { color: colors.danger }]}>Falha na correção</Text>
+              </View>
+
+              {essay.feedback?.includes('backend') || essay.feedback?.includes('conectar') ? (
+                <>
+                  <Text style={[styles.errorText, { color: colors.mutedText }]}>
+                    O app não conseguiu se conectar ao servidor de correção.
+                  </Text>
+                  <View style={[styles.errorSteps, { backgroundColor: colors.input, borderRadius: 12 }]}>
+                    <Text style={[styles.errorStepsTitle, { color: colors.softText }]}>Como resolver:</Text>
+                    <ErrorStep n="1" text="Abra o terminal no computador" colors={colors} />
+                    <ErrorStep n="2" text={'Entre na pasta backend/ e rode:\nnpm run dev'} colors={colors} mono />
+                    <ErrorStep n="3" text="Verifique se o IP no .env ainda é o mesmo do computador" colors={colors} />
+                    <ErrorStep n="4" text="Toque em «Tentar novamente» abaixo" colors={colors} />
+                  </View>
+                </>
+              ) : (
+                <Text style={[styles.errorText, { color: colors.mutedText }]}>{essay.feedback}</Text>
+              )}
             </Card>
           </StaggerItem>
         ) : null}
@@ -179,7 +201,7 @@ export default function RedacaoDetalheScreen() {
             <View style={[styles.aiCta, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.aiCtaHeader}>
                 <View style={[styles.aiCtaBadge, { backgroundColor: colors.accent + '18' }]}>
-                  <Text style={[styles.aiCtaBadgeText, { color: colors.accent }]}>🤖 CORREÇÃO COM IA</Text>
+                  <Text style={[styles.aiCtaBadgeText, { color: colors.accent }]}>🤖 Correção com IA</Text>
                 </View>
               </View>
               <Text style={[styles.aiCtaTitle, { color: colors.text }]}>
@@ -188,11 +210,17 @@ export default function RedacaoDetalheScreen() {
               <Text style={[styles.aiCtaDesc, { color: colors.mutedText }]}>
                 A IA irá transcrever o manuscrito, identificar o tema, pontuar as 5 competências e gerar um parecer pedagógico completo.
               </Text>
+              <View style={[styles.backendHint, { backgroundColor: colors.warning + '14', borderColor: colors.warning + '35' }]}>
+                <Ionicons name="server-outline" size={14} color={colors.warning} />
+                <Text style={[styles.backendHintText, { color: colors.warning }]}>
+                  Certifique-se de que o servidor backend está rodando antes de iniciar.
+                </Text>
+              </View>
               <View style={[styles.aiCtaSteps, { borderColor: colors.border, backgroundColor: colors.input }]}>
                 {['Leitura da imagem', 'Avaliação temática', 'Pontuação das competências', 'Parecer pedagógico'].map((s, i) => (
                   <View key={i} style={[styles.aiCtaStep, i < 3 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
-                    <View style={[styles.aiCtaStepNum, { backgroundColor: colors.border }]}>
-                      <Text style={[styles.aiCtaStepNumText, { color: colors.softText }]}>{i + 1}</Text>
+                    <View style={[styles.aiCtaStepNum, { backgroundColor: colors.accent + '20' }]}>
+                      <Text style={[styles.aiCtaStepNumText, { color: colors.accent }]}>{i + 1}</Text>
                     </View>
                     <Text style={[styles.aiCtaStepLabel, { color: colors.softText }]}>{s}</Text>
                   </View>
@@ -213,22 +241,22 @@ export default function RedacaoDetalheScreen() {
           <>
             <StaggerItem index={3}>
               <Card>
-                <Text style={[styles.blockTitle, { color: colors.softText }]}>RESUMO</Text>
+                <Text style={[styles.blockTitle, { color: colors.softText }]}>Resumo</Text>
                 <View style={styles.summaryGrid}>
                   <SummaryChip
-                    label="NOTA"
+                    label="Nota"
                     value={String(essay.totalScore ?? '--')}
                     color={colors.accent}
                     colors={colors}
                   />
                   <SummaryChip
-                    label="TEMA"
+                    label="Tema"
                     value={essay.themeAdequacy?.level ?? '--'}
                     color={colors.success}
                     colors={colors}
                   />
                   <SummaryChip
-                    label="TRANSCRIÇÃO"
+                    label="Transcrição"
                     value={essay.transcriptionConfidence ?? '--'}
                     color={colors.info}
                     colors={colors}
@@ -256,9 +284,22 @@ export default function RedacaoDetalheScreen() {
   );
 }
 
+function ErrorStep({ n, text, colors, mono }: { n: string; text: string; colors: any; mono?: boolean }) {
+  return (
+    <View style={styles.errorStepRow}>
+      <View style={[styles.errorStepNum, { backgroundColor: colors.accent + '20' }]}>
+        <Text style={[styles.errorStepNumText, { color: colors.accent }]}>{n}</Text>
+      </View>
+      <Text style={[styles.errorStepText, { color: colors.softText }, mono && { fontFamily: 'monospace', fontSize: 12 }]}>
+        {text}
+      </Text>
+    </View>
+  );
+}
+
 function InfoRow({ label, value, colors }: { label: string; value: string; colors: any }) {
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, { borderBottomColor: colors.border }]}>
       <Text style={[styles.rowLabel, { color: colors.mutedText }]}>{label}</Text>
       <Text style={[styles.rowValue, { color: colors.text }]}>{value}</Text>
     </View>
@@ -293,39 +334,54 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   row: { gap: theme.spacing.xs, paddingBottom: theme.spacing.sm, borderBottomWidth: 1 },
-  rowLabel: { ...theme.typography.monoLabel },
-  rowValue: { ...theme.typography.title },
-  blockTitle: { ...theme.typography.monoLabel, marginBottom: theme.spacing.sm },
-  previewImage: { width: '100%', height: 300, borderWidth: 1 },
-  errorTitle: { ...theme.typography.title, marginBottom: theme.spacing.xs },
-  errorText: { ...theme.typography.body, lineHeight: 24 },
-  emptyText: { ...theme.typography.body },
+  rowLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.1 },
+  rowValue: { fontSize: 16, fontWeight: '600', lineHeight: 22 },
+  blockTitle: { fontSize: 14, fontWeight: '700', letterSpacing: -0.1, marginBottom: 10 },
+  previewImage: { width: '100%', height: 300, borderRadius: 12 },
+  errorCard: { borderWidth: 1 },
+  errorHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: theme.spacing.sm },
+  errorIconWrap: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  errorTitle: { fontSize: 16, fontWeight: '700', lineHeight: 22, flex: 1 },
+  errorText: { fontSize: 14, lineHeight: 22, marginBottom: theme.spacing.sm },
+  errorSteps: { padding: theme.spacing.md, gap: 10 },
+  errorStepsTitle: { fontSize: 12, fontWeight: '700', letterSpacing: 0.1, marginBottom: 4 },
+  errorStepRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  errorStepNum: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
+  errorStepNumText: { fontSize: 11, fontWeight: '700' },
+  errorStepText: { flex: 1, fontSize: 13, lineHeight: 20 },
+  emptyText: { fontSize: 15, lineHeight: 22 },
   // Retry queue
   queueCard: { borderWidth: 1 },
   queueRow: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm },
   queueDot: { width: 8, height: 8, borderRadius: 4, marginTop: 6 },
-  queueText: { flex: 1, ...theme.typography.bodySmall, lineHeight: 20 },
+  queueText: { flex: 1, fontSize: 13, lineHeight: 20 },
   // AI CTA
   aiCta: {
-    borderWidth: 1,
-    borderRadius: theme.radius.md,
+    borderRadius: 16,
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
+    shadowColor: '#1B2559',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 3,
   },
   aiCtaHeader: { alignItems: 'flex-start' },
-  aiCtaBadge: { paddingHorizontal: theme.spacing.sm, paddingVertical: theme.spacing.xxs, borderRadius: theme.radius.pill },
-  aiCtaBadgeText: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.4 },
-  aiCtaTitle: { ...theme.typography.h3 },
-  aiCtaDesc: { ...theme.typography.body, lineHeight: 24 },
-  aiCtaSteps: { borderWidth: 1, borderRadius: theme.radius.md, overflow: 'hidden' },
+  aiCtaBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+  aiCtaBadgeText: { fontSize: 11, fontWeight: '700' },
+  aiCtaTitle: { fontSize: 20, fontWeight: '700', lineHeight: 26, letterSpacing: -0.2 },
+  aiCtaDesc: { fontSize: 15, lineHeight: 22 },
+  aiCtaSteps: { borderRadius: 12, overflow: 'hidden' },
   aiCtaStep: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, padding: theme.spacing.sm },
-  aiCtaStepNum: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  aiCtaStepNumText: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700' },
-  aiCtaStepLabel: { ...theme.typography.bodySmall },
+  aiCtaStepNum: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  aiCtaStepNumText: { fontSize: 11, fontWeight: '700', color: '#fff' },
+  aiCtaStepLabel: { fontSize: 13, lineHeight: 18 },
+  backendHint: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8 },
+  backendHintText: { flex: 1, fontSize: 12, lineHeight: 18, fontWeight: '600' },
   // Summary chips
-  summaryGrid: { flexDirection: 'row', gap: theme.spacing.sm, marginBottom: theme.spacing.sm },
-  chip: { flex: 1, borderWidth: 1, borderRadius: theme.radius.md, padding: theme.spacing.sm, gap: 4, alignItems: 'center' },
-  chipLabel: { ...theme.typography.monoLabel, fontSize: 9 },
+  summaryGrid: { flexDirection: 'row', gap: 8, marginBottom: theme.spacing.sm },
+  chip: { flex: 1, borderRadius: 12, padding: theme.spacing.sm, gap: 4, alignItems: 'center' },
+  chipLabel: { fontSize: 10, fontWeight: '600', letterSpacing: 0.1 },
   chipValue: { fontSize: 16, fontWeight: '700' },
-  resumeObs: { ...theme.typography.bodySmall, lineHeight: 20, paddingTop: theme.spacing.sm, borderTopWidth: 1, marginTop: theme.spacing.xs },
+  resumeObs: { fontSize: 13, lineHeight: 20, paddingTop: theme.spacing.sm, borderTopWidth: 1, marginTop: theme.spacing.xs },
 });

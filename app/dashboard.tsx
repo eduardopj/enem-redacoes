@@ -55,14 +55,14 @@ export default function DashboardScreen() {
 
   const contextualAction = useMemo(() => {
     if (teacherStudents.length === 0)
-      return { title: 'Cadastre o primeiro aluno', subtitle: 'Esse é o primeiro passo.', buttonLabel: 'Cadastrar aluno', onPress: () => router.push('/novo-aluno') };
+      return { title: 'Cadastre o primeiro aluno', subtitle: 'Esse é o primeiro passo para começar a corrigir.', buttonLabel: 'Cadastrar aluno', onPress: () => router.push('/novo-aluno'), icon: 'person-add-outline' as const };
     if (teacherThemes.length === 0)
-      return { title: 'Cadastre o primeiro tema', subtitle: 'Sem tema, a correção fica sem contexto.', buttonLabel: 'Cadastrar tema', onPress: () => router.push('/novo-tema') };
+      return { title: 'Cadastre o primeiro tema', subtitle: 'Defina o tema antes de enviar a redação.', buttonLabel: 'Cadastrar tema', onPress: () => router.push('/novo-tema'), icon: 'book-outline' as const };
     if (pendingEssays.length > 0)
-      return { title: 'Há redações aguardando', subtitle: 'Abra a próxima e siga para a correção.', buttonLabel: 'Corrigir agora', onPress: () => router.push(`/redacao/${pendingEssays[0].id}`) };
+      return { title: `${pendingEssays.length} redação${pendingEssays.length > 1 ? 'ões' : ''} aguardando`, subtitle: 'Abra a próxima e inicie a correção com IA.', buttonLabel: 'Corrigir agora', onPress: () => router.push(`/redacao/${pendingEssays[0].id}`), icon: 'sparkles-outline' as const };
     if (correctedEssays.length > 0)
-      return { title: 'Última correção pronta', subtitle: 'Revise o parecer mais recente.', buttonLabel: 'Ver última correção', onPress: () => router.push(`/resultado/${correctedEssays[0].id}`) };
-    return { title: 'Criar nova redação', subtitle: 'Sua base já está pronta.', buttonLabel: 'Nova redação', onPress: () => router.push('/nova-redacao') };
+      return { title: 'Última correção pronta', subtitle: 'Revise o parecer mais recente.', buttonLabel: 'Ver resultado', onPress: () => router.push(`/resultado/${correctedEssays[0].id}`), icon: 'analytics-outline' as const };
+    return { title: 'Tudo pronto!', subtitle: 'Cadastre a primeira redação da turma.', buttonLabel: 'Nova redação', onPress: () => router.push('/nova-redacao'), icon: 'add-circle-outline' as const };
   }, [teacherStudents.length, teacherThemes.length, pendingEssays, correctedEssays]);
 
   const getStudentName = (studentId: string) =>
@@ -71,89 +71,144 @@ export default function DashboardScreen() {
   return (
     <ProtectedRoute>
       <ScreenContainer showHomeButton={false}>
-        <AppHeader
-          eyebrow="PAINEL"
-          title={`Olá, ${teacherFirstName}`}
-          subtitle="Visão geral da turma."
-          showLogout
-        />
+
+        {/* Header com avatar */}
+        <StaggerItem index={0}>
+          <AppHeader
+            eyebrow={`Bem-vindo de volta`}
+            title={`Olá, ${teacherFirstName} 👋`}
+            subtitle="Visão geral da turma"
+            showLogout
+          />
+        </StaggerItem>
 
         {/* Onboarding */}
         {isNewUser ? (
-          <StaggerItem index={0}>
+          <StaggerItem index={1}>
             <Card>
-              <Text style={[styles.sectionLabel, { color: colors.softText }]}>COMO COMEÇAR</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Como começar</Text>
+              <Text style={[styles.sectionSub, { color: colors.mutedText }]}>
+                Siga as etapas abaixo para configurar sua turma.
+              </Text>
               <View style={styles.onboardingSteps}>
                 <OnboardingStep number="1" title="Cadastre um aluno" desc="Adicione os alunos que vão enviar redações." onPress={() => router.push('/novo-aluno')} colors={colors} />
                 <View style={[styles.stepDivider, { backgroundColor: colors.border }]} />
-                <OnboardingStep number="2" title="Cadastre um tema" desc="Defina o tema antes de enviar." onPress={() => router.push('/novo-tema')} colors={colors} />
+                <OnboardingStep number="2" title="Cadastre um tema" desc="Defina o tema antes de enviar a redação." onPress={() => router.push('/novo-tema')} colors={colors} />
                 <View style={[styles.stepDivider, { backgroundColor: colors.border }]} />
-                <OnboardingStep number="3" title="Envie a redação" desc="Foto, galeria ou documento — a IA corrige." onPress={() => router.push('/nova-redacao')} colors={colors} />
+                <OnboardingStep number="3" title="Envie a redação" desc="Foto ou galeria — a IA corrige em segundos." onPress={() => router.push('/nova-redacao')} colors={colors} />
               </View>
             </Card>
           </StaggerItem>
         ) : null}
 
-        {/* Próxima ação */}
-        <StaggerItem index={isNewUser ? 1 : 0}>
-          <Card>
-            <Text style={[styles.sectionLabel, { color: colors.softText }]}>PRÓXIMA AÇÃO</Text>
-            <Text style={[styles.heroTitle, { color: colors.text }]}>{contextualAction.title}</Text>
-            <Text style={[styles.heroText, { color: colors.mutedText }]}>{contextualAction.subtitle}</Text>
-            <View style={styles.heroButtonWrap}>
-              <Button title={contextualAction.buttonLabel} leftIcon="flash-outline" onPress={contextualAction.onPress} />
+        {/* Próxima ação em destaque */}
+        <StaggerItem index={isNewUser ? 2 : 1}>
+          <View style={[styles.actionCard, { backgroundColor: colors.accent }]}>
+            <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+              <Ionicons name={contextualAction.icon} size={22} color="#fff" />
             </View>
-          </Card>
+            <View style={styles.actionText}>
+              <Text style={styles.actionTitle}>{contextualAction.title}</Text>
+              <Text style={styles.actionSub}>{contextualAction.subtitle}</Text>
+            </View>
+            <Pressable
+              onPress={contextualAction.onPress}
+              style={styles.actionBtn}
+            >
+              <Ionicons name="arrow-forward" size={18} color={colors.accent} />
+            </Pressable>
+          </View>
         </StaggerItem>
 
-        {/* KPIs da turma — apenas se houver redações corrigidas */}
+        {/* KPIs — grid 2×2 */}
+        <StaggerItem index={2}>
+          <View style={styles.kpiGrid}>
+            <KpiCard
+              label="Alunos"
+              value={teacherStudents.length}
+              icon="people"
+              iconBg="#EEF2FF"
+              iconColor="#4E76F8"
+              onPress={() => router.push('/alunos')}
+              colors={colors}
+            />
+            <KpiCard
+              label="Temas"
+              value={teacherThemes.length}
+              icon="library"
+              iconBg="#F0FDF4"
+              iconColor="#22C55E"
+              onPress={() => router.push('/temas')}
+              colors={colors}
+            />
+            <KpiCard
+              label="Pendentes"
+              value={pendingEssays.length}
+              icon="time"
+              iconBg={pendingEssays.length > 0 ? '#FEF3C7' : '#F5F7FD'}
+              iconColor={pendingEssays.length > 0 ? '#F59E0B' : '#8E9AB8'}
+              alert={pendingEssays.length > 0}
+              onPress={() => router.push('/redacoes')}
+              colors={colors}
+            />
+            <KpiCard
+              label="Corrigidas"
+              value={correctedEssays.length}
+              icon="checkmark-circle"
+              iconBg="#DBEAFE"
+              iconColor="#3B82F6"
+              onPress={() => router.push('/redacoes')}
+              colors={colors}
+            />
+          </View>
+        </StaggerItem>
+
+        {/* Média da turma — só se houver correções */}
         {correctedEssays.length > 0 ? (
-          <StaggerItem index={2}>
+          <StaggerItem index={3}>
             <Card>
-              <View style={styles.kpiHeader}>
-                <Text style={[styles.sectionLabel, { color: colors.softText }]}>TURMA</Text>
-                <Pressable onPress={() => router.push('/analytics' as any)} style={styles.kpiLink}>
-                  <Text style={[styles.kpiLinkText, { color: colors.accent }]}>Ver análise completa</Text>
-                  <Ionicons name="arrow-forward" size={14} color={colors.accent} />
+              <View style={styles.cardHeader}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Desempenho da turma</Text>
+                <Pressable onPress={() => router.push('/analytics' as any)}>
+                  <Text style={[styles.linkText, { color: colors.accent }]}>Ver análise</Text>
                 </Pressable>
               </View>
-              <View style={styles.kpiRow}>
-                <KpiBlock
-                  label="MÉDIA"
+
+              <View style={styles.classKpiRow}>
+                <ClassKpi
+                  label="Média"
                   value={classStats.classAverage ?? '--'}
                   sub={classStats.classAverage ? getScoreLabel(classStats.classAverage) : ''}
-                  valueColor={classStats.classAverage ? getScoreColor(classStats.classAverage, colors) : colors.text}
+                  color={classStats.classAverage ? getScoreColor(classStats.classAverage, colors) : colors.mutedText}
                   colors={colors}
                 />
-                <View style={[styles.kpiDivider, { backgroundColor: colors.border }]} />
-                <KpiBlock
-                  label="MAIOR NOTA"
+                <View style={[styles.kpiSep, { backgroundColor: colors.border }]} />
+                <ClassKpi
+                  label="Maior nota"
                   value={classStats.classHighest ?? '--'}
                   sub={classStats.classHighest ? getScoreLabel(classStats.classHighest) : ''}
-                  valueColor={classStats.classHighest ? getScoreColor(classStats.classHighest, colors) : colors.text}
+                  color={classStats.classHighest ? getScoreColor(classStats.classHighest, colors) : colors.mutedText}
                   colors={colors}
                 />
-                <View style={[styles.kpiDivider, { backgroundColor: colors.border }]} />
-                <KpiBlock
-                  label="MENOR NOTA"
+                <View style={[styles.kpiSep, { backgroundColor: colors.border }]} />
+                <ClassKpi
+                  label="Menor nota"
                   value={classStats.classLowest ?? '--'}
                   sub={classStats.classLowest ? getScoreLabel(classStats.classLowest) : ''}
-                  valueColor={classStats.classLowest ? getScoreColor(classStats.classLowest, colors) : colors.text}
+                  color={classStats.classLowest ? getScoreColor(classStats.classLowest, colors) : colors.mutedText}
                   colors={colors}
                 />
               </View>
 
-              {/* Competência mais fraca da turma */}
               {classStats.weakestClassCompetency ? (
-                <View style={[styles.weaknessRow, { backgroundColor: colors.input, borderRadius: 4 }]}>
-                  <Ionicons name="alert-circle-outline" size={16} color={colors.warning} />
-                  <Text style={[styles.weaknessText, { color: colors.softText }]}>
-                    Ponto de atenção:{' '}
-                    <Text style={{ color: colors.warning, fontWeight: '600' }}>
+                <View style={[styles.weakRow, { backgroundColor: colors.warningSoft, borderRadius: 12 }]}>
+                  <Ionicons name="warning-outline" size={15} color={colors.warning} />
+                  <Text style={[styles.weakText, { color: colors.warning }]}>
+                    Atenção:{' '}
+                    <Text style={{ fontWeight: '700' }}>
                       {getCompetencyLabel(classStats.weakestClassCompetency)}
-                    </Text>{' '}
-                    — menor média da turma (
-                    {classStats.avgCompetencies[classStats.weakestClassCompetency]} pts)
+                    </Text>
+                    {' '}— menor média da turma
                   </Text>
                 </View>
               ) : null}
@@ -161,32 +216,18 @@ export default function DashboardScreen() {
           </StaggerItem>
         ) : null}
 
-        {/* Métricas em grid 2×2 */}
-        <View style={styles.metricsGrid}>
-          <StaggerItem index={3}>
-            <MetricCard label="ALUNOS" value={teacherStudents.length} helper="Cadastrados" colors={colors} />
-          </StaggerItem>
-          <StaggerItem index={4}>
-            <MetricCard label="TEMAS" value={teacherThemes.length} helper="Disponíveis" colors={colors} />
-          </StaggerItem>
-          <StaggerItem index={5}>
-            <MetricCard label="PENDENTES" value={pendingEssays.length} helper="Aguardando" alert={pendingEssays.length > 0} colors={colors} />
-          </StaggerItem>
-          <StaggerItem index={6}>
-            <MetricCard label="CORRIGIDAS" value={correctedEssays.length} helper="Prontas" colors={colors} />
-          </StaggerItem>
-        </View>
-
-        {/* Top performers */}
+        {/* Top alunos */}
         {classStats.topStudents.length > 0 ? (
-          <StaggerItem index={7}>
+          <StaggerItem index={4}>
             <Card>
-              <Text style={[styles.sectionLabel, { color: colors.softText }]}>TOP ALUNOS</Text>
-              <View>
+              <View style={styles.cardHeader}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Top alunos</Text>
+              </View>
+              <View style={styles.topList}>
                 {classStats.topStudents.map((item, i) => {
                   const name = getStudentName(item.studentId);
                   const pct = scorePct(item.averageScore);
-                  const scoreColor = getScoreColor(item.averageScore, colors);
+                  const sColor = getScoreColor(item.averageScore, colors);
                   return (
                     <Pressable
                       key={item.studentId}
@@ -197,17 +238,17 @@ export default function DashboardScreen() {
                       ]}
                     >
                       <View style={[styles.rankBadge, { backgroundColor: i === 0 ? colors.accent : colors.input }]}>
-                        <Text style={[styles.rankText, { color: i === 0 ? colors.white : colors.softText }]}>
+                        <Text style={[styles.rankText, { color: i === 0 ? '#fff' : colors.softText }]}>
                           {i + 1}
                         </Text>
                       </View>
                       <View style={styles.topStudentInfo}>
                         <Text style={[styles.topStudentName, { color: colors.text }]}>{name}</Text>
                         <View style={[styles.progressTrack, { backgroundColor: colors.input }]}>
-                          <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: scoreColor }]} />
+                          <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: sColor }]} />
                         </View>
                       </View>
-                      <Text style={[styles.topStudentScore, { color: scoreColor }]}>{item.averageScore}</Text>
+                      <Text style={[styles.topStudentScore, { color: sColor }]}>{item.averageScore}</Text>
                     </Pressable>
                   );
                 })}
@@ -216,38 +257,41 @@ export default function DashboardScreen() {
           </StaggerItem>
         ) : null}
 
-        {/* Mini gráfico de notas */}
+        {/* Mini gráfico de notas recentes */}
         {correctedEssays.length > 0 ? (
-          <StaggerItem index={8}>
+          <StaggerItem index={5}>
             <Card>
-              <Text style={[styles.sectionLabel, { color: colors.softText }]}>NOTAS RECENTES</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Notas recentes</Text>
               <MiniBarChart essays={correctedEssays.slice(0, 6)} getStudentName={getStudentName} colors={colors} />
             </Card>
           </StaggerItem>
         ) : null}
 
         {/* Atalhos rápidos */}
-        <StaggerItem index={9}>
+        <StaggerItem index={6}>
           <Card>
-            <Text style={[styles.sectionLabel, { color: colors.softText }]}>ATALHOS</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Atalhos rápidos</Text>
             <View style={styles.quickGrid}>
-              <QuickActionCard icon="add-circle-outline" title="Nova redação" onPress={() => router.push('/nova-redacao')} colors={colors} />
-              <QuickActionCard icon="people-outline" title="Alunos" onPress={() => router.push('/alunos')} colors={colors} />
-              <QuickActionCard icon="library-outline" title="Temas" onPress={() => router.push('/temas')} colors={colors} />
-              <QuickActionCard icon="bar-chart-outline" title="Análise" onPress={() => router.push('/analytics' as any)} colors={colors} />
+              <QuickAction icon="add-circle" iconBg="#EEF2FF" iconColor="#4E76F8" title="Nova redação" onPress={() => router.push('/nova-redacao')} colors={colors} />
+              <QuickAction icon="people" iconBg="#F0FDF4" iconColor="#22C55E" title="Alunos" onPress={() => router.push('/alunos')} colors={colors} />
+              <QuickAction icon="library" iconBg="#FFF7ED" iconColor="#F59E0B" title="Temas" onPress={() => router.push('/temas')} colors={colors} />
+              <QuickAction icon="bar-chart" iconBg="#DBEAFE" iconColor="#3B82F6" title="Análise" onPress={() => router.push('/analytics' as any)} colors={colors} />
             </View>
           </Card>
         </StaggerItem>
 
         {/* Último movimento */}
         {lastEssay ? (
-          <StaggerItem index={10}>
+          <StaggerItem index={7}>
             <Card>
-              <Text style={[styles.sectionLabel, { color: colors.softText }]}>ÚLTIMO MOVIMENTO</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Último movimento</Text>
               <View style={styles.lastRow}>
+                <View style={[styles.lastAvatar, { backgroundColor: colors.accent + '18' }]}>
+                  <Ionicons name="document-text-outline" size={20} color={colors.accent} />
+                </View>
                 <View style={styles.lastInfo}>
                   <Text style={[styles.lastStudent, { color: colors.text }]}>{getStudentName(lastEssay.studentId)}</Text>
-                  <Text style={[styles.lastTheme, { color: colors.mutedText }]}>{lastEssay.themeTitle}</Text>
+                  <Text style={[styles.lastTheme, { color: colors.mutedText }]} numberOfLines={1}>{lastEssay.themeTitle}</Text>
                 </View>
                 <StatusBadge status={lastEssay.status} />
               </View>
@@ -265,6 +309,7 @@ export default function DashboardScreen() {
             </Card>
           </StaggerItem>
         ) : null}
+
       </ScreenContainer>
     </ProtectedRoute>
   );
@@ -272,36 +317,46 @@ export default function DashboardScreen() {
 
 // ─── Sub-components ────────────────────────────────────────────────────────
 
-function KpiBlock({ label, value, sub, valueColor, colors }: {
-  label: string; value: number | string; sub: string; valueColor: string; colors: any;
+function KpiCard({ label, value, icon, iconBg, iconColor, onPress, alert = false, colors }: {
+  label: string; value: number; icon: ComponentProps<typeof Ionicons>['name']; iconBg: string; iconColor: string; onPress?: () => void; alert?: boolean; colors: any;
 }) {
   return (
-    <View style={styles.kpiBlock}>
-      <Text style={[styles.kpiLabel, { color: colors.softText }]}>{label}</Text>
-      <Text style={[styles.kpiValue, { color: valueColor }]}>{value}</Text>
-      {sub ? <Text style={[styles.kpiSub, { color: colors.mutedText }]}>{sub}</Text> : null}
+    <Pressable
+      onPress={onPress}
+      style={[styles.kpiCard, { backgroundColor: colors.surface }]}
+    >
+      <View style={[styles.kpiIcon, { backgroundColor: iconBg }]}>
+        <Ionicons name={icon} size={20} color={iconColor} />
+      </View>
+      <Text style={[styles.kpiValue, { color: alert ? colors.warning : colors.text }]}>{value}</Text>
+      <Text style={[styles.kpiLabel, { color: colors.mutedText }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function ClassKpi({ label, value, sub, color, colors }: {
+  label: string; value: number | string; sub: string; color: string; colors: any;
+}) {
+  return (
+    <View style={styles.classKpiBlock}>
+      <Text style={[styles.classKpiLabel, { color: colors.mutedText }]}>{label}</Text>
+      <Text style={[styles.classKpiValue, { color }]}>{value}</Text>
+      {sub ? <Text style={[styles.classKpiSub, { color: colors.mutedText }]}>{sub}</Text> : null}
     </View>
   );
 }
 
-function MetricCard({ label, value, helper, alert = false, colors }: {
-  label: string; value: number; helper: string; alert?: boolean; colors: any;
+function QuickAction({ icon, iconBg, iconColor, title, onPress, colors }: {
+  icon: ComponentProps<typeof Ionicons>['name']; iconBg: string; iconColor: string; title: string; onPress: () => void; colors: any;
 }) {
   return (
-    <View style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: alert ? colors.warning : colors.border }]}>
-      <Text style={[styles.metricLabel, { color: colors.softText }]}>{label}</Text>
-      <Text style={[styles.metricValue, { color: alert ? colors.warning : colors.text }]}>{value}</Text>
-      <Text style={[styles.metricHelper, { color: colors.mutedText }]}>{helper}</Text>
-    </View>
-  );
-}
-
-function QuickActionCard({ icon, title, onPress, colors }: {
-  icon: ComponentProps<typeof Ionicons>['name']; title: string; onPress: () => void; colors: any;
-}) {
-  return (
-    <Pressable onPress={onPress} style={[styles.quickCard, { borderColor: colors.border, backgroundColor: colors.input }]}>
-      <Ionicons name={icon} size={24} color={colors.accent} />
+    <Pressable
+      onPress={onPress}
+      style={[styles.quickCard, { backgroundColor: colors.input }]}
+    >
+      <View style={[styles.quickIcon, { backgroundColor: iconBg }]}>
+        <Ionicons name={icon} size={22} color={iconColor} />
+      </View>
       <Text style={[styles.quickTitle, { color: colors.text }]}>{title}</Text>
     </Pressable>
   );
@@ -313,12 +368,13 @@ function OnboardingStep({ number, title, desc, onPress, colors }: {
   return (
     <Pressable onPress={onPress} style={styles.step}>
       <View style={[styles.stepNum, { backgroundColor: colors.accent }]}>
-        <Text style={[styles.stepNumText, { color: colors.white }]}>{number}</Text>
+        <Text style={[styles.stepNumText, { color: '#fff' }]}>{number}</Text>
       </View>
       <View style={styles.stepText}>
         <Text style={[styles.stepTitle, { color: colors.text }]}>{title}</Text>
         <Text style={[styles.stepDesc, { color: colors.mutedText }]}>{desc}</Text>
       </View>
+      <Ionicons name="chevron-forward" size={16} color={colors.mutedText} />
     </Pressable>
   );
 }
@@ -346,7 +402,7 @@ function MiniBarChart({ essays, getStudentName, colors }: {
         return (
           <Pressable key={essay.id} onPress={() => router.push(`/resultado/${essay.id}` as any)} style={styles.barItem}>
             <Text style={[styles.barScore, { color: colors.text }]}>{score}</Text>
-            <View style={[styles.barTrack, { backgroundColor: colors.input, borderColor: colors.border }]}>
+            <View style={[styles.barTrack, { backgroundColor: colors.input }]}>
               <View style={[styles.barFill, { height: `${pct}%`, backgroundColor: barColor }]} />
             </View>
             <Text style={[styles.barLabel, { color: colors.mutedText }]}>{name}</Text>
@@ -358,56 +414,205 @@ function MiniBarChart({ essays, getStudentName, colors }: {
 }
 
 const styles = StyleSheet.create({
-  sectionLabel: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.6, marginBottom: 12 },
-  heroTitle: { fontSize: 28, lineHeight: 32, fontWeight: '700', letterSpacing: -0.6, marginBottom: 8 },
-  heroText: { fontSize: 15, lineHeight: 24 },
-  heroButtonWrap: { marginTop: 16 },
-  metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
-  metricCard: { flex: 1, minWidth: '45%', minHeight: 110, borderWidth: 1, borderRadius: 4, padding: 16, gap: 4, alignItems: 'center' },
-  metricLabel: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.6, textAlign: 'center' },
-  metricValue: { fontSize: 52, lineHeight: 52, fontWeight: '700', letterSpacing: -1.6, textAlign: 'center' },
-  metricHelper: { fontSize: 13, lineHeight: 20, marginTop: 4, textAlign: 'center' },
-  quickGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  quickCard: { flex: 1, minWidth: '45%', borderWidth: 1, borderRadius: 4, padding: 14, gap: 8, alignItems: 'center' },
-  quickTitle: { fontSize: 13, lineHeight: 20, fontWeight: '600', textAlign: 'center' },
-  lastRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 },
-  lastInfo: { flex: 1, gap: 4 },
-  lastStudent: { fontSize: 18, lineHeight: 24, fontWeight: '600' },
-  lastTheme: { fontSize: 15, lineHeight: 24 },
-  lastBtn: { marginTop: 16 },
-  onboardingSteps: { gap: 0 },
-  step: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, paddingVertical: 12 },
-  stepNum: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  stepNumText: { fontFamily: 'monospace', fontSize: 11, fontWeight: '700' },
-  stepText: { flex: 1, gap: 2 },
-  stepTitle: { fontSize: 15, lineHeight: 22, fontWeight: '600' },
-  stepDesc: { fontSize: 13, lineHeight: 20 },
-  stepDivider: { height: 1, marginLeft: 42 },
-  chartWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, height: 100 },
-  barItem: { flex: 1, alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' },
-  barScore: { fontSize: 10, fontWeight: '700' },
-  barTrack: { width: '80%', flex: 1, borderWidth: 1, borderRadius: 2, overflow: 'hidden', justifyContent: 'flex-end' },
-  barFill: { width: '100%', borderRadius: 2 },
-  barLabel: { fontSize: 10, textAlign: 'center' },
-  // KPI turma
-  kpiHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  kpiLink: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  kpiLinkText: { fontSize: 12, fontWeight: '600' },
-  kpiRow: { flexDirection: 'row', gap: 0 },
-  kpiBlock: { flex: 1, gap: 2, alignItems: 'center' },
-  kpiDivider: { width: 1, marginVertical: 4 },
-  kpiLabel: { fontFamily: 'monospace', fontSize: 9, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.4, textAlign: 'center' },
-  kpiValue: { fontSize: 30, lineHeight: 34, fontWeight: '700', letterSpacing: -0.8, textAlign: 'center' },
-  kpiSub: { fontSize: 11, lineHeight: 16, textAlign: 'center' },
-  weaknessRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 10, marginTop: 12 },
-  weaknessText: { flex: 1, fontSize: 12, lineHeight: 18 },
-  // Top performers
+  // Section headers
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+    marginBottom: 4,
+  },
+  sectionSub: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  linkText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // Action card (highlight)
+  actionCard: {
+    borderRadius: 18,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    shadowColor: '#4E76F8',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  actionIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  actionText: { flex: 1, gap: 3 },
+  actionTitle: { color: '#fff', fontSize: 15, fontWeight: '700', lineHeight: 20 },
+  actionSub: { color: 'rgba(255,255,255,0.75)', fontSize: 12, lineHeight: 16 },
+  actionBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+
+  // KPI grid
+  kpiGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  kpiCard: {
+    flex: 1,
+    minWidth: '45%',
+    borderRadius: 16,
+    padding: 16,
+    gap: 6,
+    shadowColor: '#1B2559',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  kpiIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  kpiValue: {
+    fontSize: 32,
+    fontWeight: '700',
+    letterSpacing: -0.8,
+    lineHeight: 36,
+  },
+  kpiLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 16,
+  },
+
+  // Class KPI
+  classKpiRow: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  classKpiBlock: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 3,
+  },
+  classKpiLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.1,
+  },
+  classKpiValue: {
+    fontSize: 28,
+    fontWeight: '700',
+    lineHeight: 34,
+    letterSpacing: -0.6,
+  },
+  classKpiSub: {
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  kpiSep: {
+    width: 1,
+    marginVertical: 4,
+  },
+  weakRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    padding: 12,
+  },
+  weakText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+
+  // Top students
+  topList: { gap: 0 },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
   rankBadge: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   rankText: { fontSize: 12, fontWeight: '700' },
   topStudentInfo: { flex: 1, gap: 6 },
-  topStudentName: { fontSize: 14, lineHeight: 20, fontWeight: '600' },
-  progressTrack: { height: 4, borderRadius: 2, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 2 },
-  topStudentScore: { fontSize: 18, lineHeight: 22, fontWeight: '700', minWidth: 42, textAlign: 'right' },
+  topStudentName: { fontSize: 14, fontWeight: '600', lineHeight: 18 },
+  progressTrack: { height: 6, borderRadius: 3, overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: 3 },
+  topStudentScore: { fontSize: 16, fontWeight: '700', minWidth: 38, textAlign: 'right' },
+
+  // Quick actions
+  quickGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 12,
+  },
+  quickCard: {
+    flex: 1,
+    minWidth: '45%',
+    borderRadius: 14,
+    padding: 14,
+    gap: 8,
+    alignItems: 'center',
+  },
+  quickIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+
+  // Last essay
+  lastRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
+  lastAvatar: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  lastInfo: { flex: 1, gap: 3 },
+  lastStudent: { fontSize: 15, fontWeight: '600', lineHeight: 20 },
+  lastTheme: { fontSize: 13, lineHeight: 17 },
+  lastBtn: {},
+
+  // Onboarding
+  onboardingSteps: { gap: 0, marginTop: 4 },
+  step: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14 },
+  stepNum: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  stepNumText: { fontSize: 13, fontWeight: '700' },
+  stepText: { flex: 1, gap: 2 },
+  stepTitle: { fontSize: 15, fontWeight: '600', lineHeight: 20 },
+  stepDesc: { fontSize: 13, lineHeight: 18 },
+  stepDivider: { height: 1, marginLeft: 44 },
+
+  // Mini bar chart
+  chartWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, height: 100, marginTop: 12 },
+  barItem: { flex: 1, alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' },
+  barScore: { fontSize: 10, fontWeight: '700' },
+  barTrack: { width: '80%', flex: 1, borderRadius: 4, overflow: 'hidden', justifyContent: 'flex-end' },
+  barFill: { width: '100%', borderRadius: 4 },
+  barLabel: { fontSize: 10, textAlign: 'center' },
 });

@@ -55,7 +55,7 @@ export default function NovoTemaScreen() {
     <ProtectedRoute>
       <ScreenContainer showBack>
         <AppHeader
-          eyebrow="NOVO TEMA"
+          eyebrow="Novo tema"
           title="Cadastrar tema"
           subtitle="Crie um novo tema e depois continue o fluxo da redação."
         />
@@ -67,7 +67,7 @@ export default function NovoTemaScreen() {
               name="title"
               render={({ field: { onChange, onBlur, value } }) => (
                 <Input
-                  label="TÍTULO DO TEMA"
+                  label="Título do tema"
                   placeholder="Ex.: A importância da leitura na formação cidadã"
                   leftIcon="book-outline"
                   onBlur={onBlur}
@@ -83,7 +83,7 @@ export default function NovoTemaScreen() {
               name="category"
               render={({ field: { onChange, onBlur, value } }) => (
                 <Input
-                  label="CATEGORIA"
+                  label="Categoria"
                   placeholder="Ex.: Educação e Sociedade"
                   leftIcon="grid-outline"
                   onBlur={onBlur}

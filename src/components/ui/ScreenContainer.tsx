@@ -1,16 +1,16 @@
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { PropsWithChildren } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppFooter } from './AppFooter';
-import { NoiseLayer } from './NoiseLayer';
 import { TopBar } from './TopBar';
 
 type ScreenContainerProps = PropsWithChildren<{
   noScroll?: boolean;
   showBack?: boolean;
   showHomeButton?: boolean;
+  showFooter?: boolean;
 }>;
 
 export function ScreenContainer({
@@ -18,6 +18,7 @@ export function ScreenContainer({
   noScroll = false,
   showBack = false,
   showHomeButton = true,
+  showFooter = true,
 }: ScreenContainerProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
@@ -25,7 +26,6 @@ export function ScreenContainer({
   if (noScroll) {
     return (
       <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: colors.background }]}>
-        <NoiseLayer />
         <TopBar showBack={showBack} showHomeButton={showHomeButton} />
         <View
           style={[
@@ -41,20 +41,27 @@ export function ScreenContainer({
 
   return (
     <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: colors.background }]}>
-      <NoiseLayer />
       <TopBar showBack={showBack} showHomeButton={showHomeButton} />
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.content,
-          { paddingBottom: Math.max(24, insets.bottom + 16) },
-        ]}
-        showsVerticalScrollIndicator={false}
-        bounces
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
       >
-        {children}
-      </ScrollView>
-      <AppFooter />
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: Math.max(28, insets.bottom + 16) },
+          ]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          bounces
+        >
+          {children}
+        </ScrollView>
+      </KeyboardAvoidingView>
+      {showFooter && <AppFooter />}
     </SafeAreaView>
   );
 }
@@ -63,16 +70,19 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
   },
+  keyboardView: {
+    flex: 1,
+  },
   scroll: {
     flex: 1,
   },
   content: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
-    gap: theme.spacing.lg,
+    paddingHorizontal: 20,
+    paddingTop: theme.spacing.sm,
+    gap: theme.spacing.md,
   },
   staticContent: {
     flex: 1,
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: 20,
   },
 });

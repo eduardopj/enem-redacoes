@@ -30,11 +30,15 @@ export function ThemeToggle() {
   }));
 
   return (
-    <Pressable onPress={handlePress} style={styles.btn} hitSlop={10}>
+    <Pressable
+      onPress={handlePress}
+      style={[styles.btn, { backgroundColor: colors.surface }]}
+      hitSlop={10}
+    >
       <Animated.View style={animStyle}>
         <Ionicons
           name={isDark ? 'moon-outline' : 'sunny-outline'}
-          size={20}
+          size={18}
           color={colors.softText}
         />
       </Animated.View>
@@ -44,6 +48,15 @@ export function ThemeToggle() {
 
 const styles = StyleSheet.create({
   btn: {
-    padding: 6,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#1B2559',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
 });

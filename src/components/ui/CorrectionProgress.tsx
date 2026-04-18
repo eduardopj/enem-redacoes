@@ -24,7 +24,6 @@ export function CorrectionProgress({ currentStep, feedback }: CorrectionProgress
   const progressPct = ((currentStep - 1) / 3) * 100;
 
   useEffect(() => {
-    // Pulse animation for active dot
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
@@ -32,14 +31,12 @@ export function CorrectionProgress({ currentStep, feedback }: CorrectionProgress
       ])
     ).start();
 
-    // Glow sweep
     Animated.loop(
       Animated.timing(glowAnim, { toValue: 1, duration: 1800, easing: Easing.linear, useNativeDriver: false })
     ).start();
   }, [glowAnim, pulseAnim]);
 
   useEffect(() => {
-    // Progress bar animation on step change
     Animated.spring(barAnim, {
       toValue: progressPct,
       friction: 8,
@@ -51,16 +48,18 @@ export function CorrectionProgress({ currentStep, feedback }: CorrectionProgress
   const barWidth = barAnim.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] });
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+    <View style={[styles.card, { backgroundColor: colors.surface }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={[styles.kicker, { color: colors.accent }]}>🤖 CORREÇÃO EM ANDAMENTO</Text>
+      <View style={[styles.header, { backgroundColor: colors.accent + '12', borderRadius: 12 }]}>
+        <Text style={[styles.kicker, { color: colors.accent }]}>🤖 Correção em andamento</Text>
+        <Text style={[styles.stepCounter, { color: colors.mutedText }]}>
+          Etapa {currentStep} de 4
+        </Text>
       </View>
 
-      {/* Big progress bar */}
-      <View style={[styles.trackOuter, { backgroundColor: colors.input, borderColor: colors.border }]}>
+      {/* Progress bar */}
+      <View style={[styles.trackOuter, { backgroundColor: colors.input }]}>
         <Animated.View style={[styles.trackFill, { width: barWidth, backgroundColor: colors.accent }]}>
-          {/* Shimmer effect inside fill */}
           <Animated.View
             style={[
               styles.shimmer,
@@ -73,12 +72,7 @@ export function CorrectionProgress({ currentStep, feedback }: CorrectionProgress
         </Animated.View>
       </View>
 
-      {/* Step counter */}
-      <Text style={[styles.stepCounter, { color: colors.mutedText }]}>
-        ETAPA {currentStep} DE 4
-      </Text>
-
-      {/* Steps list */}
+      {/* Steps */}
       <View style={styles.steps}>
         {STEPS.map((step) => {
           const isActive = step.n === currentStep;
@@ -112,9 +106,9 @@ export function CorrectionProgress({ currentStep, feedback }: CorrectionProgress
         })}
       </View>
 
-      {/* Feedback text */}
+      {/* Feedback */}
       {feedback ? (
-        <View style={[styles.feedbackBox, { backgroundColor: colors.input, borderColor: colors.border }]}>
+        <View style={[styles.feedbackBox, { backgroundColor: colors.input, borderRadius: 12 }]}>
           <Text style={[styles.feedbackText, { color: colors.softText }]}>{feedback}</Text>
         </View>
       ) : null}
@@ -123,13 +117,22 @@ export function CorrectionProgress({ currentStep, feedback }: CorrectionProgress
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: 4, padding: 20, gap: 16 },
-  header: { gap: 4 },
-  kicker: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.6 },
-  trackOuter: { height: 10, borderWidth: 1, borderRadius: 999, overflow: 'hidden' },
+  card: {
+    borderRadius: 20,
+    padding: 20,
+    gap: 16,
+    shadowColor: '#1B2559',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.07,
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  header: { padding: 12, gap: 4 },
+  kicker: { fontSize: 14, fontWeight: '700', lineHeight: 20 },
+  trackOuter: { height: 10, borderRadius: 999, overflow: 'hidden' },
   trackFill: { height: '100%', borderRadius: 999, overflow: 'hidden', position: 'relative' },
   shimmer: { position: 'absolute', top: 0, bottom: 0, width: 60, backgroundColor: 'rgba(255,255,255,0.5)' },
-  stepCounter: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.6, textAlign: 'center' },
+  stepCounter: { fontSize: 12, fontWeight: '500' },
   steps: { gap: 12 },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   stepDot: { width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
@@ -137,6 +140,6 @@ const styles = StyleSheet.create({
   activeDotInner: { width: 10, height: 10, borderRadius: 5 },
   pendingDot: { width: 8, height: 8, borderRadius: 4 },
   stepLabel: { fontSize: 15, lineHeight: 22 },
-  feedbackBox: { borderWidth: 1, borderRadius: 4, padding: 12 },
-  feedbackText: { fontSize: 13, lineHeight: 20, fontFamily: 'monospace' },
+  feedbackBox: { padding: 12 },
+  feedbackText: { fontSize: 13, lineHeight: 20 },
 });

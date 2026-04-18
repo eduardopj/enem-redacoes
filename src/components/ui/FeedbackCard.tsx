@@ -14,11 +14,13 @@ export function FeedbackCard({ feedback }: FeedbackCardProps) {
   return (
     <Card>
       <View style={styles.header}>
-        <Ionicons name="chatbubble-ellipses-outline" size={18} color={colors.accent} />
-        <Text style={[styles.title, { color: colors.softText }]}>FEEDBACK PEDAGÓGICO</Text>
+        <View style={[styles.iconWrap, { backgroundColor: colors.accent + '14' }]}>
+          <Ionicons name="chatbubble-ellipses-outline" size={18} color={colors.accent} />
+        </View>
+        <Text style={[styles.title, { color: colors.text }]}>Feedback pedagógico</Text>
       </View>
 
-      <Text style={[styles.text, { color: colors.mutedText }]}>
+      <Text style={[styles.text, { color: colors.softText }]}>
         {feedback ?? 'Ainda não há feedback disponível para esta redação.'}
       </Text>
     </Card>
@@ -32,11 +34,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: theme.spacing.sm,
   },
+  iconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   title: {
-    ...theme.typography.monoLabel,
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 22,
   },
   text: {
-    ...theme.typography.body,
-    lineHeight: 25,
+    fontSize: 14,
+    lineHeight: 22,
   },
 });

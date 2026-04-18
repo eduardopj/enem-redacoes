@@ -1,4 +1,4 @@
-import { Button, ScreenContainer, StaggerItem } from '@/components/ui';
+import { Button, Card, ScreenContainer, StaggerItem } from '@/components/ui';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,18 +8,21 @@ import { StyleSheet, Text, View } from 'react-native';
 const FEATURES = [
   {
     icon: 'camera-outline' as const,
-    color: '#2268B5',
+    bg: '#EEF2FF',
+    color: '#4E76F8',
     title: 'Foto → Correção completa',
-    desc: 'Envie a foto do manuscrito. A IA transcreve e corrige.',
+    desc: 'A IA transcreve e corrige o manuscrito em segundos.',
   },
   {
     icon: 'analytics-outline' as const,
-    color: '#1F8A57',
+    bg: '#F0FDF4',
+    color: '#22C55E',
     title: '5 competências ENEM',
     desc: 'Feedback detalhado por competência com pontuação.',
   },
   {
     icon: 'people-outline' as const,
+    bg: '#F5F3FF',
     color: '#8B5CF6',
     title: 'Turma organizada',
     desc: 'Alunos, temas e histórico de redações em um só lugar.',
@@ -32,12 +35,13 @@ export default function IndexScreen() {
   return (
     <ScreenContainer noScroll showHomeButton={false}>
       <View style={styles.container}>
+
         <StaggerItem index={0}>
           <View style={styles.hero}>
-            <View style={styles.brandRow}>
-              <Ionicons name="school-outline" size={18} color={colors.accent} />
-              <Text style={[styles.brand, { color: colors.accent }]}>ENEM IA</Text>
+            <View style={[styles.logoWrap, { backgroundColor: colors.accent }]}>
+              <Ionicons name="school" size={32} color="#fff" />
             </View>
+            <Text style={[styles.brand, { color: colors.mutedText }]}>ENEM IA</Text>
             <Text style={[styles.headline, { color: colors.text }]}>
               Corrija redações{'\n'}com inteligência
             </Text>
@@ -48,21 +52,17 @@ export default function IndexScreen() {
         </StaggerItem>
 
         <StaggerItem index={1}>
-          <View style={[styles.featureList, { borderColor: colors.border }]}>
+          <Card style={styles.featureCard}>
             {FEATURES.map((f, i) => (
               <View
                 key={i}
                 style={[
                   styles.featureItem,
-                  { backgroundColor: colors.surface },
-                  i < FEATURES.length - 1 && {
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.border,
-                  },
+                  i < FEATURES.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border },
                 ]}
               >
-                <View style={[styles.featureIcon, { backgroundColor: f.color + '18' }]}>
-                  <Ionicons name={f.icon} size={18} color={f.color} />
+                <View style={[styles.featureIcon, { backgroundColor: f.bg }]}>
+                  <Ionicons name={f.icon} size={20} color={f.color} />
                 </View>
                 <View style={styles.featureText}>
                   <Text style={[styles.featureTitle, { color: colors.text }]}>{f.title}</Text>
@@ -70,7 +70,7 @@ export default function IndexScreen() {
                 </View>
               </View>
             ))}
-          </View>
+          </Card>
         </StaggerItem>
 
         <StaggerItem index={2}>
@@ -88,6 +88,7 @@ export default function IndexScreen() {
             />
           </View>
         </StaggerItem>
+
       </View>
     </ScreenContainer>
   );
@@ -100,32 +101,42 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xl,
   },
   hero: {
-    gap: theme.spacing.sm,
-  },
-  brandRow: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.xs,
-    marginBottom: theme.spacing.xs,
+    gap: 8,
+  },
+  logoWrap: {
+    width: 76,
+    height: 76,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    shadowColor: '#4E76F8',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 6,
   },
   brand: {
-    fontFamily: 'monospace',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
+    letterSpacing: 2.5,
   },
   headline: {
-    ...theme.typography.hero,
+    fontSize: 38,
+    fontWeight: '700',
+    lineHeight: 44,
+    letterSpacing: -0.8,
+    textAlign: 'center',
   },
   sub: {
-    ...theme.typography.body,
-    lineHeight: 24,
-    marginTop: theme.spacing.xs,
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+    maxWidth: 300,
   },
-  featureList: {
-    borderWidth: 1,
-    borderRadius: theme.radius.md,
+  featureCard: {
+    padding: 0,
     overflow: 'hidden',
   },
   featureItem: {
@@ -135,11 +146,12 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
   },
   featureIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.md,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   featureText: {
     flex: 1,
@@ -151,7 +163,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   featureDesc: {
-    ...theme.typography.bodySmall,
+    fontSize: 13,
     lineHeight: 18,
   },
   actions: {

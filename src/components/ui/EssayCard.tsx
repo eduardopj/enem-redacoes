@@ -19,7 +19,7 @@ type EssayCardProps = {
   onDelete?: () => void;
 };
 
-function scoreGradientColor(score: number): string {
+function scoreColor(score: number): string {
   if (score >= 900) return '#16A34A';
   if (score >= 800) return '#22C55E';
   if (score >= 700) return '#84CC16';
@@ -40,9 +40,9 @@ export function EssayCard({
 }: EssayCardProps) {
   const { colors } = useAppTheme();
 
-  const scoreColor =
+  const color =
     status === 'corrigida' && typeof totalScore === 'number'
-      ? scoreGradientColor(totalScore)
+      ? scoreColor(totalScore)
       : colors.mutedText;
 
   const displayDate = correctedAt ?? createdAt;
@@ -50,24 +50,41 @@ export function EssayCard({
   const fullDate = displayDate ? formatDateTime(displayDate) : null;
   const dateLabel = correctedAt ? 'Corrigida' : 'Enviada';
 
+  const initials = studentName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+
   return (
     <Card>
-      <Pressable onPress={onPress} style={styles.mainArea}>
+      <Pressable onPress={onPress}>
         <View style={styles.topRow}>
+          {/* Avatar */}
+          <View style={[styles.avatar, { backgroundColor: colors.accent + '18' }]}>
+            <Text style={[styles.avatarText, { color: colors.accent }]}>{initials}</Text>
+          </View>
+
+          {/* Info */}
           <View style={styles.topInfo}>
             <Text style={[styles.studentName, { color: colors.text }]}>{studentName}</Text>
-            <Text style={[styles.themeTitle, { color: colors.mutedText }]} numberOfLines={2}>
+            <Text style={[styles.themeTitle, { color: colors.mutedText }]} numberOfLines={1}>
               {themeTitle}
             </Text>
           </View>
 
+          {/* Score or arrow */}
           {status === 'corrigida' && typeof totalScore === 'number' ? (
-            <View style={styles.scoreBlock}>
-              <Text style={[styles.scoreValue, { color: scoreColor }]}>{totalScore}</Text>
-              <Text style={[styles.scoreLabel, { color: colors.mutedText }]}>pts</Text>
+            <View style={[styles.scorePill, { backgroundColor: color + '18' }]}>
+              <Text style={[styles.scoreValue, { color }]}>{totalScore}</Text>
+              <Text style={[styles.scoreLabel, { color }]}>pts</Text>
             </View>
           ) : (
-            <Ionicons name="arrow-forward" size={18} color={colors.softText} />
+            <View style={[styles.arrowWrap, { backgroundColor: colors.input }]}>
+              <Ionicons name="chevron-forward" size={16} color={colors.softText} />
+            </View>
           )}
         </View>
 
@@ -79,7 +96,6 @@ export function EssayCard({
               <Text style={[styles.dateRelative, { color: colors.softText }]}>
                 {dateLabel} {relDate}
               </Text>
-              <Text style={[styles.dateFull, { color: colors.mutedText }]}>{fullDate}</Text>
             </View>
           ) : null}
         </View>
@@ -88,9 +104,9 @@ export function EssayCard({
       {onDelete ? (
         <Pressable
           onPress={onDelete}
-          style={[styles.deleteButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+          style={[styles.deleteButton, { backgroundColor: colors.dangerSoft }]}
         >
-          <Ionicons name="trash-outline" size={16} color={colors.danger} />
+          <Ionicons name="trash-outline" size={14} color={colors.danger} />
           <Text style={[styles.deleteLabel, { color: colors.danger }]}>Excluir</Text>
         </Pressable>
       ) : null}
@@ -99,69 +115,88 @@ export function EssayCard({
 }
 
 const styles = StyleSheet.create({
-  mainArea: {
-    gap: theme.spacing.md,
-  },
   topRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: theme.spacing.md,
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  avatarText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   topInfo: {
     flex: 1,
-    gap: theme.spacing.xxs,
+    gap: 3,
   },
   studentName: {
-    ...theme.typography.title,
-  },
-  themeTitle: {
-    ...theme.typography.bodySmall,
+    fontSize: 15,
+    fontWeight: '600',
     lineHeight: 20,
   },
-  scoreBlock: {
-    alignItems: 'flex-end',
-    gap: 0,
+  themeTitle: {
+    fontSize: 13,
+    lineHeight: 17,
+  },
+  scorePill: {
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    alignItems: 'center',
+    flexShrink: 0,
+    minWidth: 56,
   },
   scoreValue: {
-    fontSize: 26,
+    fontSize: 18,
     fontWeight: '700',
-    lineHeight: 28,
-    letterSpacing: -0.5,
+    lineHeight: 22,
+    letterSpacing: -0.3,
   },
   scoreLabel: {
-    ...theme.typography.monoLabel,
-    fontSize: 9,
+    fontSize: 10,
+    fontWeight: '600',
+    lineHeight: 12,
+  },
+  arrowWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   metaRow: {
     paddingTop: theme.spacing.sm,
     borderTopWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    gap: theme.spacing.md,
+    alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   dateBlock: {
     alignItems: 'flex-end',
-    gap: 2,
   },
   dateRelative: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
     lineHeight: 16,
-  },
-  dateFull: {
-    fontSize: 11,
-    lineHeight: 14,
   },
   deleteButton: {
     flexDirection: 'row',
     alignSelf: 'flex-end',
     alignItems: 'center',
-    gap: theme.spacing.xs,
+    gap: 5,
     paddingVertical: 6,
-    paddingHorizontal: theme.spacing.sm,
-    borderWidth: 1,
-    borderRadius: theme.radius.sm,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    marginTop: theme.spacing.sm,
   },
   deleteLabel: {
     fontSize: 12,

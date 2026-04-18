@@ -5,16 +5,19 @@ import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 
 type CardProps = PropsWithChildren<{
   style?: StyleProp<ViewStyle>;
+  variant?: 'default' | 'accent' | 'flat';
 }>;
 
-export function Card({ children, style }: CardProps) {
+export function Card({ children, style, variant = 'default' }: CardProps) {
   const { colors } = useAppTheme();
 
   return (
     <View
       style={[
         styles.card,
-        { backgroundColor: colors.surface, borderColor: colors.border },
+        { backgroundColor: colors.surface },
+        variant === 'accent' && { backgroundColor: colors.accent },
+        variant === 'flat' && { backgroundColor: colors.input },
         style,
       ]}
     >
@@ -25,8 +28,7 @@ export function Card({ children, style }: CardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
-    borderRadius: theme.radius.sm,
+    borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
     ...theme.shadows.card,
   },

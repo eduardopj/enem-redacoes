@@ -31,7 +31,7 @@ export default function TemaDetalheScreen() {
     <ProtectedRoute>
       <ScreenContainer showBack>
         <AppHeader
-          eyebrow="TEMA"
+          eyebrow="Tema"
           title="Detalhe do tema"
           subtitle="Use este tema nas novas correções."
         />
@@ -46,7 +46,7 @@ export default function TemaDetalheScreen() {
         <Button
           title="Usar este tema"
           leftIcon="arrow-forward-outline"
-          onPress={() => router.push('/nova-redacao')}
+          onPress={() => router.push(`/nova-redacao?themeId=${themeItem.id}`)}
         />
       </ScreenContainer>
     </ProtectedRoute>
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.sm,
     borderBottomWidth: 1,
   },
-  label: { ...theme.typography.monoLabel },
-  value: { ...theme.typography.title },
-  emptyText: { ...theme.typography.body },
+  label: { fontSize: 11, fontWeight: '600', letterSpacing: 0.3 },
+  value: { fontSize: 17, fontWeight: '600', lineHeight: 24 },
+  emptyText: { fontSize: 15, lineHeight: 22 },
 });
