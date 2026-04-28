@@ -149,8 +149,8 @@ export default function DashboardScreen() {
               label="Alunos"
               value={teacherStudents.length}
               icon="people"
-              iconBg="#EEF2FF"
-              iconColor="#4E76F8"
+              iconBg={colors.infoSoft}
+              iconColor={colors.accent}
               onPress={() => router.push('/alunos')}
               colors={colors}
             />
@@ -158,8 +158,8 @@ export default function DashboardScreen() {
               label="Temas"
               value={teacherThemes.length}
               icon="library"
-              iconBg="#F0FDF4"
-              iconColor="#22C55E"
+              iconBg={colors.successSoft}
+              iconColor={colors.success}
               onPress={() => router.push('/temas')}
               colors={colors}
             />
@@ -167,8 +167,8 @@ export default function DashboardScreen() {
               label="Pendentes"
               value={pendingEssays.length}
               icon="time"
-              iconBg={pendingEssays.length > 0 ? '#FEF3C7' : '#F5F7FD'}
-              iconColor={pendingEssays.length > 0 ? '#F59E0B' : '#8E9AB8'}
+              iconBg={pendingEssays.length > 0 ? colors.warningSoft : colors.input}
+              iconColor={pendingEssays.length > 0 ? colors.warning : colors.mutedText}
               alert={pendingEssays.length > 0}
               onPress={() => router.push('/redacoes')}
               colors={colors}
@@ -177,8 +177,8 @@ export default function DashboardScreen() {
               label="Corrigidas"
               value={correctedEssays.length}
               icon="checkmark-circle"
-              iconBg="#DBEAFE"
-              iconColor="#3B82F6"
+              iconBg={colors.infoSoft}
+              iconColor={colors.info}
               onPress={() => router.push('/redacoes')}
               colors={colors}
             />
@@ -333,7 +333,7 @@ export default function DashboardScreen() {
                     </View>
                     {avg !== null ? (
                       <Text style={[styles.turmaAvg, {
-                        color: avg >= 700 ? '#22C55E' : avg >= 500 ? '#EAB308' : '#EF4444'
+                        color: avg >= 700 ? colors.success : avg >= 500 ? colors.warning : colors.danger
                       }]}>
                         {avg} pts
                       </Text>
@@ -353,10 +353,10 @@ export default function DashboardScreen() {
           <Card>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Atalhos rápidos</Text>
             <View style={styles.quickGrid}>
-              <QuickAction icon="people" iconBg="#EEF2FF" iconColor="#4E76F8" title="Turmas" onPress={() => router.push('/turmas' as any)} colors={colors} />
-              <QuickAction icon="add-circle" iconBg="#F0FDF4" iconColor="#22C55E" title="Nova redação" onPress={() => router.push('/nova-redacao')} colors={colors} />
-              <QuickAction icon="trophy" iconBg="#FFF7ED" iconColor="#F59E0B" title="Ranking" onPress={() => router.push('/ranking' as any)} colors={colors} />
-              <QuickAction icon="bar-chart" iconBg="#DBEAFE" iconColor="#3B82F6" title="Análise" onPress={() => router.push('/analytics' as any)} colors={colors} />
+              <QuickAction icon="people" iconBg={colors.infoSoft} iconColor={colors.accent} title="Turmas" onPress={() => router.push('/turmas' as any)} colors={colors} />
+              <QuickAction icon="add-circle" iconBg={colors.successSoft} iconColor={colors.success} title="Nova redação" onPress={() => router.push('/nova-redacao')} colors={colors} />
+              <QuickAction icon="trophy" iconBg={colors.warningSoft} iconColor={colors.warning} title="Ranking" onPress={() => router.push('/ranking' as any)} colors={colors} />
+              <QuickAction icon="bar-chart" iconBg={colors.infoSoft} iconColor={colors.info} title="Análise" onPress={() => router.push('/analytics' as any)} colors={colors} />
             </View>
           </Card>
         </StaggerItem>

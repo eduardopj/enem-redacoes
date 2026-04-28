@@ -87,9 +87,9 @@ export default function AlunosScreen() {
     <ProtectedRoute>
       <ScreenContainer showBack showNav>
         <AppHeader
-          eyebrow="Alunos"
-          title="Base de alunos"
-          subtitle={hasStudents ? `${teacherStudents.length} aluno${teacherStudents.length !== 1 ? 's' : ''} cadastrado${teacherStudents.length !== 1 ? 's' : ''}` : 'Cadastre e gerencie seus alunos.'}
+          eyebrow="Turma"
+          title="Alunos"
+          subtitle={hasStudents ? `${teacherStudents.length} aluno${teacherStudents.length !== 1 ? 's' : ''} cadastrado${teacherStudents.length !== 1 ? 's' : ''}` : 'Cadastre e acompanhe seus alunos.'}
         />
 
         {hasStudents && (

@@ -49,7 +49,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       dot: '#F59E0B',
     },
     processando: {
-      label: 'Processando',
+      label: 'Em análise',
       color: colors.info,
       backgroundColor: colors.infoSoft,
       dot: '#3B82F6',

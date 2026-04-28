@@ -94,9 +94,9 @@ export default function RedacoesScreen() {
     <ProtectedRoute>
       <ScreenContainer showBack showNav>
         <AppHeader
-          eyebrow="Redações"
-          title="Pipeline de correção"
-          subtitle="Filtre, acompanhe, abra e gerencie os envios."
+          eyebrow="Correção com IA"
+          title="Redações"
+          subtitle="Acompanhe e gerencie os envios da turma."
         />
 
         {hasStudents && hasEssays ? (
@@ -154,7 +154,7 @@ export default function RedacoesScreen() {
                 [
                   { key: 'todas', label: 'Todas' },
                   { key: 'corrigida', label: 'Corrigidas' },
-                  { key: 'processando', label: 'Processando' },
+                  { key: 'processando', label: 'Em análise' },
                   { key: 'pendente', label: 'Pendentes' },
                 ] as { key: FilterStatus; label: string }[]
               ).map(({ key, label }) => (
@@ -230,7 +230,7 @@ function FilterChip({ label, active, onPress }: { label: string; active: boolean
         styles.chip,
         {
           borderColor: active ? colors.accent : colors.border,
-          backgroundColor: active ? colors.input : colors.surface,
+          backgroundColor: active ? colors.accent + '18' : colors.surface,
         },
       ]}
     >

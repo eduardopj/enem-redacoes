@@ -78,7 +78,7 @@ export default function TemasScreen() {
           subtitle={
             isSelectionMode
               ? 'Escolha um tema para continuar o cadastro da redação deste aluno.'
-              : 'Abra, use e gerencie seus temas.'
+              : 'Crie e organize os temas das redações.'
           }
         />
 
