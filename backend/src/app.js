@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { openAiRoutes } from './routes/openai.routes.js';
 import { researchRoutes } from './routes/research.routes.js';
 import { syncRoutes } from './routes/sync.routes.js';
@@ -26,6 +27,16 @@ app.use((req, _res, next) => {
   next();
 });
 
+// Rate limiting: max 20 correções por IP a cada 10 minutos
+const correctionLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Muitas requisições. Aguarde alguns minutos e tente novamente.' },
+});
+
+app.use('/openai/correct-essay', correctionLimiter);
 app.use('/openai', openAiRoutes);
 app.use('/research', researchRoutes);
 app.use('/sync', syncRoutes);
