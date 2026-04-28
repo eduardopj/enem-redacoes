@@ -46,6 +46,7 @@ export type OpenAICorrectionResult = {
   feedback: string;
   studentDirectMessage: string;
   improvementPotential: string;
+  detectedTheme: string;
   vocabularyAnalysis: {
     frequentWords: string[];
     synonymSuggestions: {
@@ -58,5 +59,6 @@ export type OpenAICorrectionResult = {
 
 export type OpenAIServiceInput = {
   themeTitle: string;
-  imageUri: string;
+  imageUri?: string;
+  essayText?: string;
 };

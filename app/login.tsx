@@ -1,4 +1,4 @@
-import { Button, Card, Input, ScreenContainer, StaggerItem } from '@/components/ui';
+import { Button, Card, Input, ScreenContainer } from '@/components/ui';
 import { LoginFormData, loginSchema } from '@/features/auth/schemas';
 import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
@@ -6,12 +6,41 @@ import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
+import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 export default function LoginScreen() {
   const { colors } = useAppTheme();
   const login = useAppStore((state) => state.login);
+
+  const logoScale   = useSharedValue(0.7);
+  const logoOpacity = useSharedValue(0);
+  const formOpacity = useSharedValue(0);
+  const formY       = useSharedValue(28);
+
+  useEffect(() => {
+    logoScale.value   = withSpring(1, { damping: 13, stiffness: 110 });
+    logoOpacity.value = withTiming(1, { duration: 400 });
+    formOpacity.value = withDelay(250, withTiming(1, { duration: 400 }));
+    formY.value       = withDelay(250, withSpring(0, { damping: 18, stiffness: 160 }));
+  }, []);
+
+  const logoStyle = useAnimatedStyle(() => ({
+    opacity: logoOpacity.value,
+    transform: [{ scale: logoScale.value }],
+  }));
+  const formStyle = useAnimatedStyle(() => ({
+    opacity: formOpacity.value,
+    transform: [{ translateY: formY.value }],
+  }));
 
   const {
     control,
@@ -38,21 +67,19 @@ export default function LoginScreen() {
       <View style={styles.page}>
 
         {/* Logo / hero */}
-        <StaggerItem index={0}>
-          <View style={styles.hero}>
-            <View style={[styles.logoWrap, { backgroundColor: colors.accent }]}>
-              <Ionicons name="school" size={32} color="#fff" />
-            </View>
-            <Text style={[styles.appName, { color: colors.text }]}>ENEM IA</Text>
-            <Text style={[styles.title, { color: colors.text }]}>Bem-vindo de volta</Text>
-            <Text style={[styles.subtitle, { color: colors.mutedText }]}>
-              Acesse seu painel e continue corrigindo.
-            </Text>
+        <Animated.View style={[styles.hero, logoStyle]}>
+          <View style={[styles.logoWrap, { backgroundColor: colors.accent }]}>
+            <Ionicons name="school" size={32} color="#fff" />
           </View>
-        </StaggerItem>
+          <Text style={[styles.appName, { color: colors.mutedText }]}>ENEM IA</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Bem-vindo de volta</Text>
+          <Text style={[styles.subtitle, { color: colors.mutedText }]}>
+            Acesse seu painel e continue corrigindo.
+          </Text>
+        </Animated.View>
 
         {/* Form */}
-        <StaggerItem index={1}>
+        <Animated.View style={formStyle}>
           <Card>
             <View style={styles.form}>
               <Controller
@@ -108,14 +135,14 @@ export default function LoginScreen() {
               />
             </View>
           </Card>
-        </StaggerItem>
+        </Animated.View>
 
         {/* Footer hint */}
-        <StaggerItem index={2}>
+        <Animated.View style={formStyle}>
           <Text style={[styles.hint, { color: colors.mutedText }]}>
             Correção de redações ENEM com inteligência artificial
           </Text>
-        </StaggerItem>
+        </Animated.View>
 
       </View>
     </ScreenContainer>

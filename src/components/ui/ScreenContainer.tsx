@@ -4,6 +4,8 @@ import { PropsWithChildren } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppFooter } from './AppFooter';
+import { BOTTOM_NAV_HEIGHT, BottomNav } from './BottomNav';
+import { STUDENT_BOTTOM_NAV_HEIGHT, StudentBottomNav } from './StudentBottomNav';
 import { TopBar } from './TopBar';
 
 type ScreenContainerProps = PropsWithChildren<{
@@ -11,6 +13,8 @@ type ScreenContainerProps = PropsWithChildren<{
   showBack?: boolean;
   showHomeButton?: boolean;
   showFooter?: boolean;
+  showNav?: boolean;
+  showStudentNav?: boolean;
 }>;
 
 export function ScreenContainer({
@@ -19,9 +23,23 @@ export function ScreenContainer({
   showBack = false,
   showHomeButton = true,
   showFooter = true,
+  showNav = false,
+  showStudentNav = false,
 }: ScreenContainerProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
+
+  const navHeight = showNav
+    ? BOTTOM_NAV_HEIGHT + Math.max(insets.bottom, 8)
+    : showStudentNav
+    ? STUDENT_BOTTOM_NAV_HEIGHT + Math.max(insets.bottom, 8)
+    : 0;
+
+  const bottomPad = navHeight > 0
+    ? navHeight + 16
+    : Math.max(28, insets.bottom + 16);
+
+  const NavBar = showNav ? <BottomNav /> : showStudentNav ? <StudentBottomNav /> : null;
 
   if (noScroll) {
     return (
@@ -35,6 +53,7 @@ export function ScreenContainer({
         >
           {children}
         </View>
+        {NavBar}
       </SafeAreaView>
     );
   }
@@ -49,10 +68,7 @@ export function ScreenContainer({
       >
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={[
-            styles.content,
-            { paddingBottom: Math.max(28, insets.bottom + 16) },
-          ]}
+          contentContainerStyle={[styles.content, { paddingBottom: bottomPad }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
@@ -61,7 +77,7 @@ export function ScreenContainer({
           {children}
         </ScrollView>
       </KeyboardAvoidingView>
-      {showFooter && <AppFooter />}
+      {NavBar ?? (showFooter ? <AppFooter /> : null)}
     </SafeAreaView>
   );
 }

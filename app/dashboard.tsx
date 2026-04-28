@@ -18,6 +18,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 export default function DashboardScreen() {
   const { colors } = useAppTheme();
   const currentTeacher = useAppStore((state) => state.currentTeacher);
+  const turmas = useAppStore((state) => state.turmas);
   const students = useAppStore((state) => state.students);
   const themes = useAppStore((state) => state.themes);
   const essays = useAppStore((state) => state.essays);
@@ -53,6 +54,27 @@ export default function DashboardScreen() {
 
   const isNewUser = teacherStudents.length === 0 && teacherEssays.length === 0;
 
+  const myTurmas = useMemo(
+    () => turmas.filter((t) => t.teacherId === currentTeacher?.id).slice(0, 3),
+    [turmas, currentTeacher]
+  );
+
+  const turmaSnapshots = useMemo(
+    () =>
+      myTurmas.map((t) => {
+        const ss = students.filter((s) => s.turmaId === t.id);
+        const ces = essays.filter(
+          (e) => ss.some((s) => s.id === e.studentId) && e.status === 'corrigida'
+        );
+        const scores = ces.map((e) => e.totalScore ?? 0).filter((s) => s > 0);
+        const avg = scores.length
+          ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+          : null;
+        return { turma: t, students: ss.length, avg };
+      }),
+    [myTurmas, students, essays]
+  );
+
   const contextualAction = useMemo(() => {
     if (teacherStudents.length === 0)
       return { title: 'Cadastre o primeiro aluno', subtitle: 'Esse é o primeiro passo para começar a corrigir.', buttonLabel: 'Cadastrar aluno', onPress: () => router.push('/novo-aluno'), icon: 'person-add-outline' as const };
@@ -70,7 +92,7 @@ export default function DashboardScreen() {
 
   return (
     <ProtectedRoute>
-      <ScreenContainer showHomeButton={false}>
+      <ScreenContainer showHomeButton={false} showNav>
 
         {/* Header com avatar */}
         <StaggerItem index={0}>
@@ -267,14 +289,73 @@ export default function DashboardScreen() {
           </StaggerItem>
         ) : null}
 
-        {/* Atalhos rápidos */}
+        {/* ── Minhas turmas ── */}
         <StaggerItem index={6}>
+          <Card>
+            <View style={styles.sectionRow}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Minhas turmas</Text>
+              <Pressable onPress={() => router.push('/turmas' as any)} style={styles.seeAllBtn}>
+                <Text style={[styles.seeAllText, { color: colors.accent }]}>Ver todas</Text>
+                <Ionicons name="chevron-forward" size={13} color={colors.accent} />
+              </Pressable>
+            </View>
+
+            {turmaSnapshots.length === 0 ? (
+              <Pressable
+                onPress={() => router.push('/nova-turma' as any)}
+                style={[styles.emptyTurmaRow, { backgroundColor: colors.input, borderColor: colors.border }]}
+              >
+                <View style={[styles.emptyTurmaIcon, { backgroundColor: colors.accent + '18' }]}>
+                  <Ionicons name="people-outline" size={18} color={colors.accent} />
+                </View>
+                <Text style={[styles.emptyTurmaText, { color: colors.mutedText }]}>
+                  Crie sua primeira turma para organizar os alunos
+                </Text>
+                <Ionicons name="add-circle-outline" size={18} color={colors.accent} />
+              </Pressable>
+            ) : (
+              <View style={styles.turmaList}>
+                {turmaSnapshots.map(({ turma, students: sCount, avg }) => (
+                  <Pressable
+                    key={turma.id}
+                    onPress={() => router.push(`/turma/${turma.id}` as any)}
+                    style={[styles.turmaRow, { borderBottomColor: colors.border }]}
+                  >
+                    <View style={[styles.turmaIconWrap, { backgroundColor: colors.accent + '14' }]}>
+                      <Ionicons name="school-outline" size={16} color={colors.accent} />
+                    </View>
+                    <View style={styles.turmaInfo}>
+                      <Text style={[styles.turmaName, { color: colors.text }]}>{turma.name}</Text>
+                      <Text style={[styles.turmaMeta, { color: colors.mutedText }]}>
+                        {sCount} aluno{sCount !== 1 ? 's' : ''}
+                        {turma.period ? ` · ${turma.period}` : ''}
+                      </Text>
+                    </View>
+                    {avg !== null ? (
+                      <Text style={[styles.turmaAvg, {
+                        color: avg >= 700 ? '#22C55E' : avg >= 500 ? '#EAB308' : '#EF4444'
+                      }]}>
+                        {avg} pts
+                      </Text>
+                    ) : (
+                      <Text style={[styles.turmaAvg, { color: colors.mutedText }]}>— pts</Text>
+                    )}
+                    <Ionicons name="chevron-forward" size={14} color={colors.border} />
+                  </Pressable>
+                ))}
+              </View>
+            )}
+          </Card>
+        </StaggerItem>
+
+        {/* Atalhos rápidos */}
+        <StaggerItem index={7}>
           <Card>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Atalhos rápidos</Text>
             <View style={styles.quickGrid}>
-              <QuickAction icon="add-circle" iconBg="#EEF2FF" iconColor="#4E76F8" title="Nova redação" onPress={() => router.push('/nova-redacao')} colors={colors} />
-              <QuickAction icon="people" iconBg="#F0FDF4" iconColor="#22C55E" title="Alunos" onPress={() => router.push('/alunos')} colors={colors} />
-              <QuickAction icon="library" iconBg="#FFF7ED" iconColor="#F59E0B" title="Temas" onPress={() => router.push('/temas')} colors={colors} />
+              <QuickAction icon="people" iconBg="#EEF2FF" iconColor="#4E76F8" title="Turmas" onPress={() => router.push('/turmas' as any)} colors={colors} />
+              <QuickAction icon="add-circle" iconBg="#F0FDF4" iconColor="#22C55E" title="Nova redação" onPress={() => router.push('/nova-redacao')} colors={colors} />
+              <QuickAction icon="trophy" iconBg="#FFF7ED" iconColor="#F59E0B" title="Ranking" onPress={() => router.push('/ranking' as any)} colors={colors} />
               <QuickAction icon="bar-chart" iconBg="#DBEAFE" iconColor="#3B82F6" title="Análise" onPress={() => router.push('/analytics' as any)} colors={colors} />
             </View>
           </Card>
@@ -282,7 +363,7 @@ export default function DashboardScreen() {
 
         {/* Último movimento */}
         {lastEssay ? (
-          <StaggerItem index={7}>
+          <StaggerItem index={8}>
             <Card>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Último movimento</Text>
               <View style={styles.lastRow}>
@@ -607,6 +688,37 @@ const styles = StyleSheet.create({
   stepTitle: { fontSize: 15, fontWeight: '600', lineHeight: 20 },
   stepDesc: { fontSize: 13, lineHeight: 18 },
   stepDivider: { height: 1, marginLeft: 44 },
+
+  // Turmas section
+  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  seeAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  seeAllText: { fontSize: 13, fontWeight: '600' },
+  turmaList: { gap: 0, marginTop: 8 },
+  turmaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  turmaIconWrap: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  turmaInfo: { flex: 1, gap: 2 },
+  turmaName: { fontSize: 14, fontWeight: '600', lineHeight: 18 },
+  turmaMeta: { fontSize: 12, lineHeight: 16 },
+  turmaAvg: { fontSize: 13, fontWeight: '700', minWidth: 52, textAlign: 'right' },
+  emptyTurmaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    marginTop: 8,
+  },
+  emptyTurmaIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  emptyTurmaText: { flex: 1, fontSize: 13, lineHeight: 18 },
 
   // Mini bar chart
   chartWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, height: 100, marginTop: 12 },

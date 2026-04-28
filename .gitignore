@@ -43,3 +43,7 @@ app-example
 # generated native folders
 /ios
 /android
+
+# backend runtime data
+data/
+backend.tar.gz

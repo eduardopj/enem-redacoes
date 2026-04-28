@@ -21,8 +21,9 @@ import {
 } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import * as Haptics from 'expo-haptics';
+import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 const COMP_COLORS: Record<string, string> = {
   c1: '#3B82F6',
@@ -75,6 +76,9 @@ export default function AlunoDetalheScreen() {
   const students = useAppStore((state) => state.students);
   const essays = useAppStore((state) => state.essays);
   const deleteEssay = useAppStore((state) => state.deleteEssay);
+  const generateStudentCode = useAppStore((state) => state.generateStudentCode);
+  const currentTeacher = useAppStore((state) => state.currentTeacher);
+  const [codeShared, setCodeShared] = useState(false);
 
   const student = useMemo(() => students.find((s) => s.id === id), [students, id]);
 
@@ -124,6 +128,19 @@ export default function AlunoDetalheScreen() {
 
   const aboveNational =
     stats.averageScore !== null ? stats.averageScore - NATIONAL_AVG : null;
+
+  async function handleGenerateCode() {
+    const code = generateStudentCode(student!.id);
+    if (code) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setCodeShared(true);
+      setTimeout(() => setCodeShared(false), 2000);
+      await Share.share({
+        message: `Olá ${student!.name}! Seu código de acesso ao ENEM IA é: ${code}\n\nAbra o app, toque em "Sou aluno" e use:\nProfessor: ${currentTeacher?.email}\nCódigo: ${code}`,
+        title: 'Código de acesso — ENEM IA',
+      });
+    }
+  }
 
   function handleDeleteEssay(essay: Essay) {
     Alert.alert(
@@ -225,6 +242,51 @@ export default function AlunoDetalheScreen() {
           leftIcon="create-outline"
           onPress={() => router.push(`/nova-redacao?studentId=${student.id}` as any)}
         />
+
+        {/* ── Código de acesso do aluno ── */}
+        <Card>
+          <View style={styles.codeHeader}>
+            <View style={[styles.codeIconWrap, { backgroundColor: colors.accent + '18' }]}>
+              <Ionicons name="key-outline" size={16} color={colors.accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.codeTitle, { color: colors.text }]}>Código de acesso</Text>
+              <Text style={[styles.codeSub, { color: colors.mutedText }]}>
+                Compartilhe com o aluno para ele entrar no app
+              </Text>
+            </View>
+          </View>
+
+          {student.accessCode ? (
+            <Pressable
+              onPress={handleGenerateCode}
+              style={[styles.codeBox, { backgroundColor: colors.input, borderColor: colors.accent + '40' }]}
+            >
+              <Text style={[styles.codeValue, { color: colors.accent }]}>{student.accessCode}</Text>
+              <View style={[styles.copyBtn, { backgroundColor: colors.accent + '18' }]}>
+                <Ionicons
+                  name={codeShared ? 'checkmark-outline' : 'share-outline'}
+                  size={16}
+                  color={colors.accent}
+                />
+                <Text style={[styles.copyText, { color: colors.accent }]}>
+                  {codeShared ? 'Ok!' : 'Enviar'}
+                </Text>
+              </View>
+            </Pressable>
+          ) : null}
+
+          <Button
+            title={student.accessCode ? 'Gerar novo código' : 'Gerar código de acesso'}
+            variant="secondary"
+            leftIcon="refresh-outline"
+            onPress={handleGenerateCode}
+          />
+
+          <Text style={[styles.codeHint, { color: colors.mutedText }]}>
+            O aluno usa o e-mail do professor + este código para entrar
+          </Text>
+        </Card>
 
         {/* ── Evolução de notas ── */}
         {correctedSorted.length >= 2 && (
@@ -539,6 +601,26 @@ const styles = StyleSheet.create({
   focusComp: { fontSize: 13, fontWeight: '700', lineHeight: 18 },
   focusScoreRow: { fontSize: 12, lineHeight: 18, marginTop: 2 },
   focusTip: { fontSize: 13, lineHeight: 20 },
+
+  // Access code
+  codeHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 12 },
+  codeIconWrap: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  codeTitle: { fontSize: 14, fontWeight: '700', lineHeight: 19 },
+  codeSub: { fontSize: 12, lineHeight: 17, marginTop: 1 },
+  codeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 10,
+  },
+  codeValue: { fontSize: 28, fontWeight: '800', letterSpacing: 6 },
+  copyBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  copyText: { fontSize: 12, fontWeight: '700' },
+  codeHint: { fontSize: 11, lineHeight: 16, textAlign: 'center', marginTop: 4 },
 
   // Essay history rows
   essayRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 14 },

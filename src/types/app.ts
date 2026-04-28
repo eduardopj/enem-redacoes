@@ -4,12 +4,45 @@ export type Teacher = {
   id: string;
   name: string;
   email: string;
+  state?: string;
+};
+
+export type Turma = {
+  id: string;
+  teacherId: string;
+  name: string;
+  period?: 'manhã' | 'tarde' | 'noite' | 'integral';
+  year?: string;
+  subject?: string;
+  joinCode?: string;
+  createdAt: string;
+};
+
+export type QRJoinPayload = {
+  type: 'enem-ia-join-v1';
+  teacherId: string;
+  teacherName: string;
+  teacherEmail: string;
+  turmaId: string;
+  turmaName: string;
+  joinCode: string;
 };
 
 export type Student = {
   id: string;
   teacherId: string;
+  turmaId?: string;
   name: string;
+  className: string;    // kept for backward compat; mirrors turma.name when turmaId set
+  accessCode?: string;
+  state?: string;
+};
+
+export type StudentSession = {
+  studentId: string;
+  teacherId: string;
+  turmaId?: string;
+  studentName: string;
   className: string;
 };
 
@@ -20,17 +53,23 @@ export type ThemeItem = {
   category: string;
 };
 
+export type EssayInputMode = 'manuscrita' | 'digitada' | 'upload';
+
 export type Essay = {
   id: string;
   teacherId: string;
   studentId: string;
   themeTitle: string;
+  inputMode?: EssayInputMode;
+  essayText?: string;
   imageName?: string;
   imageUri?: string;
   documentName?: string;
   documentUri?: string;
   status: EssayStatus;
   totalScore?: number;
+  teacherScore?: number;   // manual grade added by teacher (0–1000)
+  teacherNote?: string;    // teacher's own written assessment
   transcription?: string;
   transcriptionNotes?: string;
   transcriptionConfidence?: 'alta' | 'media' | 'baixa';

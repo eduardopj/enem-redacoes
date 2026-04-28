@@ -10,9 +10,10 @@ import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -241,8 +242,14 @@ export default function ResultadoScreen() {
   const { colors } = useAppTheme();
   const essays = useAppStore((state) => state.essays);
   const students = useAppStore((state) => state.students);
+  const updateEssayTeacherEval = useAppStore((state) => state.updateEssayTeacherEval);
+  const currentTeacher = useAppStore((state) => state.currentTeacher);
+  const isTeacher = currentTeacher != null;
   const [showTranscription, setShowTranscription] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [teacherEvalOpen, setTeacherEvalOpen] = useState(false);
+  const [teacherScoreInput, setTeacherScoreInput] = useState('');
+  const [teacherNoteInput, setTeacherNoteInput] = useState('');
 
   const essay = useMemo(() => essays.find((item) => item.id === id), [essays, id]);
 
@@ -265,6 +272,7 @@ export default function ResultadoScreen() {
     if (!essay) return;
     try {
       setSharing(true);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       await Share.share({
         message: buildShareText(essay, studentName),
         title: `Parecer — ${studentName}`,
@@ -278,7 +286,7 @@ export default function ResultadoScreen() {
 
   if (!essay) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute allowStudent>
         <ScreenContainer showBack>
           <AppHeader title="Resultado" subtitle="Correção da redação." />
           <Card>
@@ -296,7 +304,7 @@ export default function ResultadoScreen() {
     essay.scoreReliability?.level === 'media' || essay.scoreReliability?.level === 'baixa';
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowStudent>
       <ScreenContainer showBack>
         <AppHeader
           eyebrow="Resultado"
@@ -705,6 +713,164 @@ export default function ResultadoScreen() {
             )}
           </Card>
         </StaggerItem>
+
+        {/* ── Avaliação do professor ── */}
+        {isTeacher ? (
+          <StaggerItem index={20}>
+            <View style={[styles.teacherCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              {/* Header */}
+              <View style={styles.teacherHeader}>
+                <View style={[styles.teacherIconWrap, { backgroundColor: colors.accent + '18' }]}>
+                  <Ionicons name="create-outline" size={18} color={colors.accent} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.teacherTitle, { color: colors.text }]}>
+                    Avaliação do professor
+                  </Text>
+                  <Text style={[styles.teacherSub, { color: colors.mutedText }]}>
+                    Opcional — adicione sua nota e parecer
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => {
+                    if (!teacherEvalOpen) {
+                      setTeacherScoreInput(essay.teacherScore != null ? String(essay.teacherScore) : '');
+                      setTeacherNoteInput(essay.teacherNote ?? '');
+                    }
+                    setTeacherEvalOpen((v) => !v);
+                  }}
+                  style={[styles.teacherToggleBtn, { backgroundColor: teacherEvalOpen ? colors.accent : colors.input }]}
+                >
+                  <Ionicons
+                    name={teacherEvalOpen ? 'chevron-up' : (essay.teacherScore != null || essay.teacherNote ? 'pencil' : 'add')}
+                    size={16}
+                    color={teacherEvalOpen ? '#fff' : colors.accent}
+                  />
+                </Pressable>
+              </View>
+
+              {/* Saved preview */}
+              {!teacherEvalOpen && (essay.teacherScore != null || essay.teacherNote) && (
+                <View style={[styles.teacherPreview, { backgroundColor: colors.input, borderRadius: 12 }]}>
+                  {essay.teacherScore != null && (
+                    <View style={styles.teacherPreviewScore}>
+                      <Text style={[styles.teacherPreviewScoreNum, { color: colors.accent }]}>
+                        {essay.teacherScore}
+                      </Text>
+                      <Text style={[styles.teacherPreviewScoreLabel, { color: colors.mutedText }]}>
+                        /1000 — nota do professor
+                      </Text>
+                    </View>
+                  )}
+                  {essay.teacherNote ? (
+                    <Text style={[styles.teacherPreviewNote, { color: colors.softText }]} numberOfLines={3}>
+                      {essay.teacherNote}
+                    </Text>
+                  ) : null}
+                </View>
+              )}
+
+              {/* Form */}
+              {teacherEvalOpen && (
+                <View style={styles.teacherForm}>
+                  <View style={styles.teacherFormField}>
+                    <Text style={[styles.teacherFormLabel, { color: colors.softText }]}>
+                      Sua nota (0–1000)
+                    </Text>
+                    <View style={[styles.teacherScoreInput, { backgroundColor: colors.input, borderColor: colors.border }]}>
+                      <TextInput
+                        style={[styles.teacherScoreText, { color: colors.text }]}
+                        placeholder="Ex.: 720"
+                        placeholderTextColor={colors.mutedText}
+                        value={teacherScoreInput}
+                        onChangeText={(v) => {
+                          const n = v.replace(/[^0-9]/g, '');
+                          if (n === '' || (parseInt(n) >= 0 && parseInt(n) <= 1000)) setTeacherScoreInput(n);
+                        }}
+                        keyboardType="number-pad"
+                        maxLength={4}
+                      />
+                      <Text style={[styles.teacherScoreDenom, { color: colors.mutedText }]}>/1000</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.teacherFormField}>
+                    <Text style={[styles.teacherFormLabel, { color: colors.softText }]}>
+                      Seu parecer
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.teacherNoteInput,
+                        { backgroundColor: colors.input, borderColor: colors.border, color: colors.text },
+                      ]}
+                      placeholder="Escreva seu comentário ou feedback para o aluno..."
+                      placeholderTextColor={colors.mutedText}
+                      value={teacherNoteInput}
+                      onChangeText={setTeacherNoteInput}
+                      multiline
+                      numberOfLines={5}
+                      textAlignVertical="top"
+                    />
+                  </View>
+
+                  <View style={styles.teacherFormActions}>
+                    <Pressable
+                      onPress={() => setTeacherEvalOpen(false)}
+                      style={[styles.teacherCancelBtn, { borderColor: colors.border }]}
+                    >
+                      <Text style={[styles.teacherCancelText, { color: colors.mutedText }]}>Cancelar</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => {
+                        const score = teacherScoreInput ? parseInt(teacherScoreInput) : undefined;
+                        updateEssayTeacherEval(essay.id, score, teacherNoteInput);
+                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                        setTeacherEvalOpen(false);
+                      }}
+                      style={[styles.teacherSaveBtn, { backgroundColor: colors.accent }]}
+                    >
+                      <Ionicons name="checkmark-outline" size={16} color="#fff" />
+                      <Text style={styles.teacherSaveText}>Salvar avaliação</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              )}
+            </View>
+          </StaggerItem>
+        ) : (essay.teacherScore != null || essay.teacherNote) ? (
+          <StaggerItem index={20}>
+            <View style={[styles.teacherCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={styles.teacherHeader}>
+                <View style={[styles.teacherIconWrap, { backgroundColor: colors.accent + '18' }]}>
+                  <Ionicons name="create-outline" size={18} color={colors.accent} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.teacherTitle, { color: colors.text }]}>
+                    Parecer do professor
+                  </Text>
+                </View>
+              </View>
+              <View style={[styles.teacherPreview, { backgroundColor: colors.input, borderRadius: 12 }]}>
+                {essay.teacherScore != null && (
+                  <View style={styles.teacherPreviewScore}>
+                    <Text style={[styles.teacherPreviewScoreNum, { color: colors.accent }]}>
+                      {essay.teacherScore}
+                    </Text>
+                    <Text style={[styles.teacherPreviewScoreLabel, { color: colors.mutedText }]}>
+                      /1000 — nota do professor
+                    </Text>
+                  </View>
+                )}
+                {essay.teacherNote ? (
+                  <Text style={[styles.teacherPreviewNote, { color: colors.softText }]}>
+                    {essay.teacherNote}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          </StaggerItem>
+        ) : null}
+
       </ScreenContainer>
     </ProtectedRoute>
   );
@@ -1023,4 +1189,65 @@ const styles = StyleSheet.create({
   miniBlockTitle: { fontSize: 12, fontWeight: '700', letterSpacing: 0.1 },
   miniBlockText: { fontSize: 13, lineHeight: 20 },
   monoText: { fontFamily: 'monospace', fontSize: 13, lineHeight: 22 },
+
+  // Teacher evaluation card
+  teacherCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 18,
+    gap: 14,
+  },
+  teacherHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  teacherIconWrap: { width: 38, height: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  teacherTitle: { fontSize: 15, fontWeight: '700', lineHeight: 20 },
+  teacherSub: { fontSize: 12, lineHeight: 17, marginTop: 2 },
+  teacherToggleBtn: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  teacherPreview: { padding: 14, gap: 8 },
+  teacherPreviewScore: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
+  teacherPreviewScoreNum: { fontSize: 32, fontWeight: '800', letterSpacing: -1 },
+  teacherPreviewScoreLabel: { fontSize: 13 },
+  teacherPreviewNote: { fontSize: 13, lineHeight: 20 },
+  teacherForm: { gap: 14 },
+  teacherFormField: { gap: 7 },
+  teacherFormLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.1 },
+  teacherScoreInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 6,
+  },
+  teacherScoreText: { fontSize: 28, fontWeight: '800', letterSpacing: -0.5, minWidth: 60 },
+  teacherScoreDenom: { fontSize: 16, fontWeight: '500' },
+  teacherNoteInput: {
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    lineHeight: 22,
+    minHeight: 110,
+  },
+  teacherFormActions: { flexDirection: 'row', gap: 10 },
+  teacherCancelBtn: {
+    flex: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  teacherCancelText: { fontSize: 14, fontWeight: '600' },
+  teacherSaveBtn: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    borderRadius: 12,
+    paddingVertical: 12,
+  },
+  teacherSaveText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 });

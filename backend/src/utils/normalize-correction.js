@@ -215,5 +215,19 @@ export function normalizeCorrection(raw) {
       ? 'Há qualidades de escrita no texto, mas o tema proposto não foi atendido.'
       : normalizeText(raw?.congratulations, 'Parabéns pelo esforço e pela construção do texto.'),
     feedback: `${feedbackPrefix}${normalizeText(raw?.feedback, 'Sem feedback retornado.')}`,
+    studentDirectMessage: normalizeText(raw?.studentDirectMessage, ''),
+    improvementPotential: normalizeText(raw?.improvementPotential, ''),
+    vocabularyAnalysis: {
+      frequentWords: normalizeStringArray(raw?.vocabularyAnalysis?.frequentWords, 10),
+      synonymSuggestions: (Array.isArray(raw?.vocabularyAnalysis?.synonymSuggestions)
+        ? raw.vocabularyAnalysis.synonymSuggestions
+        : []
+      ).map((s) => ({
+        word: normalizeText(s?.word, ''),
+        alternatives: normalizeStringArray(s?.alternatives, 6),
+        context: normalizeText(s?.context, ''),
+      })).filter((s) => s.word),
+    },
+    detectedTheme: normalizeText(raw?.detectedTheme, ''),
   };
 }

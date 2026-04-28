@@ -27,6 +27,7 @@ export default function RedacaoDetalheScreen() {
 
   const [retrying, setRetrying] = useState(false);
   const prevStatusRef = useRef<string | undefined>(undefined);
+  const didAutoNav = useRef(false);
 
   const essay = useMemo(() => essays.find((item) => item.id === id), [essays, id]);
 
@@ -35,12 +36,18 @@ export default function RedacaoDetalheScreen() {
     return students.find((student) => student.id === essay.studentId)?.name ?? 'Aluno';
   }, [essay, students]);
 
-  // Auto-navigate to resultado when correction completes
+  // Auto-navigate to resultado — on mount if already corrigida, or on transition
   useEffect(() => {
-    if (!essay) return;
+    if (!essay || didAutoNav.current) return;
+    if (essay.status === 'corrigida') {
+      didAutoNav.current = true;
+      router.replace(`/resultado/${essay.id}`);
+      return;
+    }
     const prev = prevStatusRef.current;
     prevStatusRef.current = essay.status;
     if (prev === 'processando' && essay.status === 'corrigida') {
+      didAutoNav.current = true;
       router.replace(`/resultado/${essay.id}`);
     }
   }, [essay?.status]);
@@ -57,7 +64,7 @@ export default function RedacaoDetalheScreen() {
 
   if (!essay) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute allowStudent>
         <ScreenContainer showBack>
           <AppHeader title="Detalhe da redação" subtitle="Redação não encontrada." />
           <Card>
@@ -76,29 +83,42 @@ export default function RedacaoDetalheScreen() {
   const isInRetryQueue = retryQueue.includes(essay.id);
   const currentStep = parseStep(essay.feedback);
 
-  const handleRetry = async () => {
-    try {
-      setRetrying(true);
-      await evaluateEssayWithOpenAI(essay.id);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Falha ao corrigir com OpenAI.';
-      const isNetwork =
-        message.includes('Network request failed') ||
-        message.includes('connect') ||
-        message.includes('backend');
-      Alert.alert(
-        'Erro na correção',
-        isNetwork
-          ? `${message}\n\nA redação foi adicionada à fila automática e será reprocessada quando a conexão for restabelecida.`
-          : message
-      );
-    } finally {
-      setRetrying(false);
-    }
+  const handleRetry = () => {
+    Alert.alert(
+      'Corrigir com IA',
+      'A IA irá transcrever a redação, avaliar as 5 competências do ENEM e gerar um parecer pedagógico completo. Isso pode levar de 30 a 90 segundos.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Iniciar correção',
+          onPress: async () => {
+            try {
+              setRetrying(true);
+              await evaluateEssayWithOpenAI(essay.id);
+            } catch (error) {
+              const message = error instanceof Error ? error.message : 'Falha ao conectar ao servidor.';
+              const isNetwork =
+                message.includes('Network request failed') ||
+                message.includes('connect') ||
+                message.includes('backend') ||
+                message.includes('fetch');
+              Alert.alert(
+                'Erro na correção',
+                isNetwork
+                  ? 'Não foi possível conectar ao servidor de correção. A redação foi adicionada à fila e será reprocessada automaticamente quando a conexão for restabelecida.'
+                  : 'Ocorreu um erro inesperado. Tente novamente mais tarde.'
+              );
+            } finally {
+              setRetrying(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowStudent>
       <ScreenContainer showBack>
         <AppHeader
           eyebrow="Redação"
@@ -174,23 +194,9 @@ export default function RedacaoDetalheScreen() {
                 </View>
                 <Text style={[styles.errorTitle, { color: colors.danger }]}>Falha na correção</Text>
               </View>
-
-              {essay.feedback?.includes('backend') || essay.feedback?.includes('conectar') ? (
-                <>
-                  <Text style={[styles.errorText, { color: colors.mutedText }]}>
-                    O app não conseguiu se conectar ao servidor de correção.
-                  </Text>
-                  <View style={[styles.errorSteps, { backgroundColor: colors.input, borderRadius: 12 }]}>
-                    <Text style={[styles.errorStepsTitle, { color: colors.softText }]}>Como resolver:</Text>
-                    <ErrorStep n="1" text="Abra o terminal no computador" colors={colors} />
-                    <ErrorStep n="2" text={'Entre na pasta backend/ e rode:\nnpm run dev'} colors={colors} mono />
-                    <ErrorStep n="3" text="Verifique se o IP no .env ainda é o mesmo do computador" colors={colors} />
-                    <ErrorStep n="4" text="Toque em «Tentar novamente» abaixo" colors={colors} />
-                  </View>
-                </>
-              ) : (
-                <Text style={[styles.errorText, { color: colors.mutedText }]}>{essay.feedback}</Text>
-              )}
+              <Text style={[styles.errorText, { color: colors.mutedText }]}>
+                Não foi possível completar a correção. Verifique sua conexão e tente novamente. Se o problema persistir, a redação será reprocessada automaticamente quando a conexão for restabelecida.
+              </Text>
             </Card>
           </StaggerItem>
         ) : null}
@@ -210,12 +216,6 @@ export default function RedacaoDetalheScreen() {
               <Text style={[styles.aiCtaDesc, { color: colors.mutedText }]}>
                 A IA irá transcrever o manuscrito, identificar o tema, pontuar as 5 competências e gerar um parecer pedagógico completo.
               </Text>
-              <View style={[styles.backendHint, { backgroundColor: colors.warning + '14', borderColor: colors.warning + '35' }]}>
-                <Ionicons name="server-outline" size={14} color={colors.warning} />
-                <Text style={[styles.backendHintText, { color: colors.warning }]}>
-                  Certifique-se de que o servidor backend está rodando antes de iniciar.
-                </Text>
-              </View>
               <View style={[styles.aiCtaSteps, { borderColor: colors.border, backgroundColor: colors.input }]}>
                 {['Leitura da imagem', 'Avaliação temática', 'Pontuação das competências', 'Parecer pedagógico'].map((s, i) => (
                   <View key={i} style={[styles.aiCtaStep, i < 3 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
@@ -284,19 +284,6 @@ export default function RedacaoDetalheScreen() {
   );
 }
 
-function ErrorStep({ n, text, colors, mono }: { n: string; text: string; colors: any; mono?: boolean }) {
-  return (
-    <View style={styles.errorStepRow}>
-      <View style={[styles.errorStepNum, { backgroundColor: colors.accent + '20' }]}>
-        <Text style={[styles.errorStepNumText, { color: colors.accent }]}>{n}</Text>
-      </View>
-      <Text style={[styles.errorStepText, { color: colors.softText }, mono && { fontFamily: 'monospace', fontSize: 12 }]}>
-        {text}
-      </Text>
-    </View>
-  );
-}
-
 function InfoRow({ label, value, colors }: { label: string; value: string; colors: any }) {
   return (
     <View style={[styles.row, { borderBottomColor: colors.border }]}>
@@ -342,13 +329,7 @@ const styles = StyleSheet.create({
   errorHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: theme.spacing.sm },
   errorIconWrap: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   errorTitle: { fontSize: 16, fontWeight: '700', lineHeight: 22, flex: 1 },
-  errorText: { fontSize: 14, lineHeight: 22, marginBottom: theme.spacing.sm },
-  errorSteps: { padding: theme.spacing.md, gap: 10 },
-  errorStepsTitle: { fontSize: 12, fontWeight: '700', letterSpacing: 0.1, marginBottom: 4 },
-  errorStepRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  errorStepNum: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
-  errorStepNumText: { fontSize: 11, fontWeight: '700' },
-  errorStepText: { flex: 1, fontSize: 13, lineHeight: 20 },
+  errorText: { fontSize: 14, lineHeight: 22 },
   emptyText: { fontSize: 15, lineHeight: 22 },
   // Retry queue
   queueCard: { borderWidth: 1 },
@@ -376,8 +357,6 @@ const styles = StyleSheet.create({
   aiCtaStepNum: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   aiCtaStepNumText: { fontSize: 11, fontWeight: '700', color: '#fff' },
   aiCtaStepLabel: { fontSize: 13, lineHeight: 18 },
-  backendHint: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8 },
-  backendHintText: { flex: 1, fontSize: 12, lineHeight: 18, fontWeight: '600' },
   // Summary chips
   summaryGrid: { flexDirection: 'row', gap: 8, marginBottom: theme.spacing.sm },
   chip: { flex: 1, borderRadius: 12, padding: theme.spacing.sm, gap: 4, alignItems: 'center' },

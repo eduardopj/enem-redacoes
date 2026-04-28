@@ -92,7 +92,7 @@ export default function RedacoesScreen() {
 
   return (
     <ProtectedRoute>
-      <ScreenContainer showBack>
+      <ScreenContainer showBack showNav>
         <AppHeader
           eyebrow="Redações"
           title="Pipeline de correção"
@@ -203,6 +203,7 @@ export default function RedacoesScreen() {
                         themeTitle={essay.themeTitle}
                         status={essay.status}
                         totalScore={essay.totalScore}
+                        competencies={essay.competencies}
                         createdAt={essay.createdAt}
                         correctedAt={essay.correctedAt}
                         onPress={() => router.push(`/redacao/${essay.id}`)}

@@ -3,7 +3,13 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
+import { LogBox } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+LogBox.ignoreLogs([
+  'Unable to activate keep awake',
+  'ExpoKeepAwake',
+]);
 
 function ThemedStack() {
   const { colors, isDark } = useAppTheme();

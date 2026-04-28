@@ -88,7 +88,7 @@ export default function AnalyticsScreen() {
   if (correctedEssays.length === 0) {
     return (
       <ProtectedRoute>
-        <ScreenContainer showBack>
+        <ScreenContainer showBack showNav>
           <AppHeader eyebrow="Análise" title="Análise da Turma" subtitle="Dados consolidados por competência e aluno." />
           <Card>
             <View style={styles.emptyWrap}>

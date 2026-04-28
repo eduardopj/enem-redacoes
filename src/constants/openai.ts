@@ -10,4 +10,3 @@ export const OPENAI_CONFIG = {
   backendUrl: normalizedBackendUrl,
 };
 
-console.log('OPENAI_CONFIG.backendUrl =', OPENAI_CONFIG.backendUrl);

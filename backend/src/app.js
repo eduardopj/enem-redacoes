@@ -1,13 +1,15 @@
 import cors from 'cors';
 import express from 'express';
 import { openAiRoutes } from './routes/openai.routes.js';
+import { researchRoutes } from './routes/research.routes.js';
+import { syncRoutes } from './routes/sync.routes.js';
 
 const app = express();
 
 app.use(
   cors({
     origin: '*',
-    methods: ['GET', 'POST', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
@@ -25,6 +27,8 @@ app.use((req, _res, next) => {
 });
 
 app.use('/openai', openAiRoutes);
+app.use('/research', researchRoutes);
+app.use('/sync', syncRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error('Erro global no backend:', err);

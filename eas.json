@@ -12,10 +12,27 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "http://146.190.47.67:3333",
+        "EXPO_PUBLIC_OPENAI_USE_BACKEND": "true",
+        "EXPO_PUBLIC_OPENAI_MODEL": "gpt-4.1-mini",
+        "EXPO_PUBLIC_OPENAI_TIMEOUT_MS": "120000",
+        "EXPO_PUBLIC_APP_ENV": "production"
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "http://146.190.47.67:3333",
+        "EXPO_PUBLIC_OPENAI_USE_BACKEND": "true",
+        "EXPO_PUBLIC_OPENAI_MODEL": "gpt-4.1-mini",
+        "EXPO_PUBLIC_OPENAI_TIMEOUT_MS": "120000",
+        "EXPO_PUBLIC_APP_ENV": "production"
+      }
     }
   },
   "submit": {

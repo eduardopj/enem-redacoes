@@ -4,11 +4,8 @@ import * as FileSystem from 'expo-file-system/legacy';
 
 function getMimeTypeFromUri(uri: string) {
   const lower = uri.toLowerCase();
-
   if (lower.endsWith('.png')) return 'image/png';
   if (lower.endsWith('.webp')) return 'image/webp';
-  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
-
   return 'image/jpeg';
 }
 
@@ -19,24 +16,33 @@ export async function correctEssayWithOpenAI(
     throw new Error('EXPO_PUBLIC_BACKEND_URL não configurada no .env do app.');
   }
 
-  const imageBase64 = await FileSystem.readAsStringAsync(input.imageUri, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
-
-  const mimeType = getMimeTypeFromUri(input.imageUri);
   const endpoint = `${OPENAI_CONFIG.backendUrl}/openai/correct-essay`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 120_000);
+
+  let body: Record<string, unknown>;
+
+  if (input.essayText) {
+    body = { themeTitle: input.themeTitle, essayText: input.essayText };
+  } else if (input.imageUri) {
+    const imageBase64 = await FileSystem.readAsStringAsync(input.imageUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    body = {
+      themeTitle: input.themeTitle,
+      imageBase64,
+      mimeType: getMimeTypeFromUri(input.imageUri),
+    };
+  } else {
+    throw new Error('Forneça uma imagem (imageUri) ou texto (essayText).');
+  }
 
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        themeTitle: input.themeTitle,
-        imageBase64,
-        mimeType,
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
     });
 
     if (!response.ok) {
@@ -46,19 +52,22 @@ export async function correctEssayWithOpenAI(
 
     return response.json();
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Falha desconhecida ao conectar com o backend.';
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('A correção demorou mais que o esperado (120s). Verifique sua conexão e tente novamente.');
+    }
+
+    const message = error instanceof Error ? error.message : 'Falha desconhecida ao conectar com o backend.';
 
     if (
       message.includes('Network request failed') ||
       message.includes('fetch') ||
       message.includes('network')
     ) {
-      throw new Error(
-        `Não foi possível conectar ao backend em ${endpoint}. Verifique o .env, reinicie o Expo com -c e confirme se o app leu a URL correta.`
-      );
+      throw new Error('Não foi possível conectar ao servidor de correção. Verifique sua conexão com a internet e tente novamente.');
     }
 
     throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }

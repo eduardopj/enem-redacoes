@@ -7,6 +7,7 @@ import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
+import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -81,6 +82,9 @@ const cStyles = StyleSheet.create({
 
 // ─── Tela principal ──────────────────────────────────────────────────────────
 
+const FREE_THEME_ID = '__tema_livre__';
+const FREE_THEME_ITEM = { id: FREE_THEME_ID, title: 'Tema Livre', category: 'A IA identifica o tema automaticamente' };
+
 export default function NovaRedacaoScreen() {
   const { colors } = useAppTheme();
   const { studentId: studentIdParam, themeId: themeIdParam } = useLocalSearchParams<{
@@ -91,6 +95,7 @@ export default function NovaRedacaoScreen() {
   const currentTeacher = useAppStore((state) => state.currentTeacher);
   const students = useAppStore((state) => state.students);
   const themes = useAppStore((state) => state.themes);
+  const turmas = useAppStore((state) => state.turmas);
   const addEssay = useAppStore((state) => state.addEssay);
   const evaluateEssayWithOpenAI = useAppStore((state) => state.evaluateEssayWithOpenAI);
 
@@ -99,6 +104,11 @@ export default function NovaRedacaoScreen() {
     return students.filter((s) => s.teacherId === currentTeacher.id);
   }, [currentTeacher, students]);
 
+  const myTurmas = useMemo(
+    () => turmas.filter((t) => t.teacherId === currentTeacher?.id),
+    [turmas, currentTeacher]
+  );
+
   const availableThemes = useMemo(() => {
     if (!currentTeacher) return [];
     return themes.filter((t) => t.teacherId === currentTeacher.id);
@@ -106,6 +116,7 @@ export default function NovaRedacaoScreen() {
 
   const [selectedStudentId, setSelectedStudentId] = useState(studentIdParam ?? '');
   const [selectedThemeId, setSelectedThemeId] = useState(themeIdParam ?? '');
+  const [filterTurmaId, setFilterTurmaId] = useState<string>('');
   const [imageUri, setImageUri] = useState('');
   const [imageName, setImageName] = useState('');
   const [documentUri, setDocumentUri] = useState('');
@@ -116,11 +127,21 @@ export default function NovaRedacaoScreen() {
   useEffect(() => { if (themeIdParam) setSelectedThemeId(themeIdParam); }, [themeIdParam]);
 
   const selectedStudent = teacherStudents.find((s) => s.id === selectedStudentId);
-  const selectedTheme = availableThemes.find((t) => t.id === selectedThemeId);
+  const selectedTheme = selectedThemeId === FREE_THEME_ID
+    ? FREE_THEME_ITEM
+    : availableThemes.find((t) => t.id === selectedThemeId);
   const hasFile = Boolean(imageUri || documentUri);
 
-  const stepsDone = [Boolean(selectedStudentId), Boolean(selectedThemeId), hasFile];
-  const canSubmit = stepsDone.every(Boolean);
+  const filteredStudents = useMemo(() => {
+    if (!filterTurmaId) return teacherStudents;
+    return teacherStudents.filter((s) => s.turmaId === filterTurmaId);
+  }, [teacherStudents, filterTurmaId]);
+
+  const step1Done = Boolean(selectedStudentId);
+  const step2Done = step1Done && Boolean(selectedThemeId);
+  const step3Done = step2Done && hasFile;
+  const stepsDone = [step1Done, step2Done, step3Done];
+  const canSubmit = step3Done;
 
   async function checkImageQuality(uri: string): Promise<boolean> {
     try {
@@ -192,6 +213,7 @@ export default function NovaRedacaoScreen() {
 
   const handleSubmit = async () => {
     if (!selectedStudent || !selectedTheme || !hasFile) return;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
     const essayId = addEssay({
       studentId: selectedStudent.id,
@@ -242,35 +264,70 @@ export default function NovaRedacaoScreen() {
               colors={colors}
             />
           ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.hList}
-            >
-              {teacherStudents.map((s) => {
-                const initials = s.name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-                const isSelected = selectedStudentId === s.id;
-                return (
+            <>
+              {/* Filtro por turma */}
+              {myTurmas.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.turmaFilterRow} style={{ flexGrow: 0, marginBottom: 10 }}>
                   <Pressable
-                    key={s.id}
-                    onPress={() => setSelectedStudentId(s.id)}
-                    style={[
-                      styles.studentCard,
-                      {
-                        borderColor: isSelected ? colors.accent : colors.border,
-                        backgroundColor: isSelected ? colors.accent + '0E' : colors.input,
-                      },
-                    ]}
+                    onPress={() => setFilterTurmaId('')}
+                    style={[styles.turmaFilterChip, !filterTurmaId
+                      ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                      : { backgroundColor: colors.input, borderColor: colors.border }]}
                   >
-                    <View style={[styles.studentAvatar, { backgroundColor: isSelected ? colors.accent : colors.mutedText + '30' }]}>
-                      <Text style={[styles.studentInitials, { color: isSelected ? '#fff' : colors.softText }]}>{initials}</Text>
-                    </View>
-                    <Text style={[styles.studentName, { color: colors.text }]} numberOfLines={2}>{s.name}</Text>
-                    <Text style={[styles.studentClass, { color: colors.mutedText }]} numberOfLines={1}>{s.className}</Text>
+                    <Text style={[styles.turmaFilterText, { color: !filterTurmaId ? '#fff' : colors.softText }]}>Todos</Text>
                   </Pressable>
-                );
-              })}
-            </ScrollView>
+                  {myTurmas.map((t) => {
+                    const active = filterTurmaId === t.id;
+                    return (
+                      <Pressable
+                        key={t.id}
+                        onPress={() => setFilterTurmaId(active ? '' : t.id)}
+                        style={[styles.turmaFilterChip, active
+                          ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                          : { backgroundColor: colors.input, borderColor: colors.border }]}
+                      >
+                        <Ionicons name="school-outline" size={11} color={active ? '#fff' : colors.mutedText} />
+                        <Text style={[styles.turmaFilterText, { color: active ? '#fff' : colors.softText }]}>{t.name}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              )}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.hList}
+              >
+                {filteredStudents.map((s) => {
+                  const initials = s.name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+                  const isSelected = selectedStudentId === s.id;
+                  return (
+                    <Pressable
+                      key={s.id}
+                      onPress={() => setSelectedStudentId(s.id)}
+                      style={[
+                        styles.studentCard,
+                        {
+                          borderColor: isSelected ? colors.accent : colors.border,
+                          backgroundColor: isSelected ? colors.accent + '0E' : colors.input,
+                        },
+                      ]}
+                    >
+                      <View style={[styles.studentAvatar, { backgroundColor: isSelected ? colors.accent : colors.mutedText + '30' }]}>
+                        <Text style={[styles.studentInitials, { color: isSelected ? '#fff' : colors.softText }]}>{initials}</Text>
+                      </View>
+                      <Text style={[styles.studentName, { color: colors.text }]} numberOfLines={2}>{s.name}</Text>
+                      <Text style={[styles.studentClass, { color: colors.mutedText }]} numberOfLines={1}>{s.className}</Text>
+                    </Pressable>
+                  );
+                })}
+                {filteredStudents.length === 0 && (
+                  <View style={[styles.noStudentHint, { backgroundColor: colors.input, borderColor: colors.border }]}>
+                    <Text style={[styles.noStudentText, { color: colors.mutedText }]}>Nenhum aluno nesta turma.</Text>
+                  </View>
+                )}
+              </ScrollView>
+            </>
           )}
         </SectionBlock>
 
@@ -295,6 +352,38 @@ export default function NovaRedacaoScreen() {
             />
           ) : (
             <View style={styles.themeList}>
+              {/* Tema Livre */}
+              {(() => {
+                const isSelected = selectedThemeId === FREE_THEME_ID;
+                return (
+                  <Pressable
+                    key={FREE_THEME_ID}
+                    onPress={() => setSelectedThemeId(FREE_THEME_ID)}
+                    style={[
+                      styles.themeRow,
+                      {
+                        borderColor: isSelected ? colors.accent : colors.accent + '40',
+                        backgroundColor: isSelected ? colors.accent + '10' : colors.accent + '06',
+                      },
+                    ]}
+                  >
+                    <View style={styles.themeInfo}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                        <Ionicons name="sparkles" size={13} color={colors.accent} />
+                        <Text style={[styles.themeTitle, { color: colors.accent }]}>Tema Livre</Text>
+                      </View>
+                      <Text style={[styles.themeCategory, { color: colors.mutedText }]}>A IA identifica o tema automaticamente</Text>
+                    </View>
+                    <View style={[
+                      styles.themeRadio,
+                      { borderColor: isSelected ? colors.accent : colors.accent + '60' },
+                      isSelected && { backgroundColor: colors.accent },
+                    ]}>
+                      {isSelected ? <Ionicons name="checkmark" size={12} color="#fff" /> : null}
+                    </View>
+                  </Pressable>
+                );
+              })()}
               {availableThemes.map((t) => {
                 const isSelected = selectedThemeId === t.id;
                 return (
@@ -505,7 +594,7 @@ function SectionBlock({
           </View>
         ) : null}
       </View>
-      <View style={bStyles.body}>{children}</View>
+      <View style={bStyles.body} pointerEvents={locked ? 'none' : 'auto'}>{children}</View>
     </View>
   );
 }
@@ -543,6 +632,19 @@ const eStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   lockedText: { fontSize: 13, lineHeight: 18 },
+
+  // Turma filter
+  turmaFilterRow: { flexDirection: 'row', gap: 7, paddingVertical: 2 },
+  turmaFilterChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 11, paddingVertical: 7, borderRadius: 999, borderWidth: 1.5,
+  },
+  turmaFilterText: { fontSize: 12, fontWeight: '600' },
+  noStudentHint: {
+    width: 160, borderRadius: 12, borderWidth: 1.5, padding: 14,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  noStudentText: { fontSize: 12, textAlign: 'center', lineHeight: 18 },
 
   // Alunos
   hList: { gap: 10, paddingVertical: 2, paddingRight: 4 },

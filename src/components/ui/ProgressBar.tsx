@@ -1,31 +1,52 @@
-import { theme } from '@/theme';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, View } from 'react-native';
 import { useAppTheme } from '@/theme/ThemeContext';
-import { StyleSheet, View } from 'react-native';
 
 type ProgressBarProps = {
-  value: number;
+  value: number;       // 0–100
+  color?: string;
+  height?: number;
+  delay?: number;
 };
 
-export function ProgressBar({ value }: ProgressBarProps) {
+export function ProgressBar({ value, color, height = 10, delay = 0 }: ProgressBarProps) {
   const { colors } = useAppTheme();
-  const progress = Math.max(0, Math.min(100, value));
+  const [containerWidth, setContainerWidth] = useState(0);
+  const animWidth = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (containerWidth === 0) return;
+    const target = (Math.min(Math.max(value, 0), 100) / 100) * containerWidth;
+    Animated.timing(animWidth, {
+      toValue: target,
+      duration: 700,
+      delay,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [value, containerWidth, delay]);
+
+  const fillColor = color ?? colors.accent;
 
   return (
-    <View style={[styles.track, { backgroundColor: colors.input }]}>
-      <View style={[styles.fill, { width: `${progress}%`, backgroundColor: colors.accent }]} />
+    <View
+      style={{
+        width: '100%',
+        height,
+        borderRadius: 999,
+        overflow: 'hidden',
+        backgroundColor: colors.input,
+      }}
+      onLayout={e => setContainerWidth(e.nativeEvent.layout.width)}
+    >
+      <Animated.View
+        style={{
+          width: animWidth,
+          height: '100%',
+          backgroundColor: fillColor,
+          borderRadius: 999,
+        }}
+      />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  track: {
-    width: '100%',
-    height: 10,
-    borderRadius: theme.radius.pill,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: theme.radius.pill,
-  },
-});

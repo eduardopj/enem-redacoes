@@ -5,21 +5,22 @@ const router = Router();
 
 router.post('/correct-essay', async (req, res) => {
   console.log('POST /openai/correct-essay chegou');
-  console.log(req.body);
 
   try {
-    const { themeTitle, imageBase64, mimeType } = req.body;
+    const { themeTitle, imageBase64, mimeType, essayText } = req.body;
 
-    if (!themeTitle || !imageBase64 || !mimeType) {
-      return res.status(400).json({
-        error: 'Campos obrigatórios: themeTitle, imageBase64, mimeType',
-      });
+    if (!themeTitle) {
+      return res.status(400).json({ error: 'themeTitle é obrigatório' });
+    }
+    if (!imageBase64 && !essayText) {
+      return res.status(400).json({ error: 'Envie imageBase64 (foto) ou essayText (texto digitado)' });
     }
 
     const result = await correctEssayWithOpenAI({
       themeTitle,
       imageBase64,
       mimeType,
+      essayText,
     });
 
     return res.json(result);

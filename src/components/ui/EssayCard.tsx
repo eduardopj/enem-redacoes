@@ -8,16 +8,23 @@ import { StatusBadge } from './StatusBadge';
 
 type EssayStatus = 'pendente' | 'processando' | 'corrigida';
 
+type Competencies = {
+  c1: number; c2: number; c3: number; c4: number; c5: number;
+};
+
 type EssayCardProps = {
   studentName: string;
   themeTitle: string;
   status: EssayStatus;
   totalScore?: number;
+  competencies?: Competencies;
   createdAt?: string;
   correctedAt?: string;
   onPress?: () => void;
   onDelete?: () => void;
 };
+
+const COMP_COLORS = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#F43F5E'];
 
 function scoreColor(score: number): string {
   if (score >= 900) return '#16A34A';
@@ -28,11 +35,36 @@ function scoreColor(score: number): string {
   return '#EF4444';
 }
 
+function MiniCompBars({ competencies }: { competencies: Competencies }) {
+  const vals = [competencies.c1, competencies.c2, competencies.c3, competencies.c4, competencies.c5];
+  return (
+    <View style={barStyles.wrap}>
+      {vals.map((v, i) => (
+        <View key={i} style={barStyles.col}>
+          <View style={barStyles.track}>
+            <View style={[barStyles.fill, { height: `${(v / 200) * 100}%`, backgroundColor: COMP_COLORS[i] }]} />
+          </View>
+          <Text style={[barStyles.label, { color: COMP_COLORS[i] }]}>C{i + 1}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+const barStyles = StyleSheet.create({
+  wrap: { flexDirection: 'row', gap: 6, alignItems: 'flex-end', height: 28 },
+  col: { flex: 1, alignItems: 'center', gap: 2 },
+  track: { width: '100%', height: 20, backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 3, justifyContent: 'flex-end', overflow: 'hidden' },
+  fill: { width: '100%', borderRadius: 3 },
+  label: { fontSize: 8, fontWeight: '700' },
+});
+
 export function EssayCard({
   studentName,
   themeTitle,
   status,
   totalScore,
+  competencies,
   createdAt,
   correctedAt,
   onPress,
@@ -58,13 +90,15 @@ export function EssayCard({
     .join('')
     .toUpperCase();
 
+  const showCompBars = status === 'corrigida' && competencies;
+
   return (
     <Card>
       <Pressable onPress={onPress}>
         <View style={styles.topRow}>
           {/* Avatar */}
-          <View style={[styles.avatar, { backgroundColor: colors.accent + '18' }]}>
-            <Text style={[styles.avatarText, { color: colors.accent }]}>{initials}</Text>
+          <View style={[styles.avatar, { backgroundColor: status === 'corrigida' ? color + '18' : colors.accent + '18' }]}>
+            <Text style={[styles.avatarText, { color: status === 'corrigida' ? color : colors.accent }]}>{initials}</Text>
           </View>
 
           {/* Info */}
@@ -87,6 +121,13 @@ export function EssayCard({
             </View>
           )}
         </View>
+
+        {/* Mini competency bars */}
+        {showCompBars ? (
+          <View style={[styles.compSection, { borderTopColor: colors.border }]}>
+            <MiniCompBars competencies={competencies!} />
+          </View>
+        ) : null}
 
         <View style={[styles.metaRow, { borderTopColor: colors.border }]}>
           <StatusBadge status={status} />
@@ -171,6 +212,11 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  compSection: {
+    paddingTop: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+    borderTopWidth: 1,
   },
   metaRow: {
     paddingTop: theme.spacing.sm,

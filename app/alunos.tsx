@@ -13,33 +13,67 @@ import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function AlunosScreen() {
   const currentTeacher = useAppStore((state) => state.currentTeacher);
   const students = useAppStore((state) => state.students);
+  const essays = useAppStore((state) => state.essays);
+  const turmas = useAppStore((state) => state.turmas);
   const deleteStudent = useAppStore((state) => state.deleteStudent);
   const { colors } = useAppTheme();
 
   const [search, setSearch] = useState('');
+  const [selectedTurmaId, setSelectedTurmaId] = useState<string>('');
 
   const teacherStudents = useMemo(() => {
     if (!currentTeacher) return [];
-    return students.filter((student) => student.teacherId === currentTeacher.id);
+    return students.filter((s) => s.teacherId === currentTeacher.id);
   }, [currentTeacher, students]);
 
+  const myTurmas = useMemo(
+    () => turmas.filter((t) => t.teacherId === currentTeacher?.id),
+    [turmas, currentTeacher]
+  );
+
+  // Compute per-student stats inline
+  const studentStats = useMemo(() => {
+    return teacherStudents.reduce<Record<string, { avg: number | null; count: number; trend: 'up' | 'down' | 'stable' | null }>>((acc, s) => {
+      const ces = essays.filter((e) => e.studentId === s.id && e.status === 'corrigida')
+        .sort((a, b) => (a.correctedAt ?? a.createdAt ?? '').localeCompare(b.correctedAt ?? b.createdAt ?? ''));
+      const scores = ces.map((e) => e.totalScore ?? 0);
+      const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+      let trend: 'up' | 'down' | 'stable' | null = null;
+      if (scores.length >= 2) {
+        const delta = scores[scores.length - 1] - scores[scores.length - 2];
+        trend = delta > 20 ? 'up' : delta < -20 ? 'down' : 'stable';
+      }
+      acc[s.id] = { avg, count: essays.filter((e) => e.studentId === s.id).length, trend };
+      return acc;
+    }, {});
+  }, [teacherStudents, essays]);
+
   const filteredStudents = useMemo(() => {
-    if (!search.trim()) return teacherStudents;
-    const q = search.trim().toLowerCase();
-    return teacherStudents.filter(
-      (s) => s.name.toLowerCase().includes(q) || s.className.toLowerCase().includes(q)
-    );
-  }, [teacherStudents, search]);
+    let result = teacherStudents;
+
+    if (selectedTurmaId) {
+      result = result.filter((s) => s.turmaId === selectedTurmaId);
+    }
+
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      result = result.filter(
+        (s) => s.name.toLowerCase().includes(q) || s.className.toLowerCase().includes(q)
+      );
+    }
+
+    return result;
+  }, [teacherStudents, search, selectedTurmaId]);
 
   const handleDelete = (studentId: string, studentName: string) => {
     Alert.alert(
       'Excluir aluno',
-      `Deseja realmente excluir ${studentName}? As redações vinculadas a este aluno também serão removidas.`,
+      `Deseja realmente excluir ${studentName}? As redações vinculadas também serão removidas.`,
       [
         { text: 'Cancelar', style: 'cancel' },
         { text: 'Excluir', style: 'destructive', onPress: () => deleteStudent(studentId) },
@@ -51,20 +85,20 @@ export default function AlunosScreen() {
 
   return (
     <ProtectedRoute>
-      <ScreenContainer showBack>
+      <ScreenContainer showBack showNav>
         <AppHeader
           eyebrow="Alunos"
           title="Base de alunos"
-          subtitle="Cadastre, visualize e gerencie seus alunos."
+          subtitle={hasStudents ? `${teacherStudents.length} aluno${teacherStudents.length !== 1 ? 's' : ''} cadastrado${teacherStudents.length !== 1 ? 's' : ''}` : 'Cadastre e gerencie seus alunos.'}
         />
 
-        {hasStudents ? (
+        {hasStudents && (
           <Button
             title="Novo aluno"
             leftIcon="add-outline"
             onPress={() => router.push('/novo-aluno')}
           />
-        ) : null}
+        )}
 
         {!hasStudents ? (
           <EmptyState
@@ -76,6 +110,7 @@ export default function AlunosScreen() {
           />
         ) : (
           <>
+            {/* Busca */}
             <View style={[styles.searchRow, { backgroundColor: colors.input, borderColor: colors.border }]}>
               <Ionicons name="search-outline" size={16} color={colors.mutedText} />
               <TextInput
@@ -87,33 +122,100 @@ export default function AlunosScreen() {
                 returnKeyType="search"
                 autoCorrect={false}
               />
-              {search.length > 0 ? (
+              {search.length > 0 && (
                 <Pressable onPress={() => setSearch('')} hitSlop={8}>
                   <Ionicons name="close-circle" size={16} color={colors.mutedText} />
                 </Pressable>
-              ) : null}
+              )}
             </View>
+
+            {/* Filtro por turma */}
+            {myTurmas.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={styles.turmaFilterRow}>
+                <Pressable
+                  onPress={() => setSelectedTurmaId('')}
+                  style={[
+                    styles.turmaChip,
+                    !selectedTurmaId
+                      ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                      : { backgroundColor: colors.input, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.turmaChipText, { color: !selectedTurmaId ? '#fff' : colors.softText }]}>
+                    Todos
+                  </Text>
+                </Pressable>
+                {myTurmas.map((t) => {
+                  const active = selectedTurmaId === t.id;
+                  const count = teacherStudents.filter((s) => s.turmaId === t.id).length;
+                  return (
+                    <Pressable
+                      key={t.id}
+                      onPress={() => setSelectedTurmaId(active ? '' : t.id)}
+                      style={[
+                        styles.turmaChip,
+                        active
+                          ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                          : { backgroundColor: colors.input, borderColor: colors.border },
+                      ]}
+                    >
+                      <Ionicons name="school-outline" size={12} color={active ? '#fff' : colors.mutedText} />
+                      <Text style={[styles.turmaChipText, { color: active ? '#fff' : colors.softText }]}>
+                        {t.name}
+                      </Text>
+                      <View style={[styles.countBadge, { backgroundColor: active ? 'rgba(255,255,255,0.25)' : colors.border }]}>
+                        <Text style={[styles.countBadgeText, { color: active ? '#fff' : colors.mutedText }]}>{count}</Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            )}
+
+            {/* Resultado + lista */}
+            {selectedTurmaId || search ? (
+              <View style={styles.resultRow}>
+                <Text style={[styles.resultCount, { color: colors.mutedText }]}>
+                  {filteredStudents.length} aluno{filteredStudents.length !== 1 ? 's' : ''}
+                </Text>
+                {(selectedTurmaId || search) && (
+                  <Pressable
+                    onPress={() => { setSelectedTurmaId(''); setSearch(''); }}
+                    style={[styles.clearBtn, { backgroundColor: colors.input }]}
+                  >
+                    <Ionicons name="close" size={12} color={colors.mutedText} />
+                    <Text style={[styles.clearBtnText, { color: colors.mutedText }]}>Limpar filtros</Text>
+                  </Pressable>
+                )}
+              </View>
+            ) : null}
 
             <FlatList
               data={filteredStudents}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.list}
               scrollEnabled={false}
-              renderItem={({ item: student, index }) => (
-                <StaggerItem index={index}>
-                  <StudentCard
-                    name={student.name}
-                    className={student.className}
-                    onPress={() => router.push(`/aluno/${student.id}`)}
-                    onDelete={() => handleDelete(student.id, student.name)}
-                  />
-                </StaggerItem>
-              )}
+              renderItem={({ item: student, index }) => {
+                const stats = studentStats[student.id];
+                return (
+                  <StaggerItem index={index}>
+                    <StudentCard
+                      name={student.name}
+                      className={student.className}
+                      avgScore={stats?.avg}
+                      essayCount={stats?.count}
+                      trend={stats?.trend}
+                      onPress={() => router.push(`/aluno/${student.id}`)}
+                      onDelete={() => handleDelete(student.id, student.name)}
+                    />
+                  </StaggerItem>
+                );
+              }}
               ListEmptyComponent={
                 <EmptyState
                   icon="search-outline"
                   title="Nenhum aluno encontrado"
-                  description={`Nenhum resultado para "${search}".`}
+                  description={search ? `Nenhum resultado para "${search}".` : 'Nenhum aluno nesta turma ainda.'}
                 />
               }
             />
@@ -139,7 +241,43 @@ const styles = StyleSheet.create({
     ...theme.typography.body,
     paddingVertical: 0,
   },
-  list: {
-    gap: theme.spacing.md,
+  turmaFilterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingVertical: 2,
   },
+  turmaChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1.5,
+  },
+  turmaChipText: { fontSize: 12, fontWeight: '600' },
+  countBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 999,
+    minWidth: 18,
+    alignItems: 'center',
+  },
+  countBadgeText: { fontSize: 10, fontWeight: '700' },
+  resultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  resultCount: { fontSize: 12, fontWeight: '500' },
+  clearBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  clearBtnText: { fontSize: 11, fontWeight: '600' },
+  list: { gap: theme.spacing.md },
 });
