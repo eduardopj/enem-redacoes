@@ -36,15 +36,19 @@ export function AppHeader({ eyebrow, title, subtitle, showLogout }: AppHeaderPro
   return (
     <View style={styles.container}>
       <View style={styles.row}>
-        {/* Avatar */}
-        <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
-          <Text style={styles.avatarText}>{initials}</Text>
+        {/* Avatar with subtle ring */}
+        <View style={[styles.avatarRing, { borderColor: colors.accent + '30' }]}>
+          <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
+            <Text style={styles.avatarText}>{initials}</Text>
+          </View>
         </View>
 
         {/* Text */}
         <View style={styles.textGroup}>
           {eyebrow ? (
-            <Text style={[styles.eyebrow, { color: colors.mutedText }]}>{eyebrow}</Text>
+            <View style={[styles.eyebrowBadge, { backgroundColor: colors.accent + '12' }]}>
+              <Text style={[styles.eyebrow, { color: colors.accent }]}>{eyebrow}</Text>
+            </View>
           ) : null}
           <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
           {subtitle ? (
@@ -56,7 +60,7 @@ export function AppHeader({ eyebrow, title, subtitle, showLogout }: AppHeaderPro
         {showLogout ? (
           <Pressable
             onPress={handleLogout}
-            style={[styles.actionBtn, { backgroundColor: colors.surface }]}
+            style={[styles.actionBtn, { backgroundColor: colors.input, borderColor: colors.border }]}
             hitSlop={8}
           >
             <Ionicons name="log-out-outline" size={18} color={colors.mutedText} />
@@ -70,45 +74,60 @@ export function AppHeader({ eyebrow, title, subtitle, showLogout }: AppHeaderPro
 const styles = StyleSheet.create({
   container: {
     paddingTop: theme.spacing.xs,
-    paddingBottom: theme.spacing.xs,
+    paddingBottom: theme.spacing.sm,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.md,
   },
-  avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+  avatarRing: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#4E76F8',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
   },
   avatarText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
   textGroup: {
     flex: 1,
-    gap: 2,
+    gap: 3,
+  },
+  eyebrowBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    marginBottom: 2,
   },
   eyebrow: {
     fontSize: 11,
-    fontWeight: '500',
-    letterSpacing: 0.3,
+    fontWeight: '700',
+    letterSpacing: 0.4,
   },
   title: {
     fontSize: 22,
     fontWeight: '700',
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
     lineHeight: 28,
   },
   subtitle: {
@@ -119,12 +138,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#1B2559',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
   },
 });

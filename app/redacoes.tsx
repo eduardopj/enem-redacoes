@@ -109,19 +109,23 @@ export default function RedacoesScreen() {
 
         {!hasStudents ? (
           <EmptyState
-            icon="document-text-outline"
-            title="Nenhum aluno disponível"
-            description="Antes de cadastrar uma redação, cadastre pelo menos um aluno."
+            icon="people-outline"
+            title="Cadastre seus alunos primeiro"
+            description="As redações precisam ser vinculadas a um aluno. Comece cadastrando pelo menos um aluno da sua turma."
             buttonLabel="Cadastrar aluno"
+            secondaryLabel="Ir para Alunos"
             onPress={() => router.push('/novo-aluno')}
+            onSecondaryPress={() => router.push('/alunos')}
+            tip="Você pode cadastrar alunos individualmente ou importar uma turma inteira via QR code."
           />
         ) : !hasEssays ? (
           <EmptyState
-            icon="document-outline"
-            title="Nenhuma redação cadastrada"
-            description="Depois de cadastrar alunos, o professor já pode registrar a primeira redação."
-            buttonLabel="Cadastrar redação"
+            icon="document-text-outline"
+            title="Nenhuma redação ainda"
+            description="Registre a primeira redação e a IA fará uma análise completa das 5 competências do ENEM."
+            buttonLabel="Enviar primeira redação"
             onPress={() => router.push('/nova-redacao')}
+            tip="A IA avalia Proposta, Argumentação, Coesão, Coerência e Intervenção em poucos segundos."
           />
         ) : (
           <>
@@ -184,9 +188,12 @@ export default function RedacoesScreen() {
 
             {filteredEssays.length === 0 ? (
               <EmptyState
-                icon="filter-outline"
-                title="Nenhuma redação neste filtro"
-                description="Ajuste o filtro ou o termo de busca para ver outros registros."
+                icon="search-outline"
+                title="Nenhum resultado"
+                description={search.trim() ? `Nenhuma redação encontrada para "${search.trim()}".` : 'Nenhuma redação corresponde ao filtro selecionado.'}
+                buttonLabel="Limpar filtros"
+                onPress={() => { setFilter('todas'); setSearch(''); }}
+                tip="Tente buscar pelo nome do aluno ou pelo título do tema da redação."
               />
             ) : (
               <FlatList

@@ -18,47 +18,66 @@ const IMAGE_QUALITY_THRESHOLD_KB = 150;
 
 // ─── Indicador de progresso ──────────────────────────────────────────────────
 
+const STEP_LABELS = ['Aluno', 'Tema', 'Arquivo'];
+
 function StepIndicator({ steps }: { steps: boolean[] }) {
   const { colors } = useAppTheme();
   const done = steps.filter(Boolean).length;
 
   return (
     <View style={pStyles.wrap}>
-      {steps.map((complete, i) => (
-        <View key={i} style={pStyles.row}>
-          <View
-            style={[
-              pStyles.dot,
-              complete
-                ? { backgroundColor: colors.accent }
-                : done >= i
-                ? { backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.accent }
-                : { backgroundColor: colors.border },
-            ]}
-          >
-            {complete ? (
-              <Ionicons name="checkmark" size={11} color="#fff" />
-            ) : (
-              <Text style={[pStyles.dotNum, { color: done >= i ? colors.accent : colors.mutedText }]}>
-                {i + 1}
+      {steps.map((complete, i) => {
+        const isActive = !complete && done >= i;
+        return (
+          <React.Fragment key={i}>
+            <View style={pStyles.stepCol}>
+              <View
+                style={[
+                  pStyles.dot,
+                  complete
+                    ? { backgroundColor: colors.accent }
+                    : isActive
+                    ? { backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.accent }
+                    : { backgroundColor: colors.border },
+                ]}
+              >
+                {complete ? (
+                  <Ionicons name="checkmark" size={11} color="#fff" />
+                ) : (
+                  <Text style={[pStyles.dotNum, { color: isActive ? colors.accent : colors.mutedText }]}>
+                    {i + 1}
+                  </Text>
+                )}
+              </View>
+              <Text
+                style={[
+                  pStyles.stepLabel,
+                  {
+                    color: complete ? colors.accent : isActive ? colors.text : colors.mutedText,
+                    fontWeight: complete || isActive ? '700' : '500',
+                  },
+                ]}
+              >
+                {STEP_LABELS[i]}
               </Text>
-            )}
-          </View>
-          {i < steps.length - 1 ? (
-            <View style={[pStyles.line, { backgroundColor: complete ? colors.accent : colors.border }]} />
-          ) : null}
-        </View>
-      ))}
+            </View>
+            {i < steps.length - 1 ? (
+              <View style={[pStyles.line, { backgroundColor: complete ? colors.accent : colors.border }]} />
+            ) : null}
+          </React.Fragment>
+        );
+      })}
     </View>
   );
 }
 
 const pStyles = StyleSheet.create({
-  wrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8 },
-  row: { flexDirection: 'row', alignItems: 'center' },
+  wrap: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', paddingVertical: 8 },
+  stepCol: { alignItems: 'center', gap: 5, minWidth: 56 },
   dot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   dotNum: { fontSize: 11, fontWeight: '700' },
-  line: { width: 48, height: 2, borderRadius: 1 },
+  stepLabel: { fontSize: 10, letterSpacing: 0.2, lineHeight: 13 },
+  line: { flex: 1, height: 2, borderRadius: 1, marginTop: 13 },
 });
 
 // ─── Chip de seleção ─────────────────────────────────────────────────────────
@@ -334,9 +353,10 @@ export default function NovaRedacaoScreen() {
         {/* ── ETAPA 2: TEMA ──────────────────────────────────────────────── */}
         <SectionBlock number="2" label="Tema" done={stepsDone[1]} locked={!stepsDone[0]} colors={colors}>
           {!stepsDone[0] ? (
-            <Text style={[styles.lockedText, { color: colors.mutedText }]}>
-              Selecione um aluno primeiro.
-            </Text>
+            <View style={styles.lockedHint}>
+              <Ionicons name="arrow-up-outline" size={13} color={colors.mutedText} />
+              <Text style={[styles.lockedText, { color: colors.mutedText }]}>Selecione um aluno na etapa anterior.</Text>
+            </View>
           ) : stepsDone[1] && selectedTheme ? (
             <SelectedChip
               label={selectedTheme.title}
@@ -419,9 +439,10 @@ export default function NovaRedacaoScreen() {
         {/* ── ETAPA 3: ARQUIVO ───────────────────────────────────────────── */}
         <SectionBlock number="3" label="Arquivo da redação" done={stepsDone[2]} locked={!stepsDone[1]} colors={colors}>
           {!stepsDone[1] ? (
-            <Text style={[styles.lockedText, { color: colors.mutedText }]}>
-              Selecione um tema primeiro.
-            </Text>
+            <View style={styles.lockedHint}>
+              <Ionicons name="arrow-up-outline" size={13} color={colors.mutedText} />
+              <Text style={[styles.lockedText, { color: colors.mutedText }]}>Selecione um tema na etapa anterior.</Text>
+            </View>
           ) : hasFile ? (
             <View style={styles.filePreview}>
               {imageUri ? (
@@ -570,31 +591,49 @@ function SectionBlock({
     <View style={[
       bStyles.block,
       {
-        backgroundColor: locked ? colors.input : colors.surface,
-        opacity: locked ? 0.6 : 1,
+        backgroundColor: colors.surface,
+        borderWidth: locked ? 1 : 0,
+        borderColor: locked ? colors.border : 'transparent',
       },
     ]}>
       <View style={bStyles.header}>
         <View style={[
           bStyles.numBadge,
-          { backgroundColor: done ? colors.accent : locked ? colors.border : colors.accent },
+          {
+            backgroundColor: done
+              ? colors.accent
+              : locked
+              ? colors.input
+              : colors.accent,
+            borderWidth: locked ? 1.5 : 0,
+            borderColor: locked ? colors.border : 'transparent',
+          },
         ]}>
           {done ? (
             <Ionicons name="checkmark" size={13} color="#fff" />
+          ) : locked ? (
+            <Ionicons name="lock-closed-outline" size={12} color={colors.mutedText} />
           ) : (
             <Text style={bStyles.num}>{number}</Text>
           )}
         </View>
-        <Text style={[bStyles.label, { color: done ? colors.text : locked ? colors.mutedText : colors.text }]}>
+        <Text style={[bStyles.label, { color: locked ? colors.mutedText : colors.text }]}>
           {label}
         </Text>
         {done ? (
           <View style={[bStyles.doneTag, { backgroundColor: colors.accent + '14' }]}>
             <Text style={[bStyles.doneText, { color: colors.accent }]}>Pronto</Text>
           </View>
+        ) : locked ? (
+          <View style={[bStyles.lockedTag, { backgroundColor: colors.input, borderColor: colors.border }]}>
+            <Ionicons name="lock-closed-outline" size={9} color={colors.mutedText} />
+            <Text style={[bStyles.lockedTagText, { color: colors.mutedText }]}>Bloqueado</Text>
+          </View>
         ) : null}
       </View>
-      <View style={bStyles.body} pointerEvents={locked ? 'none' : 'auto'}>{children}</View>
+      <View style={[bStyles.body, locked && bStyles.bodyLocked]} pointerEvents={locked ? 'none' : 'auto'}>
+        {children}
+      </View>
     </View>
   );
 }
@@ -607,7 +646,10 @@ const bStyles = StyleSheet.create({
   label: { flex: 1, fontSize: 14, fontWeight: '700', letterSpacing: 0.1 },
   doneTag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   doneText: { fontSize: 11, fontWeight: '700' },
+  lockedTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, borderWidth: 1 },
+  lockedTagText: { fontSize: 10, fontWeight: '600' },
   body: { paddingHorizontal: 16, paddingBottom: 16 },
+  bodyLocked: { opacity: 0.45 },
 });
 
 // ─── Estado vazio com ação ────────────────────────────────────────────────────
@@ -631,6 +673,7 @@ const eStyles = StyleSheet.create({
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  lockedHint: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   lockedText: { fontSize: 13, lineHeight: 18 },
 
   // Turma filter

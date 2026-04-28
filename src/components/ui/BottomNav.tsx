@@ -26,20 +26,29 @@ const TABS: Tab[] = [
 function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab: boolean }) {
   const { colors } = useAppTheme();
   const scale = useRef(new Animated.Value(1)).current;
-  const dotOpacity = useRef(new Animated.Value(isActive ? 1 : 0)).current;
+  const pillScale = useRef(new Animated.Value(isActive ? 1 : 0.7)).current;
+  const pillOpacity = useRef(new Animated.Value(isActive ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.timing(dotOpacity, {
-      toValue: isActive ? 1 : 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
+    Animated.parallel([
+      Animated.spring(pillScale, {
+        toValue: isActive ? 1 : 0.7,
+        useNativeDriver: true,
+        speed: 30,
+        bounciness: 4,
+      }),
+      Animated.timing(pillOpacity, {
+        toValue: isActive ? 1 : 0,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, [isActive]);
 
   function handlePress() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Animated.sequence([
-      Animated.spring(scale, { toValue: 0.85, useNativeDriver: true, speed: 40 }),
+      Animated.spring(scale, { toValue: 0.82, useNativeDriver: true, speed: 50 }),
       Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20 }),
     ]).start();
     router.push(tab.route as any);
@@ -51,7 +60,7 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
         <Animated.View
           style={[styles.fab, { backgroundColor: colors.accent, transform: [{ scale }] }]}
         >
-          <Ionicons name="add" size={28} color="#fff" />
+          <Ionicons name="add" size={30} color="#fff" />
         </Animated.View>
       </Pressable>
     );
@@ -60,13 +69,21 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
   return (
     <Pressable onPress={handlePress} style={styles.tabItem}>
       <Animated.View style={[styles.tabIconWrap, { transform: [{ scale }] }]}>
+        {/* Active pill background */}
+        <Animated.View
+          style={[
+            styles.activePill,
+            {
+              backgroundColor: colors.accent + '18',
+              opacity: pillOpacity,
+              transform: [{ scaleX: pillScale }, { scaleY: pillScale }],
+            },
+          ]}
+        />
         <Ionicons
           name={isActive ? tab.iconActive : tab.icon}
           size={22}
           color={isActive ? colors.accent : colors.mutedText}
-        />
-        <Animated.View
-          style={[styles.activeDot, { backgroundColor: colors.accent, opacity: dotOpacity }]}
         />
       </Animated.View>
       <Text
@@ -120,25 +137,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderTopWidth: 1,
-    paddingTop: 4,
+    paddingTop: 6,
     shadowColor: '#1B2559',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 12,
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
-    paddingTop: 4,
+    gap: 4,
+    paddingTop: 2,
   },
   tabIconWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 32,
+    width: 44,
+    height: 30,
+    position: 'relative',
+  },
+  activePill: {
+    position: 'absolute',
+    width: 44,
     height: 28,
+    borderRadius: 14,
   },
   tabLabel: {
     fontSize: 10,
@@ -148,30 +172,23 @@ const styles = StyleSheet.create({
   tabLabelActive: {
     fontWeight: '700',
   },
-  activeDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    position: 'absolute',
-    bottom: -2,
-  },
   fabWrap: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
     paddingTop: 0,
-    marginTop: -18,
+    marginTop: -20,
   },
   fab: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#4E76F8',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 10,
   },
 });

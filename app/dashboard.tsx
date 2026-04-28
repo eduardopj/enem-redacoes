@@ -90,56 +90,66 @@ export default function DashboardScreen() {
   const getStudentName = (studentId: string) =>
     teacherStudents.find((s) => s.id === studentId)?.name ?? 'Aluno';
 
+  // Onboarding steps with completion state
+  const onboardingSteps = [
+    {
+      number: '1',
+      title: 'Cadastre um aluno',
+      desc: 'Adicione os alunos que vão enviar redações.',
+      onPress: () => router.push('/novo-aluno'),
+      done: teacherStudents.length > 0,
+      icon: 'person-add-outline' as const,
+    },
+    {
+      number: '2',
+      title: 'Cadastre um tema',
+      desc: 'Defina o tema antes de enviar a redação.',
+      onPress: () => router.push('/novo-tema'),
+      done: teacherThemes.length > 0,
+      icon: 'book-outline' as const,
+    },
+    {
+      number: '3',
+      title: 'Envie a redação',
+      desc: 'Foto ou galeria — a IA corrige em segundos.',
+      onPress: () => router.push('/nova-redacao'),
+      done: teacherEssays.length > 0,
+      icon: 'cloud-upload-outline' as const,
+    },
+  ];
+  const onboardingDone = onboardingSteps.filter((s) => s.done).length;
+
   return (
     <ProtectedRoute>
       <ScreenContainer showHomeButton={false} showNav>
 
-        {/* Header com avatar */}
+        {/* Header */}
         <StaggerItem index={0}>
           <AppHeader
-            eyebrow={`Bem-vindo de volta`}
+            eyebrow="Bem-vindo de volta"
             title={`Olá, ${teacherFirstName} 👋`}
             subtitle="Visão geral da turma"
             showLogout
           />
         </StaggerItem>
 
-        {/* Onboarding */}
-        {isNewUser ? (
-          <StaggerItem index={1}>
-            <Card>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Como começar</Text>
-              <Text style={[styles.sectionSub, { color: colors.mutedText }]}>
-                Siga as etapas abaixo para configurar sua turma.
-              </Text>
-              <View style={styles.onboardingSteps}>
-                <OnboardingStep number="1" title="Cadastre um aluno" desc="Adicione os alunos que vão enviar redações." onPress={() => router.push('/novo-aluno')} colors={colors} />
-                <View style={[styles.stepDivider, { backgroundColor: colors.border }]} />
-                <OnboardingStep number="2" title="Cadastre um tema" desc="Defina o tema antes de enviar a redação." onPress={() => router.push('/novo-tema')} colors={colors} />
-                <View style={[styles.stepDivider, { backgroundColor: colors.border }]} />
-                <OnboardingStep number="3" title="Envie a redação" desc="Foto ou galeria — a IA corrige em segundos." onPress={() => router.push('/nova-redacao')} colors={colors} />
-              </View>
-            </Card>
-          </StaggerItem>
-        ) : null}
-
         {/* Próxima ação em destaque */}
-        <StaggerItem index={isNewUser ? 2 : 1}>
-          <View style={[styles.actionCard, { backgroundColor: colors.accent }]}>
-            <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-              <Ionicons name={contextualAction.icon} size={22} color="#fff" />
+        <StaggerItem index={1}>
+          <Pressable
+            onPress={contextualAction.onPress}
+            style={[styles.actionCard, { backgroundColor: colors.accent }]}
+          >
+            <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(255,255,255,0.18)' }]}>
+              <Ionicons name={contextualAction.icon} size={24} color="#fff" />
             </View>
             <View style={styles.actionText}>
               <Text style={styles.actionTitle}>{contextualAction.title}</Text>
               <Text style={styles.actionSub}>{contextualAction.subtitle}</Text>
             </View>
-            <Pressable
-              onPress={contextualAction.onPress}
-              style={styles.actionBtn}
-            >
+            <View style={styles.actionBtn}>
               <Ionicons name="arrow-forward" size={18} color={colors.accent} />
-            </Pressable>
-          </View>
+            </View>
+          </Pressable>
         </StaggerItem>
 
         {/* KPIs — grid 2×2 */}
@@ -185,9 +195,53 @@ export default function DashboardScreen() {
           </View>
         </StaggerItem>
 
+        {/* Onboarding — só mostra se não tiver completado tudo */}
+        {onboardingDone < 3 ? (
+          <StaggerItem index={3}>
+            <Card>
+              {/* Header com barra de progresso */}
+              <View style={styles.onboardingHeader}>
+                <View style={styles.onboardingTitleRow}>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Como começar</Text>
+                  <Text style={[styles.onboardingCount, { color: colors.accent }]}>
+                    {onboardingDone}/3
+                  </Text>
+                </View>
+                <View style={[styles.progressTrackFull, { backgroundColor: colors.input }]}>
+                  <View
+                    style={[
+                      styles.progressFillFull,
+                      {
+                        backgroundColor: colors.accent,
+                        width: `${(onboardingDone / 3) * 100}%`,
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.onboardingSteps}>
+                {onboardingSteps.map((step, i) => (
+                  <OnboardingStep
+                    key={i}
+                    number={step.number}
+                    title={step.title}
+                    desc={step.desc}
+                    onPress={step.onPress}
+                    done={step.done}
+                    icon={step.icon}
+                    isLast={i === onboardingSteps.length - 1}
+                    colors={colors}
+                  />
+                ))}
+              </View>
+            </Card>
+          </StaggerItem>
+        ) : null}
+
         {/* Média da turma — só se houver correções */}
         {correctedEssays.length > 0 ? (
-          <StaggerItem index={3}>
+          <StaggerItem index={4}>
             <Card>
               <View style={styles.cardHeader}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>Desempenho da turma</Text>
@@ -240,7 +294,7 @@ export default function DashboardScreen() {
 
         {/* Top alunos */}
         {classStats.topStudents.length > 0 ? (
-          <StaggerItem index={4}>
+          <StaggerItem index={5}>
             <Card>
               <View style={styles.cardHeader}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>Top alunos</Text>
@@ -281,7 +335,7 @@ export default function DashboardScreen() {
 
         {/* Mini gráfico de notas recentes */}
         {correctedEssays.length > 0 ? (
-          <StaggerItem index={5}>
+          <StaggerItem index={6}>
             <Card>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Notas recentes</Text>
               <MiniBarChart essays={correctedEssays.slice(0, 6)} getStudentName={getStudentName} colors={colors} />
@@ -290,7 +344,7 @@ export default function DashboardScreen() {
         ) : null}
 
         {/* ── Minhas turmas ── */}
-        <StaggerItem index={6}>
+        <StaggerItem index={7}>
           <Card>
             <View style={styles.sectionRow}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Minhas turmas</Text>
@@ -348,19 +402,6 @@ export default function DashboardScreen() {
           </Card>
         </StaggerItem>
 
-        {/* Atalhos rápidos */}
-        <StaggerItem index={7}>
-          <Card>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Atalhos rápidos</Text>
-            <View style={styles.quickGrid}>
-              <QuickAction icon="people" iconBg={colors.infoSoft} iconColor={colors.accent} title="Turmas" onPress={() => router.push('/turmas' as any)} colors={colors} />
-              <QuickAction icon="add-circle" iconBg={colors.successSoft} iconColor={colors.success} title="Nova redação" onPress={() => router.push('/nova-redacao')} colors={colors} />
-              <QuickAction icon="trophy" iconBg={colors.warningSoft} iconColor={colors.warning} title="Ranking" onPress={() => router.push('/ranking' as any)} colors={colors} />
-              <QuickAction icon="bar-chart" iconBg={colors.infoSoft} iconColor={colors.info} title="Análise" onPress={() => router.push('/analytics' as any)} colors={colors} />
-            </View>
-          </Card>
-        </StaggerItem>
-
         {/* Último movimento */}
         {lastEssay ? (
           <StaggerItem index={8}>
@@ -406,11 +447,20 @@ function KpiCard({ label, value, icon, iconBg, iconColor, onPress, alert = false
       onPress={onPress}
       style={[styles.kpiCard, { backgroundColor: colors.surface }]}
     >
-      <View style={[styles.kpiIcon, { backgroundColor: iconBg }]}>
-        <Ionicons name={icon} size={20} color={iconColor} />
+      {/* Icon badge */}
+      <View style={[styles.kpiIconWrap, { backgroundColor: iconBg }]}>
+        <Ionicons name={icon} size={22} color={iconColor} />
+        {alert ? (
+          <View style={[styles.kpiAlert, { backgroundColor: colors.warning }]} />
+        ) : null}
       </View>
+      {/* Number */}
       <Text style={[styles.kpiValue, { color: alert ? colors.warning : colors.text }]}>{value}</Text>
       <Text style={[styles.kpiLabel, { color: colors.mutedText }]}>{label}</Text>
+      {/* Chevron hint */}
+      <View style={styles.kpiChevron}>
+        <Ionicons name="chevron-forward" size={12} color={colors.border} />
+      </View>
     </Pressable>
   );
 }
@@ -427,35 +477,48 @@ function ClassKpi({ label, value, sub, color, colors }: {
   );
 }
 
-function QuickAction({ icon, iconBg, iconColor, title, onPress, colors }: {
-  icon: ComponentProps<typeof Ionicons>['name']; iconBg: string; iconColor: string; title: string; onPress: () => void; colors: any;
+function OnboardingStep({ number, title, desc, onPress, done, icon, isLast, colors }: {
+  number: string; title: string; desc: string; onPress: () => void; done: boolean; icon: ComponentProps<typeof Ionicons>['name']; isLast: boolean; colors: any;
 }) {
   return (
     <Pressable
-      onPress={onPress}
-      style={[styles.quickCard, { backgroundColor: colors.input }]}
+      onPress={done ? undefined : onPress}
+      style={[styles.step, !isLast && { borderBottomWidth: 1, borderBottomColor: colors.border }]}
     >
-      <View style={[styles.quickIcon, { backgroundColor: iconBg }]}>
-        <Ionicons name={icon} size={22} color={iconColor} />
+      {/* Step indicator */}
+      <View style={[
+        styles.stepNum,
+        done
+          ? { backgroundColor: colors.success }
+          : { backgroundColor: colors.accent },
+      ]}>
+        {done ? (
+          <Ionicons name="checkmark" size={14} color="#fff" />
+        ) : (
+          <Text style={[styles.stepNumText, { color: '#fff' }]}>{number}</Text>
+        )}
       </View>
-      <Text style={[styles.quickTitle, { color: colors.text }]}>{title}</Text>
-    </Pressable>
-  );
-}
 
-function OnboardingStep({ number, title, desc, onPress, colors }: {
-  number: string; title: string; desc: string; onPress: () => void; colors: any;
-}) {
-  return (
-    <Pressable onPress={onPress} style={styles.step}>
-      <View style={[styles.stepNum, { backgroundColor: colors.accent }]}>
-        <Text style={[styles.stepNumText, { color: '#fff' }]}>{number}</Text>
-      </View>
       <View style={styles.stepText}>
-        <Text style={[styles.stepTitle, { color: colors.text }]}>{title}</Text>
-        <Text style={[styles.stepDesc, { color: colors.mutedText }]}>{desc}</Text>
+        <Text style={[
+          styles.stepTitle,
+          { color: done ? colors.mutedText : colors.text },
+          done && { textDecorationLine: 'line-through' },
+        ]}>
+          {title}
+        </Text>
+        {!done ? (
+          <Text style={[styles.stepDesc, { color: colors.mutedText }]}>{desc}</Text>
+        ) : null}
       </View>
-      <Ionicons name="chevron-forward" size={16} color={colors.mutedText} />
+
+      {done ? (
+        <View style={[styles.doneTag, { backgroundColor: colors.successSoft }]}>
+          <Text style={[styles.doneTagText, { color: colors.success }]}>Feito</Text>
+        </View>
+      ) : (
+        <Ionicons name="chevron-forward" size={16} color={colors.mutedText} />
+      )}
     </Pressable>
   );
 }
@@ -502,11 +565,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
     marginBottom: 4,
   },
-  sectionSub: {
-    fontSize: 13,
-    lineHeight: 18,
-    marginBottom: 16,
-  },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -518,23 +576,23 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Action card (highlight)
+  // Contextual action card
   actionCard: {
-    borderRadius: 18,
+    borderRadius: 20,
     padding: 18,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
     shadowColor: '#4E76F8',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.22,
-    shadowRadius: 16,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.26,
+    shadowRadius: 20,
+    elevation: 8,
   },
   actionIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -543,9 +601,9 @@ const styles = StyleSheet.create({
   actionTitle: { color: '#fff', fontSize: 15, fontWeight: '700', lineHeight: 20 },
   actionSub: { color: 'rgba(255,255,255,0.75)', fontSize: 12, lineHeight: 16 },
   actionBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
@@ -561,33 +619,50 @@ const styles = StyleSheet.create({
   kpiCard: {
     flex: 1,
     minWidth: '45%',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 16,
-    gap: 6,
+    gap: 4,
     shadowColor: '#1B2559',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.07,
-    shadowRadius: 12,
+    shadowRadius: 14,
     elevation: 3,
+    position: 'relative',
   },
-  kpiIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  kpiIconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
+    marginBottom: 8,
+    position: 'relative',
+  },
+  kpiAlert: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   kpiValue: {
-    fontSize: 32,
-    fontWeight: '700',
-    letterSpacing: -0.8,
-    lineHeight: 36,
+    fontSize: 34,
+    fontWeight: '800',
+    letterSpacing: -1,
+    lineHeight: 38,
   },
   kpiLabel: {
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,
+  },
+  kpiChevron: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
   },
 
   // Class KPI
@@ -642,35 +717,6 @@ const styles = StyleSheet.create({
   progressFill: { height: '100%', borderRadius: 3 },
   topStudentScore: { fontSize: 16, fontWeight: '700', minWidth: 38, textAlign: 'right' },
 
-  // Quick actions
-  quickGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 12,
-  },
-  quickCard: {
-    flex: 1,
-    minWidth: '45%',
-    borderRadius: 14,
-    padding: 14,
-    gap: 8,
-    alignItems: 'center',
-  },
-  quickIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-    lineHeight: 16,
-  },
-
   // Last essay
   lastRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
   lastAvatar: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
@@ -680,14 +726,20 @@ const styles = StyleSheet.create({
   lastBtn: {},
 
   // Onboarding
+  onboardingHeader: { gap: 10, marginBottom: 4 },
+  onboardingTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  onboardingCount: { fontSize: 13, fontWeight: '700' },
+  progressTrackFull: { height: 5, borderRadius: 999, overflow: 'hidden' },
+  progressFillFull: { height: '100%', borderRadius: 999 },
   onboardingSteps: { gap: 0, marginTop: 4 },
   step: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14 },
-  stepNum: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  stepNumText: { fontSize: 13, fontWeight: '700' },
+  stepNum: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  stepNumText: { fontSize: 13, fontWeight: '800' },
   stepText: { flex: 1, gap: 2 },
   stepTitle: { fontSize: 15, fontWeight: '600', lineHeight: 20 },
   stepDesc: { fontSize: 13, lineHeight: 18 },
-  stepDivider: { height: 1, marginLeft: 44 },
+  doneTag: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 },
+  doneTagText: { fontSize: 11, fontWeight: '700' },
 
   // Turmas section
   sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
@@ -721,10 +773,10 @@ const styles = StyleSheet.create({
   emptyTurmaText: { flex: 1, fontSize: 13, lineHeight: 18 },
 
   // Mini bar chart
-  chartWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, height: 100, marginTop: 12 },
+  chartWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, height: 110, marginTop: 12 },
   barItem: { flex: 1, alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' },
   barScore: { fontSize: 10, fontWeight: '700' },
-  barTrack: { width: '80%', flex: 1, borderRadius: 4, overflow: 'hidden', justifyContent: 'flex-end' },
-  barFill: { width: '100%', borderRadius: 4 },
+  barTrack: { width: '80%', flex: 1, borderRadius: 6, overflow: 'hidden', justifyContent: 'flex-end' },
+  barFill: { width: '100%', borderRadius: 6 },
   barLabel: { fontSize: 10, textAlign: 'center' },
 });
