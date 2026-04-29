@@ -20,15 +20,15 @@ export async function correctEssayWithOpenAI(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 120_000);
 
-  let body: Record<string, unknown>;
+  let requestBody: Record<string, unknown>;
 
   if (input.essayText) {
-    body = { themeTitle: input.themeTitle, essayText: input.essayText };
+    requestBody = { themeTitle: input.themeTitle, essayText: input.essayText };
   } else if (input.imageUri) {
     const imageBase64 = await FileSystem.readAsStringAsync(input.imageUri, {
       encoding: FileSystem.EncodingType.Base64,
     });
-    body = {
+    requestBody = {
       themeTitle: input.themeTitle,
       imageBase64,
       mimeType: getMimeTypeFromUri(input.imageUri),
@@ -38,35 +38,33 @@ export async function correctEssayWithOpenAI(
   }
 
   try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(`Erro backend: ${response.status} - ${errorBody}`);
-    }
-
-    return response.json();
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('A correção demorou mais que o esperado (120s). Verifique sua conexão e tente novamente.');
-    }
-
-    const message = error instanceof Error ? error.message : 'Falha desconhecida ao conectar com o backend.';
-
-    if (
-      message.includes('Network request failed') ||
-      message.includes('fetch') ||
-      message.includes('network')
-    ) {
+    let response: Response;
+    try {
+      response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal,
+      });
+    } catch (fetchError) {
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        throw new Error('A correção demorou mais que o esperado (120s). Verifique sua conexão e tente novamente.');
+      }
       throw new Error('Não foi possível conectar ao servidor de correção. Verifique sua conexão com a internet e tente novamente.');
     }
 
-    throw error;
+    if (!response.ok) {
+      let serverMessage = `Erro ${response.status} no servidor de correção.`;
+      try {
+        const errBody = await response.json();
+        if (errBody?.error) serverMessage = errBody.error;
+      } catch {
+        // ignore JSON parse failure
+      }
+      throw new Error(serverMessage);
+    }
+
+    return response.json();
   } finally {
     clearTimeout(timeoutId);
   }

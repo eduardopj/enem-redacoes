@@ -475,7 +475,7 @@ export default function NovaRedacaoScreen() {
               {/* Câmera — ação principal */}
               <Pressable
                 onPress={handleTakePhoto}
-                style={[styles.cameraBtn, { backgroundColor: colors.accent }]}
+                style={[styles.cameraBtn, { backgroundColor: colors.text }]}
               >
                 <View style={[styles.cameraIcon, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
                   <Ionicons name="camera" size={28} color="#fff" />
@@ -490,8 +490,8 @@ export default function NovaRedacaoScreen() {
                   onPress={handlePickImage}
                   style={[styles.secondaryBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
                 >
-                  <View style={[styles.secIcon, { backgroundColor: colors.accent + '14' }]}>
-                    <Ionicons name="images-outline" size={18} color={colors.accent} />
+                  <View style={[styles.secIcon, { backgroundColor: colors.input }]}>
+                    <Ionicons name="images-outline" size={18} color={colors.softText} />
                   </View>
                   <Text style={[styles.secondaryBtnText, { color: colors.text }]}>Galeria</Text>
                 </Pressable>
@@ -499,7 +499,7 @@ export default function NovaRedacaoScreen() {
                   onPress={handlePickDocument}
                   style={[styles.secondaryBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
                 >
-                  <View style={[styles.secIcon, { backgroundColor: colors.softText + '14' }]}>
+                  <View style={[styles.secIcon, { backgroundColor: colors.input }]}>
                     <Ionicons name="document-outline" size={18} color={colors.softText} />
                   </View>
                   <Text style={[styles.secondaryBtnText, { color: colors.text }]}>Documento</Text>

@@ -113,7 +113,7 @@ export default function IndexScreen() {
           </Animated.View>
 
           {/* Bloco Aluno */}
-          <Animated.View style={[styles.personaBlock, { backgroundColor: colors.input, borderColor: colors.border }, alunoStyle]}>
+          <Animated.View style={[styles.personaBlock, { backgroundColor: colors.successSoft + '55', borderColor: colors.success + '40' }, alunoStyle]}>
             <View style={styles.personaHeader}>
               <View style={[styles.personaIconWrap, { backgroundColor: colors.successSoft }]}>
                 <Ionicons name="person-outline" size={18} color={colors.success} />

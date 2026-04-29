@@ -8,7 +8,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -156,13 +156,14 @@ function ThemePickerModal({
 
 export default function StudentNovaScreen() {
   const { colors } = useAppTheme();
+  const { themeTitle: initialTheme } = useLocalSearchParams<{ themeTitle?: string }>();
   const currentStudent = useAppStore(s => s.currentStudent);
   const themes = useAppStore(s => s.themes);
   const addEssay = useAppStore(s => s.addEssay);
   const evaluateEssayWithOpenAI = useAppStore(s => s.evaluateEssayWithOpenAI);
 
   const [mode, setMode] = useState<EssayInputMode>('manuscrita');
-  const [themeTitle, setThemeTitle] = useState('');
+  const [themeTitle, setThemeTitle] = useState(initialTheme ? decodeURIComponent(initialTheme) : '');
   const [imageUri, setImageUri] = useState('');
   const [imageName, setImageName] = useState('');
   const [essayText, setEssayText] = useState('');
@@ -398,7 +399,7 @@ export default function StudentNovaScreen() {
                   <View style={styles.photoButtons}>
                     <Pressable
                       onPress={takePhoto}
-                      style={[styles.photoBtnPrimary, { backgroundColor: colors.accent }]}
+                      style={[styles.photoBtnPrimary, { backgroundColor: colors.text }]}
                     >
                       <Ionicons name="camera-outline" size={20} color="#fff" />
                       <Text style={styles.photoBtnPrimaryText}>Tirar foto</Text>

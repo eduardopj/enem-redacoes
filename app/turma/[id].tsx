@@ -2,7 +2,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Button, ScreenContainer } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
 import { useAppTheme } from '@/theme/ThemeContext';
-import { Essay, Student } from '@/types/app';
+import { Atividade, Essay, Student } from '@/types/app';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -56,6 +56,8 @@ export default function TurmaDetailScreen() {
   const turmas = useAppStore((s) => s.turmas);
   const students = useAppStore((s) => s.students);
   const essays = useAppStore((s) => s.essays);
+  const atividades = useAppStore((s) => s.atividades);
+  const encerrarAtividade = useAppStore((s) => s.encerrarAtividade);
   const fetchStudentEssaysFromBackend = useAppStore((s) => s.fetchStudentEssaysFromBackend);
 
   const [sortKey, setSortKey] = useState<SortKey>('avg');
@@ -150,6 +152,11 @@ export default function TurmaDetailScreen() {
     });
   }, [studentStats, essays]);
 
+  const turmaAtividades = useMemo(
+    () => atividades.filter((a) => a.turmaId === id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [atividades, id]
+  );
+
   if (!turma) {
     return (
       <ProtectedRoute>
@@ -208,7 +215,37 @@ export default function TurmaDetailScreen() {
             <Ionicons name="person-add-outline" size={16} color={colors.accent} />
             <Text style={[styles.secondBtnText, { color: colors.accent }]}>Add aluno</Text>
           </Pressable>
+          <Pressable
+            onPress={() => router.push(`/nova-atividade?turmaId=${id}` as any)}
+            style={[styles.secondBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          >
+            <Ionicons name="clipboard-outline" size={16} color={colors.accent} />
+            <Text style={[styles.secondBtnText, { color: colors.accent }]}>Atividade</Text>
+          </Pressable>
         </View>
+
+        {/* ── Atividades ── */}
+        {turmaAtividades.length > 0 && (
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            <View style={styles.cardHeader}>
+              <Ionicons name="clipboard-outline" size={16} color={colors.accent} />
+              <Text style={[styles.cardTitle, { color: colors.text }]}>Atividades</Text>
+              <View style={[styles.countBadge, { backgroundColor: colors.accent + '18' }]}>
+                <Text style={[styles.countBadgeText, { color: colors.accent }]}>
+                  {turmaAtividades.filter((a) => a.status === 'ativa').length} ativa{turmaAtividades.filter((a) => a.status === 'ativa').length !== 1 ? 's' : ''}
+                </Text>
+              </View>
+            </View>
+            {turmaAtividades.map((a) => (
+              <AtividadeRow
+                key={a.id}
+                atividade={a}
+                onEncerrar={() => encerrarAtividade(a.id)}
+                colors={colors}
+              />
+            ))}
+          </View>
+        )}
 
         {/* ── KPI Grid ── */}
         <View style={styles.kpiGrid}>
@@ -488,6 +525,48 @@ function InsightRow({ icon, color, text, colors }: { icon: any; color: string; t
   );
 }
 
+function AtividadeRow({ atividade, onEncerrar, colors }: { atividade: Atividade; onEncerrar: () => void; colors: any }) {
+  const isAtiva = atividade.status === 'ativa';
+  return (
+    <View style={[styles.atividadeRow, { borderColor: colors.border }]}>
+      <View style={styles.atividadeTop}>
+        <View style={[
+          styles.atividadeStatusPill,
+          { backgroundColor: isAtiva ? colors.success + '18' : colors.mutedText + '18' },
+        ]}>
+          <View style={[
+            styles.atividadeStatusDot,
+            { backgroundColor: isAtiva ? colors.success : colors.mutedText },
+          ]} />
+          <Text style={[styles.atividadeStatusText, { color: isAtiva ? colors.success : colors.mutedText }]}>
+            {isAtiva ? 'Ativa' : 'Encerrada'}
+          </Text>
+        </View>
+        {atividade.dueDate && (
+          <View style={styles.atividadeDueWrap}>
+            <Ionicons name="calendar-outline" size={11} color={colors.mutedText} />
+            <Text style={[styles.atividadeDue, { color: colors.mutedText }]}>{atividade.dueDate}</Text>
+          </View>
+        )}
+      </View>
+      <Text style={[styles.atividadeTitle, { color: colors.text }]} numberOfLines={2}>
+        {atividade.themeTitle}
+      </Text>
+      {atividade.description ? (
+        <Text style={[styles.atividadeDesc, { color: colors.softText }]} numberOfLines={2}>
+          {atividade.description}
+        </Text>
+      ) : null}
+      {isAtiva && (
+        <Pressable onPress={onEncerrar} style={[styles.encerrarBtn, { borderColor: colors.danger + '50' }]}>
+          <Ionicons name="stop-circle-outline" size={13} color={colors.danger} />
+          <Text style={[styles.encerrarText, { color: colors.danger }]}>Encerrar atividade</Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   syncBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 8 },
   syncText: { fontSize: 13, fontWeight: '500' },
@@ -554,6 +633,25 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   cardTitle: { fontSize: 15, fontWeight: '700', letterSpacing: -0.1 },
   cardSub: { fontSize: 12 },
+  countBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  countBadgeText: { fontSize: 11, fontWeight: '700' },
+
+  // Atividade rows
+  atividadeRow: {
+    borderTopWidth: 1,
+    paddingTop: 14,
+    gap: 8,
+  },
+  atividadeTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  atividadeStatusPill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  atividadeStatusDot: { width: 6, height: 6, borderRadius: 3 },
+  atividadeStatusText: { fontSize: 11, fontWeight: '700' },
+  atividadeDueWrap: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  atividadeDue: { fontSize: 11 },
+  atividadeTitle: { fontSize: 14, fontWeight: '600', lineHeight: 20 },
+  atividadeDesc: { fontSize: 12, lineHeight: 18 },
+  encerrarBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
+  encerrarText: { fontSize: 12, fontWeight: '600' },
 
   // Insights
   insightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },

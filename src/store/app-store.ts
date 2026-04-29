@@ -2,7 +2,7 @@ import { correctEssayWithOpenAI } from '@/services/openai/correct-essay';
 import { saveEssayForResearch } from '@/services/research/save-essay';
 import { BackendEssay, fetchEssaysByTeacher, pushEssayToBackend, pushTeacherEvalToBackend } from '@/services/sync/sync-essays';
 import { lookupTurmaByCode, pushTurmaToBackend } from '@/services/sync/sync-turmas';
-import { Essay, EssayInputMode, EssayStatus, QRJoinPayload, Student, StudentSession, Teacher, ThemeItem, Turma } from '@/types/app';
+import { Atividade, Essay, EssayInputMode, EssayStatus, QRJoinPayload, Student, StudentSession, Teacher, ThemeItem, Turma } from '@/types/app';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -66,6 +66,13 @@ function generateJoinCode(): string {
   return code;
 }
 
+type CreateAtividadeInput = {
+  turmaId: string;
+  themeTitle: string;
+  description?: string;
+  dueDate?: string;
+};
+
 type AppState = {
   hasHydrated: boolean;
   users: RegisteredUser[];
@@ -75,6 +82,7 @@ type AppState = {
   students: Student[];
   themes: ThemeItem[];
   essays: Essay[];
+  atividades: Atividade[];
   retryQueue: string[];
 
   // Auth — professor
@@ -107,6 +115,10 @@ type AppState = {
   processRetryQueue: () => Promise<void>;
   fetchStudentEssaysFromBackend: () => Promise<void>;
   setHasHydrated: (value: boolean) => void;
+
+  // Atividades
+  addAtividade: (input: CreateAtividadeInput) => string | null;
+  encerrarAtividade: (id: string) => void;
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -137,6 +149,7 @@ export const useAppStore = create<AppState>()(
       students: [],
       themes: [],
       essays: [],
+      atividades: [],
       retryQueue: [],
 
       setHasHydrated: (value) => set({ hasHydrated: value }),
@@ -685,6 +698,34 @@ export const useAppStore = create<AppState>()(
           throw error;
         }
       },
+
+      // ── Atividades ───────────────────────────────────────────────────────────
+
+      addAtividade: (input) => {
+        const teacher = get().currentTeacher;
+        if (!teacher) return null;
+        const id = `atividade-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        const nova: Atividade = {
+          id,
+          turmaId: input.turmaId,
+          teacherId: teacher.id,
+          themeTitle: input.themeTitle.trim(),
+          description: input.description?.trim() || undefined,
+          dueDate: input.dueDate || undefined,
+          createdAt: new Date().toISOString(),
+          status: 'ativa',
+        };
+        set((state) => ({ atividades: [...state.atividades, nova] }));
+        return id;
+      },
+
+      encerrarAtividade: (id) => {
+        set((state) => ({
+          atividades: state.atividades.map((a) =>
+            a.id === id ? { ...a, status: 'encerrada' } : a
+          ),
+        }));
+      },
     }),
     {
       name: 'enem-redacoes-v2',
@@ -697,6 +738,7 @@ export const useAppStore = create<AppState>()(
         students: state.students,
         themes: state.themes,
         essays: state.essays,
+        atividades: state.atividades,
         retryQueue: state.retryQueue,
       }),
       onRehydrateStorage: () => (state) => {

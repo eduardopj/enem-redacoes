@@ -16,40 +16,31 @@ type Tab = {
 };
 
 const TABS: Tab[] = [
-  { route: '/dashboard', icon: 'home-outline', iconActive: 'home', label: 'Início' },
-  { route: '/redacoes', icon: 'document-text-outline', iconActive: 'document-text', label: 'Redações' },
-  { route: '/nova-redacao', icon: 'add', iconActive: 'add', label: '' },
-  { route: '/alunos', icon: 'people-outline', iconActive: 'people', label: 'Alunos' },
-  { route: '/analytics', icon: 'bar-chart-outline', iconActive: 'bar-chart', label: 'Análises' },
+  { route: '/dashboard',    icon: 'home-outline',          iconActive: 'home',          label: 'Início' },
+  { route: '/redacoes',     icon: 'document-text-outline', iconActive: 'document-text', label: 'Redações' },
+  { route: '/nova-redacao', icon: 'add',                   iconActive: 'add',           label: '' },
+  { route: '/alunos',       icon: 'people-outline',        iconActive: 'people',        label: 'Alunos' },
+  { route: '/analytics',    icon: 'bar-chart-outline',     iconActive: 'bar-chart',     label: 'Análises' },
 ];
 
 function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab: boolean }) {
   const { colors } = useAppTheme();
   const scale = useRef(new Animated.Value(1)).current;
-  const pillScale = useRef(new Animated.Value(isActive ? 1 : 0.7)).current;
   const pillOpacity = useRef(new Animated.Value(isActive ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(pillScale, {
-        toValue: isActive ? 1 : 0.7,
-        useNativeDriver: true,
-        speed: 30,
-        bounciness: 4,
-      }),
-      Animated.timing(pillOpacity, {
-        toValue: isActive ? 1 : 0,
-        duration: 180,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.timing(pillOpacity, {
+      toValue: isActive ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
   }, [isActive]);
 
   function handlePress() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Animated.sequence([
-      Animated.spring(scale, { toValue: 0.82, useNativeDriver: true, speed: 50 }),
-      Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20 }),
+      Animated.spring(scale, { toValue: 0.85, useNativeDriver: true, speed: 50 }),
+      Animated.spring(scale, { toValue: 1,    useNativeDriver: true, speed: 20 }),
     ]).start();
     router.push(tab.route as any);
   }
@@ -57,10 +48,9 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
   if (isFab) {
     return (
       <Pressable onPress={handlePress} style={styles.fabWrap}>
-        <Animated.View
-          style={[styles.fab, { backgroundColor: colors.accent, transform: [{ scale }] }]}
-        >
-          <Ionicons name="add" size={30} color="#fff" />
+        <Animated.View style={[styles.fabPill, { backgroundColor: colors.accent, transform: [{ scale }] }]}>
+          <Ionicons name="add" size={20} color="#fff" />
+          <Text style={styles.fabPillLabel}>Nova</Text>
         </Animated.View>
       </Pressable>
     );
@@ -69,15 +59,10 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
   return (
     <Pressable onPress={handlePress} style={styles.tabItem}>
       <Animated.View style={[styles.tabIconWrap, { transform: [{ scale }] }]}>
-        {/* Active pill background */}
         <Animated.View
           style={[
             styles.activePill,
-            {
-              backgroundColor: colors.accent + '18',
-              opacity: pillOpacity,
-              transform: [{ scaleX: pillScale }, { scaleY: pillScale }],
-            },
+            { backgroundColor: colors.accent + '18', opacity: pillOpacity },
           ]}
         />
         <Ionicons
@@ -173,22 +158,27 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   fabWrap: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 0,
-    marginTop: -20,
-  },
-  fab: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
+    flex: 1.3,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: 2,
+  },
+  fabPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 14,
     shadowColor: '#4E76F8',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  fabPillLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#fff',
   },
 });

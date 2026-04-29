@@ -16,11 +16,11 @@ type Tab = {
 };
 
 const TABS: Tab[] = [
-  { route: '/student/home', icon: 'home-outline', iconActive: 'home', label: 'Início' },
-  { route: '/student/redacoes', icon: 'document-text-outline', iconActive: 'document-text', label: 'Redações' },
-  { route: '/student/nova', icon: 'add', iconActive: 'add', label: '' },
-  { route: '/student/evolucao', icon: 'trending-up-outline', iconActive: 'trending-up', label: 'Evolução' },
-  { route: '/student/ranking', icon: 'trophy-outline', iconActive: 'trophy', label: 'Ranking' },
+  { route: '/student/home',    icon: 'home-outline',          iconActive: 'home',          label: 'Início' },
+  { route: '/student/redacoes',icon: 'document-text-outline', iconActive: 'document-text', label: 'Redações' },
+  { route: '/student/nova',    icon: 'add',                   iconActive: 'add',           label: '' },
+  { route: '/student/evolucao',icon: 'trending-up-outline',   iconActive: 'trending-up',   label: 'Evolução' },
+  { route: '/student/ranking', icon: 'trophy-outline',        iconActive: 'trophy',        label: 'Ranking' },
 ];
 
 function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab: boolean }) {
@@ -40,7 +40,7 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Animated.sequence([
       Animated.spring(scale, { toValue: 0.85, useNativeDriver: true, speed: 40 }),
-      Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20 }),
+      Animated.spring(scale, { toValue: 1,    useNativeDriver: true, speed: 20 }),
     ]).start();
     router.push(tab.route as any);
   }
@@ -48,8 +48,9 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
   if (isFab) {
     return (
       <Pressable onPress={handlePress} style={styles.fabWrap}>
-        <Animated.View style={[styles.fab, { backgroundColor: colors.accent, transform: [{ scale }] }]}>
-          <Ionicons name="add" size={28} color="#fff" />
+        <Animated.View style={[styles.fabPill, { backgroundColor: colors.success, transform: [{ scale }] }]}>
+          <Ionicons name="add" size={20} color="#fff" />
+          <Text style={styles.fabPillLabel}>Nova</Text>
         </Animated.View>
       </Pressable>
     );
@@ -145,22 +146,27 @@ const styles = StyleSheet.create({
     bottom: -2,
   },
   fabWrap: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 0,
-    marginTop: -18,
-  },
-  fab: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
+    flex: 1.3,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#4E76F8',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    paddingTop: 2,
+  },
+  fabPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 14,
+    shadowColor: '#22C55E',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  fabPillLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#fff',
   },
 });

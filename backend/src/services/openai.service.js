@@ -109,7 +109,6 @@ export async function correctEssayWithOpenAI({ themeTitle, imageBase64, mimeType
   const response = await client.chat.completions.create({
     model: env.openAiModel,
     temperature: 0,
-    timeout: 130_000,
     response_format: {
       type: 'json_schema',
       json_schema: {
@@ -523,7 +522,7 @@ feedback: 2-3 frases de orientação principal para reescrita/próxima redação
           : buildImageModeContent(themeTitle, dataUrl),
       },
     ],
-  });
+  }, { timeout: 130_000 });
 
   const outputText = response.choices?.[0]?.message?.content;
 

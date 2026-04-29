@@ -25,6 +25,9 @@ router.post('/correct-essay', async (req, res) => {
 
     return res.json(result);
   } catch (error) {
+    console.error('[correct-essay] Erro:', error?.message ?? error);
+    console.error('[correct-essay] Stack:', error?.stack ?? '(sem stack)');
+
     const message =
       error instanceof Error ? error.message : 'Erro interno ao corrigir redação';
 

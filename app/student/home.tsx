@@ -4,7 +4,7 @@ import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Essay } from '@/types/app';
-import { getScoreColor, getScoreLabel } from '@/utils/analytics';
+import { getScoreColor } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
@@ -100,6 +100,7 @@ export default function StudentHomeScreen() {
   const { colors } = useAppTheme();
   const currentStudent = useAppStore(s => s.currentStudent);
   const essays = useAppStore(s => s.essays);
+  const atividades = useAppStore(s => s.atividades);
   const logoutStudent = useAppStore(s => s.logoutStudent);
 
   const myEssays = useMemo(
@@ -130,6 +131,13 @@ export default function StudentHomeScreen() {
   const pending = useMemo(() => myEssays.filter(e => e.status === 'pendente' && !e.feedback?.startsWith('Erro')), [myEssays]);
   const levelInfo = avg != null ? getLevelInfo(avg) : null;
   const scoreColor = avg != null ? getScoreColor(avg, colors) : colors.mutedText;
+
+  const atividadesPendentes = useMemo(
+    () => atividades.filter(
+      (a) => a.turmaId === currentStudent?.turmaId && a.status === 'ativa'
+    ).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [atividades, currentStudent]
+  );
 
   const name = currentStudent?.studentName.split(' ')[0] ?? 'Aluno';
 
@@ -239,9 +247,59 @@ export default function StudentHomeScreen() {
           </StaggerItem>
         )}
 
+        {/* ── Atividades da turma ── */}
+        {atividadesPendentes.length > 0 && (
+          <StaggerItem index={3}>
+            <View style={[styles.atividadesCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={styles.atividadesHeader}>
+                <View style={[styles.atividadesIconWrap, { backgroundColor: colors.accent + '14' }]}>
+                  <Ionicons name="clipboard-outline" size={15} color={colors.accent} />
+                </View>
+                <Text style={[styles.atividadesTitle, { color: colors.text }]}>Atividades da turma</Text>
+                <View style={[styles.atividadesBadge, { backgroundColor: colors.accent + '14' }]}>
+                  <Text style={[styles.atividadesBadgeText, { color: colors.accent }]}>
+                    {atividadesPendentes.length}
+                  </Text>
+                </View>
+              </View>
+              {atividadesPendentes.map((a, i) => (
+                <View
+                  key={a.id}
+                  style={[
+                    styles.atividadeItem,
+                    i > 0 && { borderTopWidth: 1, borderTopColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.atividadeTheme, { color: colors.text }]} numberOfLines={2}>
+                    {a.themeTitle}
+                  </Text>
+                  {a.description ? (
+                    <Text style={[styles.atividadeDescText, { color: colors.mutedText }]} numberOfLines={2}>
+                      {a.description}
+                    </Text>
+                  ) : null}
+                  {a.dueDate ? (
+                    <View style={styles.atividadeDueRow}>
+                      <Ionicons name="calendar-outline" size={11} color={colors.mutedText} />
+                      <Text style={[styles.atividadeDueText, { color: colors.mutedText }]}>Prazo: {a.dueDate}</Text>
+                    </View>
+                  ) : null}
+                  <Pressable
+                    onPress={() => router.push(`/student/nova?themeTitle=${encodeURIComponent(a.themeTitle)}` as any)}
+                    style={[styles.atividadeCta, { backgroundColor: colors.accent }]}
+                  >
+                    <Ionicons name="create-outline" size={14} color="#fff" />
+                    <Text style={styles.atividadeCtaText}>Enviar redação</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          </StaggerItem>
+        )}
+
         {/* ── Last corrected essay ── */}
         {lastCorrected && (
-          <StaggerItem index={3}>
+          <StaggerItem index={4}>
             <Card>
               <View style={styles.sectionHeader}>
                 <Ionicons name="checkmark-circle" size={15} color="#22C55E" />
@@ -484,4 +542,27 @@ const styles = StyleSheet.create({
     gap: 8, borderRadius: 12, borderWidth: 1, paddingVertical: 12,
   },
   logoutText: { fontSize: 13, fontWeight: '600' },
+
+  // Atividades
+  atividadesCard: {
+    borderRadius: 18, borderWidth: 1,
+    padding: 16, gap: 14,
+    shadowColor: '#1B2559', shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06, shadowRadius: 12, elevation: 2,
+  },
+  atividadesHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  atividadesIconWrap: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  atividadesTitle: { flex: 1, fontSize: 14, fontWeight: '700' },
+  atividadesBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  atividadesBadgeText: { fontSize: 11, fontWeight: '800' },
+  atividadeItem: { gap: 8, paddingTop: 14 },
+  atividadeTheme: { fontSize: 14, fontWeight: '600', lineHeight: 20 },
+  atividadeDescText: { fontSize: 12, lineHeight: 18 },
+  atividadeDueRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  atividadeDueText: { fontSize: 11 },
+  atividadeCta: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, borderRadius: 10, paddingVertical: 10,
+  },
+  atividadeCtaText: { fontSize: 13, fontWeight: '700', color: '#fff' },
 });

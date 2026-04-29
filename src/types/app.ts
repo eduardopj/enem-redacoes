@@ -55,6 +55,17 @@ export type ThemeItem = {
 
 export type EssayInputMode = 'manuscrita' | 'digitada' | 'upload';
 
+export type Atividade = {
+  id: string;
+  turmaId: string;
+  teacherId: string;
+  themeTitle: string;
+  description?: string;
+  dueDate?: string;
+  createdAt: string;
+  status: 'ativa' | 'encerrada';
+};
+
 export type Essay = {
   id: string;
   teacherId: string;
