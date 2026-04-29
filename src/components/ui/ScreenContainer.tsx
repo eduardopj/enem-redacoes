@@ -36,7 +36,7 @@ export function ScreenContainer({
     : 0;
 
   const bottomPad = navHeight > 0
-    ? navHeight + 16
+    ? navHeight + 4
     : Math.max(28, insets.bottom + 16);
 
   const NavBar = showNav ? <BottomNav /> : showStudentNav ? <StudentBottomNav /> : null;

@@ -1,5 +1,5 @@
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { AppHeader, Button, Card, ScreenContainer, StatusBadge } from '@/components/ui';
+import { AppHeader, Button, Card, EmptyState, ScreenContainer, StatusBadge } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
@@ -405,15 +405,14 @@ export default function AlunoDetalheScreen() {
 
         {/* Empty state */}
         {sortedEssays.length === 0 && (
-          <Card>
-            <View style={styles.emptyWrap}>
-              <Ionicons name="document-outline" size={36} color={colors.mutedText} />
-              <Text style={[styles.emptyTitle, { color: colors.text }]}>Nenhuma redação ainda</Text>
-              <Text style={[styles.emptyText, { color: colors.mutedText }]}>
-                Cadastre a primeira redação deste aluno para começar a acompanhar o desempenho.
-              </Text>
-            </View>
-          </Card>
+          <EmptyState
+            icon="document-text-outline"
+            title="Nenhuma redação ainda"
+            description="Envie a primeira redação para começar a acompanhar o desempenho deste aluno."
+            buttonLabel="Enviar primeira redação"
+            onPress={() => router.push(`/nova-redacao?studentId=${student.id}` as any)}
+            tip="A IA avalia as 5 competências do ENEM e devolve o resultado em segundos."
+          />
         )}
       </ScreenContainer>
     </ProtectedRoute>

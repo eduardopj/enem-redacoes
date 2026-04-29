@@ -601,7 +601,7 @@ function SectionBlock({
           bStyles.numBadge,
           {
             backgroundColor: done
-              ? colors.accent
+              ? colors.success
               : locked
               ? colors.input
               : colors.accent,
@@ -621,8 +621,8 @@ function SectionBlock({
           {label}
         </Text>
         {done ? (
-          <View style={[bStyles.doneTag, { backgroundColor: colors.accent + '14' }]}>
-            <Text style={[bStyles.doneText, { color: colors.accent }]}>Pronto</Text>
+          <View style={[bStyles.doneTag, { backgroundColor: colors.successSoft }]}>
+            <Text style={[bStyles.doneText, { color: colors.success }]}>Pronto</Text>
           </View>
         ) : locked ? (
           <View style={[bStyles.lockedTag, { backgroundColor: colors.input, borderColor: colors.border }]}>

@@ -362,10 +362,12 @@ export default function DashboardScreen() {
                 <View style={[styles.emptyTurmaIcon, { backgroundColor: colors.accent + '18' }]}>
                   <Ionicons name="people-outline" size={18} color={colors.accent} />
                 </View>
-                <Text style={[styles.emptyTurmaText, { color: colors.mutedText }]}>
+                <Text style={[styles.emptyTurmaText, { color: colors.softText }]}>
                   Crie sua primeira turma para organizar os alunos
                 </Text>
-                <Ionicons name="add-circle-outline" size={18} color={colors.accent} />
+                <View style={[styles.emptyTurmaBtn, { backgroundColor: colors.accent }]}>
+                  <Ionicons name="add" size={16} color="#fff" />
+                </View>
               </Pressable>
             ) : (
               <View style={styles.turmaList}>
@@ -771,6 +773,7 @@ const styles = StyleSheet.create({
   },
   emptyTurmaIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   emptyTurmaText: { flex: 1, fontSize: 13, lineHeight: 18 },
+  emptyTurmaBtn: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
 
   // Mini bar chart
   chartWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, height: 110, marginTop: 12 },

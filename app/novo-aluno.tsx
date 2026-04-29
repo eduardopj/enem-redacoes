@@ -107,8 +107,8 @@ export default function NovoAlunoScreen() {
                 </ScrollView>
               ) : (
                 <View style={[styles.noTurmaHint, { backgroundColor: colors.input, borderColor: colors.border }]}>
-                  <Ionicons name="information-circle-outline" size={15} color={colors.mutedText} />
-                  <Text style={[styles.noTurmaText, { color: colors.mutedText }]}>
+                  <Ionicons name="information-circle-outline" size={15} color={colors.softText} />
+                  <Text style={[styles.noTurmaText, { color: colors.softText }]}>
                     Nenhuma turma criada. Você pode{' '}
                     <Text
                       style={{ color: colors.accent, fontWeight: '700' }}
