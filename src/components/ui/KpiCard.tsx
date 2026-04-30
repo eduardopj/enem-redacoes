@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: '700',
     lineHeight: 42,
-    letterSpacing: -0.8,
+    letterSpacing: 0,
     textAlign: 'center',
   },
   label: {

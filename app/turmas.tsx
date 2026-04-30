@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 8,
   },
-  pageTitle: { fontSize: 24, fontWeight: '700', letterSpacing: -0.4 },
+  pageTitle: { fontSize: 24, fontWeight: '700', letterSpacing: 0 },
   pageSub: { fontSize: 13, marginTop: 2 },
   addBtn: {
     width: 40,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   classIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   cardInfo: { flex: 1, gap: 6 },
-  cardName: { fontSize: 18, fontWeight: '700', letterSpacing: -0.3, lineHeight: 22 },
+  cardName: { fontSize: 18, fontWeight: '700', letterSpacing: 0, lineHeight: 22 },
   cardMeta: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   pill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   pillText: { fontSize: 11, fontWeight: '600' },
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', borderTopWidth: 1, paddingTop: 14 },
   statChip: { flex: 1, alignItems: 'center', gap: 4 },
   statIconWrap: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  statValue: { fontSize: 18, fontWeight: '700', letterSpacing: -0.4 },
+  statValue: { fontSize: 18, fontWeight: '700', letterSpacing: 0 },
   statLabel: { fontSize: 10, fontWeight: '500' },
 
   pendingRow: {

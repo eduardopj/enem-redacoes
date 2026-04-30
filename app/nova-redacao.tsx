@@ -1,11 +1,9 @@
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { AppHeader, Button, Card, ScreenContainer } from '@/components/ui';
+import { AppHeader, Button, ScreenContainer } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
-import { theme } from '@/theme';
-import { AppColors } from '@/theme';
+import { AppColors, theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
-import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
@@ -18,7 +16,7 @@ const IMAGE_QUALITY_THRESHOLD_KB = 150;
 
 // ─── Indicador de progresso ──────────────────────────────────────────────────
 
-const STEP_LABELS = ['Aluno', 'Tema', 'Arquivo'];
+const STEP_LABELS = ['Aluno', 'Tema', 'Foto', 'Revisar'];
 
 function StepIndicator({ steps }: { steps: boolean[] }) {
   const { colors } = useAppTheme();
@@ -138,8 +136,6 @@ export default function NovaRedacaoScreen() {
   const [filterTurmaId, setFilterTurmaId] = useState<string>('');
   const [imageUri, setImageUri] = useState('');
   const [imageName, setImageName] = useState('');
-  const [documentUri, setDocumentUri] = useState('');
-  const [documentName, setDocumentName] = useState('');
   const [autoCorrect, setAutoCorrect] = useState(true);
 
   useEffect(() => { if (studentIdParam) setSelectedStudentId(studentIdParam); }, [studentIdParam]);
@@ -149,7 +145,7 @@ export default function NovaRedacaoScreen() {
   const selectedTheme = selectedThemeId === FREE_THEME_ID
     ? FREE_THEME_ITEM
     : availableThemes.find((t) => t.id === selectedThemeId);
-  const hasFile = Boolean(imageUri || documentUri);
+  const hasFile = Boolean(imageUri);
 
   const filteredStudents = useMemo(() => {
     if (!filterTurmaId) return teacherStudents;
@@ -159,7 +155,7 @@ export default function NovaRedacaoScreen() {
   const step1Done = Boolean(selectedStudentId);
   const step2Done = step1Done && Boolean(selectedThemeId);
   const step3Done = step2Done && hasFile;
-  const stepsDone = [step1Done, step2Done, step3Done];
+  const stepsDone = [step1Done, step2Done, step3Done, false];
   const canSubmit = step3Done;
 
   async function checkImageQuality(uri: string): Promise<boolean> {
@@ -186,8 +182,6 @@ export default function NovaRedacaoScreen() {
   const clearFile = () => {
     setImageUri('');
     setImageName('');
-    setDocumentUri('');
-    setDocumentName('');
   };
 
   const handleTakePhoto = async () => {
@@ -203,8 +197,6 @@ export default function NovaRedacaoScreen() {
     if (!(await checkImageQuality(asset.uri))) return;
     setImageUri(asset.uri);
     setImageName(asset.fileName ?? 'foto-redacao.jpg');
-    setDocumentUri('');
-    setDocumentName('');
   };
 
   const handlePickImage = async () => {
@@ -215,19 +207,6 @@ export default function NovaRedacaoScreen() {
     if (!(await checkImageQuality(asset.uri))) return;
     setImageUri(asset.uri);
     setImageName(asset.fileName ?? 'imagem-redacao.jpg');
-    setDocumentUri('');
-    setDocumentName('');
-  };
-
-  const handlePickDocument = async () => {
-    const result = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true, multiple: false });
-    if (result.canceled) return;
-    const asset = result.assets?.[0];
-    if (!asset?.uri) return;
-    setDocumentUri(asset.uri);
-    setDocumentName(asset.name ?? 'arquivo-redacao');
-    setImageUri('');
-    setImageName('');
   };
 
   const handleSubmit = async () => {
@@ -239,8 +218,6 @@ export default function NovaRedacaoScreen() {
       themeTitle: selectedTheme.title,
       imageUri: imageUri || undefined,
       imageName: imageName || undefined,
-      documentUri: documentUri || undefined,
-      documentName: documentName || undefined,
     });
 
     if (!essayId) {
@@ -363,47 +340,13 @@ export default function NovaRedacaoScreen() {
               onClear={() => setSelectedThemeId('')}
               colors={colors}
             />
-          ) : availableThemes.length === 0 ? (
-            <EmptyAction
-              message="Nenhum tema cadastrado ainda."
-              buttonLabel="Cadastrar tema"
-              onPress={() => router.push('/novo-tema')}
-              colors={colors}
-            />
           ) : (
             <View style={styles.themeList}>
-              {/* Tema Livre */}
-              {(() => {
-                const isSelected = selectedThemeId === FREE_THEME_ID;
-                return (
-                  <Pressable
-                    key={FREE_THEME_ID}
-                    onPress={() => setSelectedThemeId(FREE_THEME_ID)}
-                    style={[
-                      styles.themeRow,
-                      {
-                        borderColor: isSelected ? colors.accent : colors.accent + '40',
-                        backgroundColor: isSelected ? colors.accent + '10' : colors.accent + '06',
-                      },
-                    ]}
-                  >
-                    <View style={styles.themeInfo}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 2 }}>
-                        <Ionicons name="sparkles" size={13} color={colors.accent} />
-                        <Text style={[styles.themeTitle, { color: colors.accent }]}>Tema Livre</Text>
-                      </View>
-                      <Text style={[styles.themeCategory, { color: colors.mutedText }]}>A IA identifica o tema automaticamente</Text>
-                    </View>
-                    <View style={[
-                      styles.themeRadio,
-                      { borderColor: isSelected ? colors.accent : colors.accent + '60' },
-                      isSelected && { backgroundColor: colors.accent },
-                    ]}>
-                      {isSelected ? <Ionicons name="checkmark" size={12} color="#fff" /> : null}
-                    </View>
-                  </Pressable>
-                );
-              })()}
+              <FreeThemeRow
+                selected={selectedThemeId === FREE_THEME_ID}
+                onPress={() => setSelectedThemeId(FREE_THEME_ID)}
+                colors={colors}
+              />
               {availableThemes.map((t) => {
                 const isSelected = selectedThemeId === t.id;
                 return (
@@ -432,6 +375,15 @@ export default function NovaRedacaoScreen() {
                   </Pressable>
                 );
               })}
+              <Pressable
+                onPress={() => router.push(selectedStudentId ? `/novo-tema?selectForStudentId=${selectedStudentId}` : '/novo-tema')}
+                style={[styles.addThemeInline, { borderColor: colors.border, backgroundColor: colors.input }]}
+              >
+                <Ionicons name="add-circle-outline" size={18} color={colors.accent} />
+                <Text style={[styles.addThemeInlineText, { color: colors.accent }]}>
+                  Cadastrar outro tema
+                </Text>
+              </Pressable>
             </View>
           )}
         </SectionBlock>
@@ -445,23 +397,11 @@ export default function NovaRedacaoScreen() {
             </View>
           ) : hasFile ? (
             <View style={styles.filePreview}>
-              {imageUri ? (
-                <Image
-                  source={{ uri: imageUri }}
-                  style={[styles.previewImage, { borderRadius: 12 }]}
-                  contentFit="contain"
-                />
-              ) : (
-                <View style={[styles.docFileRow, { backgroundColor: colors.input, borderRadius: 12 }]}>
-                  <View style={[styles.docIcon, { backgroundColor: colors.accent + '18' }]}>
-                    <Ionicons name="document-text-outline" size={24} color={colors.accent} />
-                  </View>
-                  <View style={styles.docFileInfo}>
-                    <Text style={[styles.docFileName, { color: colors.text }]} numberOfLines={2}>{documentName}</Text>
-                    <Text style={[styles.docFileHint, { color: colors.mutedText }]}>Documento selecionado</Text>
-                  </View>
-                </View>
-              )}
+              <Image
+                source={{ uri: imageUri }}
+                style={[styles.previewImage, { borderRadius: 12 }]}
+                contentFit="contain"
+              />
               <Button
                 title="Usar outro arquivo"
                 variant="secondary"
@@ -495,25 +435,29 @@ export default function NovaRedacaoScreen() {
                   </View>
                   <Text style={[styles.secondaryBtnText, { color: colors.text }]}>Galeria</Text>
                 </Pressable>
-                <Pressable
-                  onPress={handlePickDocument}
-                  style={[styles.secondaryBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
-                >
-                  <View style={[styles.secIcon, { backgroundColor: colors.input }]}>
-                    <Ionicons name="document-outline" size={18} color={colors.softText} />
-                  </View>
-                  <Text style={[styles.secondaryBtnText, { color: colors.text }]}>Documento</Text>
-                </Pressable>
               </View>
+              <View style={[styles.docNotice, { backgroundColor: colors.infoSoft, borderRadius: 12 }]}>
+                <Ionicons name="information-circle-outline" size={16} color={colors.info} />
+                <Text style={[styles.docNoticeText, { color: colors.info }]}>
+                  Por enquanto, a IA corrige imagens. Use foto nítida, folha inteira e boa iluminação.
+                </Text>
+              </View>
+              <PhotoQualityTips colors={colors} />
             </View>
           )}
         </SectionBlock>
 
         {/* ── AÇÃO FINAL ─────────────────────────────────────────────────── */}
-        {canSubmit ? (
-          <Card>
+        <SectionBlock number="4" label="Revisar e salvar" done={false} locked={!canSubmit} colors={colors}>
+          {!canSubmit ? (
+            <View style={styles.lockedHint}>
+              <Ionicons name="arrow-up-outline" size={13} color={colors.mutedText} />
+              <Text style={[styles.lockedText, { color: colors.mutedText }]}>Complete aluno, tema e foto para revisar o envio.</Text>
+            </View>
+          ) : (
+          <>
             {/* Resumo */}
-            <View style={styles.summaryBlock}>
+            <View style={[styles.reviewPanel, { backgroundColor: colors.input, borderColor: colors.border }]}>
               <View style={styles.summaryRow}>
                 <View style={[styles.summaryIcon, { backgroundColor: colors.accent + '14' }]}>
                   <Ionicons name="person-outline" size={14} color={colors.accent} />
@@ -526,6 +470,12 @@ export default function NovaRedacaoScreen() {
                   <Ionicons name="book-outline" size={14} color={colors.info} />
                 </View>
                 <Text style={[styles.summaryText, { color: colors.text }]} numberOfLines={1}>{selectedTheme?.title}</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <View style={[styles.summaryIcon, { backgroundColor: colors.success + '14' }]}>
+                  <Ionicons name="image-outline" size={14} color={colors.success} />
+                </View>
+                <Text style={[styles.summaryText, { color: colors.text }]} numberOfLines={1}>{imageName || 'Imagem anexada'}</Text>
               </View>
             </View>
 
@@ -573,14 +523,35 @@ export default function NovaRedacaoScreen() {
                 disabled={!canSubmit}
               />
             </View>
-          </Card>
-        ) : null}
+          </>
+          )}
+        </SectionBlock>
       </ScreenContainer>
     </ProtectedRoute>
   );
 }
 
 // ─── Bloco de seção ──────────────────────────────────────────────────────────
+
+function PhotoQualityTips({ colors }: { colors: AppColors }) {
+  const tips = [
+    { icon: 'scan-outline' as const, text: 'Folha inteira' },
+    { icon: 'sunny-outline' as const, text: 'Boa luz' },
+    { icon: 'resize-outline' as const, text: 'Sem cortes' },
+    { icon: 'create-outline' as const, text: 'Texto nítido' },
+  ];
+
+  return (
+    <View style={styles.qualityGrid}>
+      {tips.map((tip) => (
+        <View key={tip.text} style={[styles.qualityItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Ionicons name={tip.icon} size={15} color={colors.accent} />
+          <Text style={[styles.qualityText, { color: colors.softText }]}>{tip.text}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
 
 function SectionBlock({
   number, label, done, locked = false, colors, children,
@@ -665,6 +636,40 @@ function EmptyAction({ message, buttonLabel, onPress, colors }: {
   );
 }
 
+function FreeThemeRow({ selected, onPress, colors }: {
+  selected: boolean; onPress: () => void; colors: AppColors;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.themeRow,
+        {
+          borderColor: selected ? colors.accent : colors.accent + '40',
+          backgroundColor: selected ? colors.accent + '10' : colors.accent + '06',
+        },
+      ]}
+    >
+      <View style={styles.themeInfo}>
+        <View style={styles.freeThemeHeader}>
+          <Ionicons name="sparkles" size={13} color={colors.accent} />
+          <Text style={[styles.themeTitle, { color: colors.accent }]}>Tema Livre</Text>
+        </View>
+        <Text style={[styles.themeCategory, { color: colors.mutedText }]}>
+          A IA identifica o tema automaticamente
+        </Text>
+      </View>
+      <View style={[
+        styles.themeRadio,
+        { borderColor: selected ? colors.accent : colors.accent + '60' },
+        selected && { backgroundColor: colors.accent },
+      ]}>
+        {selected ? <Ionicons name="checkmark" size={12} color="#fff" /> : null}
+      </View>
+    </Pressable>
+  );
+}
+
 const eStyles = StyleSheet.create({
   wrap: { gap: theme.spacing.md },
   msg: { fontSize: 13, lineHeight: 18 },
@@ -701,9 +706,21 @@ const styles = StyleSheet.create({
   themeList: { gap: 8 },
   themeRow: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1.5, borderRadius: 12, padding: 14 },
   themeInfo: { flex: 1, gap: 3 },
+  freeThemeHeader: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 2 },
   themeTitle: { fontSize: 14, fontWeight: '600', lineHeight: 20 },
   themeCategory: { fontSize: 12, lineHeight: 16 },
   themeRadio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  addThemeInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    paddingVertical: 13,
+  },
+  addThemeInlineText: { fontSize: 13, fontWeight: '700' },
 
   // Upload
   uploadZone: { gap: 12 },
@@ -715,6 +732,17 @@ const styles = StyleSheet.create({
   secondaryBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderRadius: 12, paddingVertical: 14 },
   secIcon: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   secondaryBtnText: { fontSize: 13, fontWeight: '600' },
+  qualityGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  qualityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  qualityText: { fontSize: 11, fontWeight: '700' },
 
   // Preview
   filePreview: { gap: 10 },
@@ -727,6 +755,7 @@ const styles = StyleSheet.create({
 
   // Ação final
   summaryBlock: { gap: 10, marginBottom: 14 },
+  reviewPanel: { gap: 10, marginBottom: 14, borderWidth: 1, borderRadius: 14, padding: 12 },
   summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   summaryIcon: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   summaryText: { flex: 1, fontSize: 14, fontWeight: '600', lineHeight: 20 },

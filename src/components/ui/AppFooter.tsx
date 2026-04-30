@@ -3,7 +3,7 @@ import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { router, usePathname } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type NavItem = {
@@ -20,13 +20,15 @@ const NAV_ITEMS: NavItem[] = [
   { icon: 'library-outline', iconActive: 'library', label: 'Temas', route: '/temas' },
   { icon: 'bar-chart-outline', iconActive: 'bar-chart', label: 'Análise', route: '/analytics' },
 ];
+const ANDROID_BOTTOM_GUARD = 34;
 
 export function AppFooter() {
-  const { colors, isDark } = useAppTheme();
+  const { colors } = useAppTheme();
   const pathname = usePathname();
   const version = Constants.expoConfig?.version ?? '1.0.0';
   const retryQueue = useAppStore((state) => state.retryQueue);
   const insets = useSafeAreaInsets();
+  const safeBottom = Math.max(insets.bottom, Platform.OS === 'android' ? ANDROID_BOTTOM_GUARD : 8);
 
   const isMainScreen = NAV_ITEMS.some((item) => pathname === item.route);
 
@@ -37,8 +39,8 @@ export function AppFooter() {
           styles.navContainer,
           {
             backgroundColor: colors.surface,
-            paddingBottom: Math.max(insets.bottom, 8),
-            shadowColor: '#1B2559',
+            paddingBottom: safeBottom,
+            shadowColor: '#3157D5',
           },
         ]}
       >
@@ -60,7 +62,7 @@ export function AppFooter() {
               >
                 <Ionicons
                   name={isActive ? item.iconActive : item.icon}
-                  size={22}
+                  size={21}
                   color={isActive ? colors.accent : colors.mutedText}
                 />
                 {showBadge ? (
@@ -91,13 +93,11 @@ export function AppFooter() {
         styles.container,
         {
           backgroundColor: colors.surface,
-          paddingBottom: Math.max(insets.bottom, 8),
+          paddingBottom: safeBottom,
         },
       ]}
     >
-      <Text style={[styles.text, { color: colors.border }]}>
-        enem ia · v{version}
-      </Text>
+      <Text style={[styles.text, { color: colors.border }]}>enem ia · v{version}</Text>
     </View>
   );
 }
@@ -105,54 +105,54 @@ export function AppFooter() {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingTop: 8,
     borderTopWidth: 0,
-    shadowColor: '#1B2559',
+    shadowColor: '#3157D5',
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 6,
   },
   text: {
     fontSize: 10,
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
     textAlign: 'center',
   },
   navContainer: {
     flexDirection: 'row',
-    paddingVertical: 8,
+    paddingTop: 6,
     paddingHorizontal: 8,
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
+    shadowOpacity: 0.05,
+    shadowRadius: 14,
     elevation: 8,
   },
   navItem: {
     flex: 1,
     alignItems: 'center',
-    gap: 4,
-    paddingTop: 6,
+    gap: 3,
+    paddingTop: 4,
   },
   navIconWrap: {
-    width: 44,
-    height: 32,
-    borderRadius: 16,
+    width: 42,
+    height: 30,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
   navLabel: {
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: '600',
     letterSpacing: 0.1,
   },
   navLabelActive: {
-    fontWeight: '700',
+    fontWeight: '800',
   },
   badge: {
     position: 'absolute',
-    top: 0,
-    right: -2,
+    top: -1,
+    right: -1,
     minWidth: 16,
     height: 16,
     borderRadius: 8,
@@ -163,6 +163,6 @@ const styles = StyleSheet.create({
   badgeText: {
     color: '#fff',
     fontSize: 9,
-    fontWeight: '700',
+    fontWeight: '800',
   },
 });

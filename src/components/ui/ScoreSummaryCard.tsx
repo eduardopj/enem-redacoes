@@ -49,7 +49,7 @@ function ScoreCounter({ target, color }: { target: number; color: string }) {
       animVal.stopAnimation();
       animVal.removeListener(id);
     };
-  }, [target]);
+  }, [animVal, target]);
 
   return <Text style={[styles.score, { color }]}>{display}</Text>;
 }
@@ -63,7 +63,7 @@ export function ScoreSummaryCard({
   const { colors } = useAppTheme();
 
   const normalizedStatus =
-    status === 'corrigida' || status === 'processando' || status === 'pendente'
+    status === 'corrigida' || status === 'processando' || status === 'pendente' || status === 'precisa_revisao' || status === 'baixa_confiabilidade'
       ? status
       : 'pendente';
 
@@ -79,7 +79,7 @@ export function ScoreSummaryCard({
       Animated.timing(fadeAnim, { toValue: 1, duration: 380, useNativeDriver: true }),
       Animated.spring(scaleAnim, { toValue: 1, damping: 14, stiffness: 120, useNativeDriver: true }),
     ]).start();
-  }, []);
+  }, [fadeAnim, scaleAnim]);
 
   return (
     <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
@@ -136,7 +136,7 @@ function ProgressBar({ score, color, colors }: { score: number; color: string; c
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
-  }, [score]);
+  }, [score, widthAnim]);
 
   const width = widthAnim.interpolate({
     inputRange: [0, 100],
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     fontSize: 64,
     fontWeight: '800',
     lineHeight: 68,
-    letterSpacing: -2,
+    letterSpacing: 0,
   },
   scoreLabel: {
     fontSize: 14,

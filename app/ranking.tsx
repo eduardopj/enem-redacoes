@@ -25,7 +25,7 @@ function trendIcon(scores: number[]): { name: any; color: string } {
 
 const MEDAL_BG = ['#FFF7E0', '#F0F4FF', '#FFF1EE'];
 const MEDAL_BORDER = ['#FBBF24', '#94A3B8', '#F97316'];
-const MEDAL_LABEL = ['🥇', '🥈', '🥉'];
+const MEDAL_LABEL = ['1º', '2º', '3º'];
 
 const PERIOD_ICON: Record<string, any> = {
   manhã: 'sunny-outline',
@@ -455,7 +455,7 @@ function EmptyCard({ icon, title, text, colors, action }: {
 const styles = StyleSheet.create({
   titleSection: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 4 },
   titleIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  pageTitle: { fontSize: 22, fontWeight: '700', letterSpacing: -0.4, lineHeight: 26 },
+  pageTitle: { fontSize: 22, fontWeight: '700', letterSpacing: 0, lineHeight: 26 },
   pageSub: { fontSize: 13, lineHeight: 18, marginTop: 2 },
 
   // Main tabs
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
   },
   summaryChip: { flex: 1, alignItems: 'center', gap: 3 },
   summaryChipLabel: { fontSize: 10, fontWeight: '600', textAlign: 'center' },
-  summaryChipValue: { fontSize: 22, fontWeight: '700', letterSpacing: -0.6 },
+  summaryChipValue: { fontSize: 22, fontWeight: '700', letterSpacing: 0 },
   summaryDiv: { width: 1, marginVertical: 4 },
 
   // Podium
@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
   podiumInitials: { fontSize: 16, fontWeight: '800' },
   podiumName: { fontSize: 11, fontWeight: '600', textAlign: 'center', lineHeight: 14 },
   podiumBase: { width: '100%', borderTopLeftRadius: 10, borderTopRightRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center', gap: 0 },
-  podiumScore: { fontSize: 20, fontWeight: '700', letterSpacing: -0.5 },
+  podiumScore: { fontSize: 20, fontWeight: '700', letterSpacing: 0 },
   podiumScoreSub: { fontSize: 10, fontWeight: '600' },
 
   // List
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
     borderRadius: 18, padding: 18,
     shadowColor: '#1B2559', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2, gap: 2,
   },
-  listTitle: { fontSize: 13, fontWeight: '700', letterSpacing: -0.1, marginBottom: 6 },
+  listTitle: { fontSize: 13, fontWeight: '700', letterSpacing: 0, marginBottom: 6 },
   listRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13 },
   posWrap: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   posText: { fontSize: 14, fontWeight: '700' },
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
   listMetaText: { fontSize: 11, lineHeight: 16 },
   listRight: { alignItems: 'flex-end', gap: 2 },
   listScoreRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  listScore: { fontSize: 18, fontWeight: '700', letterSpacing: -0.4 },
+  listScore: { fontSize: 18, fontWeight: '700', letterSpacing: 0 },
   listScoreSub: { fontSize: 10, fontWeight: '600' },
   listNone: { fontSize: 11 },
 
@@ -532,16 +532,16 @@ const styles = StyleSheet.create({
   turmaRankText: { fontSize: 16, fontWeight: '700' },
   turmaPeriodIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   turmaCardInfo: { flex: 1, gap: 5 },
-  turmaCardName: { fontSize: 16, fontWeight: '700', letterSpacing: -0.3 },
+  turmaCardName: { fontSize: 16, fontWeight: '700', letterSpacing: 0 },
   turmaCardMeta: { flexDirection: 'row', gap: 5, flexWrap: 'wrap' },
   turmaAvgBlock: { alignItems: 'flex-end' },
-  turmaAvgValue: { fontSize: 24, fontWeight: '800', letterSpacing: -0.6 },
+  turmaAvgValue: { fontSize: 24, fontWeight: '800', letterSpacing: 0 },
   turmaAvgSub: { fontSize: 10, fontWeight: '600', marginTop: -2 },
   turmaNoScore: { fontSize: 12, fontWeight: '500' },
   turmaStatsRow: { flexDirection: 'row', borderTopWidth: 1, paddingTop: 12 },
   statChip: { flex: 1, alignItems: 'center', gap: 3 },
   statIconWrap: { width: 26, height: 26, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
-  statValue: { fontSize: 15, fontWeight: '700', letterSpacing: -0.3 },
+  statValue: { fontSize: 15, fontWeight: '700', letterSpacing: 0 },
   statLabel: { fontSize: 9, fontWeight: '500' },
   pendingRow: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   pendingText: { fontSize: 11, fontWeight: '600' },

@@ -12,7 +12,7 @@
       "supportsTablet": true
     },
     "android": {
-      "edgeToEdgeEnabled": true,
+      "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
       "allowBackup": false,
       "package": "com.eduardopj.enemredacoes",
@@ -28,6 +28,10 @@
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
+    "androidNavigationBar": {
+      "backgroundColor": "#F7F4ED",
+      "barStyle": "dark-content"
+    },
     "web": {
       "output": "static"
     },
@@ -36,7 +40,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "O app precisa da câmera para escanear o QR Code da turma."
+          "cameraPermission": "O app precisa da câmera para escanear o QR Code da turma e fotografar redações."
         }
       ],
       [

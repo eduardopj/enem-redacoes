@@ -2,7 +2,7 @@ import { useAppTheme } from '@/theme/ThemeContext';
 import { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 
-type StatusType = 'pendente' | 'processando' | 'corrigida';
+type StatusType = 'pendente' | 'processando' | 'corrigida' | 'precisa_revisao' | 'baixa_confiabilidade';
 
 type StatusBadgeProps = {
   status: StatusType;
@@ -28,7 +28,7 @@ function PulsingDot({ color }: { color: string }) {
     );
     anim.start();
     return () => anim.stop();
-  }, []);
+  }, [opacity, scale]);
 
   return (
     <View style={styles.dotWrap}>
@@ -59,6 +59,18 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       color: colors.success,
       backgroundColor: colors.successSoft,
       dot: '#22C55E',
+    },
+    precisa_revisao: {
+      label: 'Revisar',
+      color: colors.warning,
+      backgroundColor: colors.warningSoft,
+      dot: '#F59E0B',
+    },
+    baixa_confiabilidade: {
+      label: 'Baixa confiança',
+      color: colors.danger,
+      backgroundColor: colors.dangerSoft,
+      dot: '#EF4444',
     },
   }[status];
 

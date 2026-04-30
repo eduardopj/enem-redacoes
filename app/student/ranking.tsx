@@ -1,7 +1,6 @@
 import { StudentRoute } from '@/components/auth/StudentRoute';
 import { Card, EmptyState, ScreenContainer, StaggerItem } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
-import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Essay, Student } from '@/types/app';
 import { getScoreColor } from '@/utils/analytics';
@@ -329,19 +328,19 @@ export default function StudentRankingScreen() {
 const styles = StyleSheet.create({
   titleRow: { paddingTop: 4, gap: 2 },
   eyebrow: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  title: { fontSize: 26, fontWeight: '700', letterSpacing: -0.5, lineHeight: 32 },
+  title: { fontSize: 26, fontWeight: '700', letterSpacing: 0, lineHeight: 32 },
 
   myCard: {
     borderRadius: 18, borderWidth: 1.5, padding: 16,
     flexDirection: 'row', alignItems: 'center', gap: 14,
   },
   myCardLeft: { alignItems: 'center', minWidth: 52 },
-  myRankNum: { fontSize: 32, fontWeight: '800', letterSpacing: -1, lineHeight: 36 },
+  myRankNum: { fontSize: 32, fontWeight: '800', letterSpacing: 0, lineHeight: 36 },
   myRankLabel: { fontSize: 10, fontWeight: '600' },
   myCardDivider: { width: 1, height: 44 },
   myCardStats: { flex: 1, flexDirection: 'row', justifyContent: 'space-around' },
   myStatItem: { alignItems: 'center', gap: 2 },
-  myStatNum: { fontSize: 18, fontWeight: '800', letterSpacing: -0.3 },
+  myStatNum: { fontSize: 18, fontWeight: '800', letterSpacing: 0 },
   myStatLabel: { fontSize: 9, fontWeight: '600' },
   myPercentile: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   myPercentileText: { fontSize: 11, fontWeight: '800' },
@@ -375,7 +374,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', gap: 2, paddingTop: 6,
   },
   podiumRankNum: { fontSize: 11, fontWeight: '700' },
-  podiumScore: { fontSize: 16, fontWeight: '800', letterSpacing: -0.5 },
+  podiumScore: { fontSize: 16, fontWeight: '800', letterSpacing: 0 },
 
   // List
   rankRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 4 },
@@ -389,6 +388,6 @@ const styles = StyleSheet.create({
   youTagText: { fontSize: 9, fontWeight: '800', color: '#fff' },
   rankMeta: { fontSize: 11, lineHeight: 16 },
   rankScoreWrap: { borderRadius: 10, padding: 8, alignItems: 'center', minWidth: 52 },
-  rankScore: { fontSize: 16, fontWeight: '800', letterSpacing: -0.3, lineHeight: 20 },
+  rankScore: { fontSize: 16, fontWeight: '800', letterSpacing: 0, lineHeight: 20 },
   rankScoreLabel: { fontSize: 9, fontWeight: '600' },
 });

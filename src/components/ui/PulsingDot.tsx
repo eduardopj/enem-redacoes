@@ -1,11 +1,5 @@
-import { useEffect } from 'react';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
+import { useEffect, useRef } from 'react';
+import { Animated } from 'react-native';
 
 type Props = {
   color: string;
@@ -13,32 +7,25 @@ type Props = {
 };
 
 export function PulsingDot({ color, size = 10 }: Props) {
-  const scale = useSharedValue(1);
-  const opacity = useSharedValue(0.9);
+  const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
-    scale.value = withRepeat(
-      withSequence(
-        withTiming(1.5, { duration: 700 }),
-        withTiming(1.0, { duration: 700 }),
-      ),
-      -1,
-      false,
+    const loop = Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(scale, { toValue: 1.5, duration: 700, useNativeDriver: true }),
+          Animated.timing(scale, { toValue: 1, duration: 700, useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.timing(opacity, { toValue: 0.35, duration: 700, useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 0.9, duration: 700, useNativeDriver: true }),
+        ]),
+      ])
     );
-    opacity.value = withRepeat(
-      withSequence(
-        withTiming(0.35, { duration: 700 }),
-        withTiming(0.9, { duration: 700 }),
-      ),
-      -1,
-      false,
-    );
-  }, []);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
-  }));
+    loop.start();
+    return () => loop.stop();
+  }, [opacity, scale]);
 
   return (
     <Animated.View
@@ -53,7 +40,7 @@ export function PulsingDot({ color, size = 10 }: Props) {
           shadowOpacity: 0.7,
           shadowRadius: 4,
         },
-        animStyle,
+        { opacity, transform: [{ scale }] },
       ]}
     />
   );

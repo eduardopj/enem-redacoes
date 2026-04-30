@@ -138,7 +138,7 @@ export default function NovoTemaScreen() {
                   <View key={year} style={styles.yearGroup}>
                     <View style={[styles.yearHeader, { backgroundColor: colors.input }]}>
                       <Text style={[styles.yearLabel, { color: colors.accent }]}>
-                        {year === 'Treino' ? '🎯 Temas de treino' : `📅 ENEM ${year}`}
+                        {year === 'Treino' ? 'Temas de treino' : `ENEM ${year}`}
                       </Text>
                     </View>
                     {themes.map((t, i) => (

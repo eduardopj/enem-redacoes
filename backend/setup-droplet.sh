@@ -18,15 +18,15 @@ npm install -g pm2
 
 echo "=== 4. Criando diretórios ==="
 mkdir -p /opt/enem-ia/data
-mkdir -p /opt/enem-ia/app
+mkdir -p /opt/enem-ia/backend
 
 echo "=== 5. Instalando dependências do backend ==="
-cd /opt/enem-ia/app/backend
+cd /opt/enem-ia/backend
 npm install --omit=dev
 
 echo "=== 6. Verificando .env ==="
-if [ ! -f /opt/enem-ia/app/backend/.env ]; then
-  echo "ATENÇÃO: crie o arquivo /opt/enem-ia/app/backend/.env com:"
+if [ ! -f /opt/enem-ia/backend/.env ]; then
+  echo "ATENÇÃO: crie o arquivo /opt/enem-ia/backend/.env com:"
   echo "  OPENAI_API_KEY=sk-..."
   echo "  DATA_DIR=/opt/enem-ia/data"
   echo "  PORT=3333"
@@ -34,7 +34,7 @@ if [ ! -f /opt/enem-ia/app/backend/.env ]; then
 fi
 
 echo "=== 7. Iniciando backend com PM2 ==="
-cd /opt/enem-ia/app/backend
+cd /opt/enem-ia/backend
 pm2 delete enem-backend 2>/dev/null || true
 pm2 start src/server.js --name enem-backend
 pm2 save

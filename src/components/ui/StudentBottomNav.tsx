@@ -3,10 +3,11 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { router, usePathname } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export const STUDENT_BOTTOM_NAV_HEIGHT = 64;
+export const STUDENT_BOTTOM_NAV_HEIGHT = 60;
+const ANDROID_BOTTOM_GUARD = 34;
 
 type Tab = {
   route: string;
@@ -16,11 +17,11 @@ type Tab = {
 };
 
 const TABS: Tab[] = [
-  { route: '/student/home',    icon: 'home-outline',          iconActive: 'home',          label: 'Início' },
-  { route: '/student/redacoes',icon: 'document-text-outline', iconActive: 'document-text', label: 'Redações' },
-  { route: '/student/nova',    icon: 'add',                   iconActive: 'add',           label: '' },
-  { route: '/student/evolucao',icon: 'trending-up-outline',   iconActive: 'trending-up',   label: 'Evolução' },
-  { route: '/student/ranking', icon: 'trophy-outline',        iconActive: 'trophy',        label: 'Ranking' },
+  { route: '/student/home', icon: 'home-outline', iconActive: 'home', label: 'Início' },
+  { route: '/student/redacoes', icon: 'document-text-outline', iconActive: 'document-text', label: 'Redações' },
+  { route: '/student/nova', icon: 'add', iconActive: 'add', label: '' },
+  { route: '/student/evolucao', icon: 'trending-up-outline', iconActive: 'trending-up', label: 'Evolução' },
+  { route: '/student/ranking', icon: 'trophy-outline', iconActive: 'trophy', label: 'Ranking' },
 ];
 
 function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab: boolean }) {
@@ -34,22 +35,22 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
       duration: 200,
       useNativeDriver: true,
     }).start();
-  }, [isActive]);
+  }, [dotOpacity, isActive]);
 
   function handlePress() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Animated.sequence([
-      Animated.spring(scale, { toValue: 0.85, useNativeDriver: true, speed: 40 }),
-      Animated.spring(scale, { toValue: 1,    useNativeDriver: true, speed: 20 }),
+      Animated.spring(scale, { toValue: 0.86, useNativeDriver: true, speed: 40 }),
+      Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20 }),
     ]).start();
     router.push(tab.route as any);
   }
 
   if (isFab) {
     return (
-      <Pressable onPress={handlePress} style={styles.fabWrap}>
+    <Pressable onPress={handlePress} style={styles.fabWrap} hitSlop={8}>
         <Animated.View style={[styles.fabPill, { backgroundColor: colors.success, transform: [{ scale }] }]}>
-          <Ionicons name="add" size={20} color="#fff" />
+          <Ionicons name="add" size={19} color="#fff" />
           <Text style={styles.fabPillLabel}>Nova</Text>
         </Animated.View>
       </Pressable>
@@ -57,16 +58,14 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
   }
 
   return (
-    <Pressable onPress={handlePress} style={styles.tabItem}>
+    <Pressable onPress={handlePress} style={styles.tabItem} hitSlop={6}>
       <Animated.View style={[styles.tabIconWrap, { transform: [{ scale }] }]}>
         <Ionicons
           name={isActive ? tab.iconActive : tab.icon}
-          size={22}
+          size={21}
           color={isActive ? colors.accent : colors.mutedText}
         />
-        <Animated.View
-          style={[styles.activeDot, { backgroundColor: colors.accent, opacity: dotOpacity }]}
-        />
+        <Animated.View style={[styles.activeDot, { backgroundColor: colors.accent, opacity: dotOpacity }]} />
       </Animated.View>
       <Text
         style={[
@@ -86,6 +85,7 @@ export function StudentBottomNav() {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
+  const safeBottom = Math.max(insets.bottom, Platform.OS === 'android' ? ANDROID_BOTTOM_GUARD : 8);
 
   return (
     <View
@@ -94,17 +94,14 @@ export function StudentBottomNav() {
         {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
-          paddingBottom: Math.max(insets.bottom, 8),
-          height: STUDENT_BOTTOM_NAV_HEIGHT + Math.max(insets.bottom, 8),
+          paddingBottom: safeBottom,
+          height: STUDENT_BOTTOM_NAV_HEIGHT + safeBottom,
         },
       ]}
     >
       {TABS.map((tab) => {
         const isFab = tab.icon === 'add';
-        const isActive = !isFab && (
-          pathname === tab.route ||
-          pathname.startsWith(tab.route + '/')
-        );
+        const isActive = !isFab && (pathname === tab.route || pathname.startsWith(tab.route + '/'));
         return <NavItem key={tab.route} tab={tab} isActive={isActive} isFab={isFab} />;
       })}
     </View>
@@ -116,8 +113,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderTopWidth: 1,
-    paddingTop: 4,
-    shadowColor: '#1B2559',
+    paddingTop: 5,
+    shadowColor: '#3157D5',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
@@ -128,16 +125,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,
-    paddingTop: 4,
+    paddingTop: 2,
   },
   tabIconWrap: {
     alignItems: 'center',
     justifyContent: 'center',
     width: 32,
-    height: 28,
+    height: 27,
   },
   tabLabel: { fontSize: 10, fontWeight: '600', letterSpacing: 0.1 },
-  tabLabelActive: { fontWeight: '700' },
+  tabLabelActive: { fontWeight: '800' },
   activeDot: {
     width: 4,
     height: 4,
@@ -146,18 +143,18 @@ const styles = StyleSheet.create({
     bottom: -2,
   },
   fabWrap: {
-    flex: 1.3,
+    flex: 1.26,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 2,
+    paddingTop: 1,
   },
   fabPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 14,
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+    borderRadius: 13,
     shadowColor: '#22C55E',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.22,
@@ -166,7 +163,7 @@ const styles = StyleSheet.create({
   },
   fabPillLabel: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#fff',
   },
 });

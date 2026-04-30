@@ -1,12 +1,14 @@
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
-import { PropsWithChildren } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { PropsWithChildren, useEffect, useRef } from 'react';
+import { Animated, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppFooter } from './AppFooter';
 import { BOTTOM_NAV_HEIGHT, BottomNav } from './BottomNav';
 import { STUDENT_BOTTOM_NAV_HEIGHT, StudentBottomNav } from './StudentBottomNav';
 import { TopBar } from './TopBar';
+
+const ANDROID_BOTTOM_GUARD = 34;
 
 type ScreenContainerProps = PropsWithChildren<{
   noScroll?: boolean;
@@ -28,31 +30,54 @@ export function ScreenContainer({
 }: ScreenContainerProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
+  const entryOpacity = useRef(new Animated.Value(0)).current;
+  const entryY = useRef(new Animated.Value(10)).current;
+  const safeBottom = Math.max(insets.bottom, Platform.OS === 'android' ? ANDROID_BOTTOM_GUARD : 8);
 
   const navHeight = showNav
-    ? BOTTOM_NAV_HEIGHT + Math.max(insets.bottom, 8)
+    ? BOTTOM_NAV_HEIGHT + safeBottom
     : showStudentNav
-    ? STUDENT_BOTTOM_NAV_HEIGHT + Math.max(insets.bottom, 8)
+    ? STUDENT_BOTTOM_NAV_HEIGHT + safeBottom
     : 0;
 
   const bottomPad = navHeight > 0
-    ? navHeight + 4
-    : Math.max(28, insets.bottom + 16);
+    ? theme.spacing.md
+    : Math.max(theme.spacing.md, safeBottom);
 
   const NavBar = showNav ? <BottomNav /> : showStudentNav ? <StudentBottomNav /> : null;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(entryOpacity, {
+        toValue: 1,
+        duration: 260,
+        useNativeDriver: true,
+      }),
+      Animated.spring(entryY, {
+        toValue: 0,
+        damping: 18,
+        stiffness: 170,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [entryOpacity, entryY]);
 
   if (noScroll) {
     return (
       <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: colors.background }]}>
         <TopBar showBack={showBack} showHomeButton={showHomeButton} />
-        <View
+        <Animated.View
           style={[
             styles.staticContent,
-            { paddingBottom: Math.max(theme.spacing.xl, insets.bottom + 20) },
+            {
+              paddingBottom: Math.max(theme.spacing.md, safeBottom),
+              opacity: entryOpacity,
+              transform: [{ translateY: entryY }],
+            },
           ]}
         >
           {children}
-        </View>
+        </Animated.View>
         {NavBar}
       </SafeAreaView>
     );
@@ -66,16 +91,24 @@ export function ScreenContainer({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={0}
       >
-        <ScrollView
-          style={styles.scroll}
+        <Animated.ScrollView
           contentContainerStyle={[styles.content, { paddingBottom: bottomPad }]}
+          contentInsetAdjustmentBehavior="never"
+          scrollIndicatorInsets={{ bottom: 0 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           bounces
+          style={[
+            styles.scroll,
+            {
+              opacity: entryOpacity,
+              transform: [{ translateY: entryY }],
+            },
+          ]}
         >
           {children}
-        </ScrollView>
+        </Animated.ScrollView>
       </KeyboardAvoidingView>
       {NavBar ?? (showFooter ? <AppFooter /> : null)}
     </SafeAreaView>

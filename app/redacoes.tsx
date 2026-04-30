@@ -2,6 +2,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import {
   AppHeader,
   Button,
+  Card,
   EmptyState,
   EssayCard,
   ScreenContainer,
@@ -12,10 +13,10 @@ import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-type FilterStatus = 'todas' | 'pendente' | 'processando' | 'corrigida';
+type FilterStatus = 'todas' | 'pendente' | 'processando' | 'corrigida' | 'precisa_revisao' | 'baixa_confiabilidade';
 type SortMode = 'data' | 'nota_asc' | 'nota_desc';
 
 export default function RedacoesScreen() {
@@ -39,8 +40,11 @@ export default function RedacoesScreen() {
     return essays.filter((essay) => essay.teacherId === currentTeacher.id);
   }, [currentTeacher, essays]);
 
-  const getStudentName = (studentId: string) =>
-    teacherStudents.find((student) => student.id === studentId)?.name ?? 'Aluno';
+  const getStudentName = useCallback(
+    (studentId: string) =>
+      teacherStudents.find((student) => student.id === studentId)?.name ?? 'Aluno',
+    [teacherStudents]
+  );
 
   const filteredEssays = useMemo(() => {
     let result = filter === 'todas' ? teacherEssays : teacherEssays.filter((e) => e.status === filter);
@@ -65,7 +69,7 @@ export default function RedacoesScreen() {
     }
 
     return result;
-  }, [teacherEssays, filter, sortMode, search]);
+  }, [teacherEssays, filter, sortMode, search, getStudentName]);
 
   const handleDelete = (essayId: string, studentName: string) => {
     Alert.alert(
@@ -80,6 +84,20 @@ export default function RedacoesScreen() {
 
   const hasStudents = teacherStudents.length > 0;
   const hasEssays = teacherEssays.length > 0;
+  const pendingCount = teacherEssays.filter((essay) => essay.status === 'pendente').length;
+  const correctedEssays = teacherEssays.filter(
+    (essay) => essay.status === 'corrigida' && typeof essay.totalScore === 'number'
+  );
+  const reviewCount = teacherEssays.filter(
+    (essay) =>
+      essay.status === 'precisa_revisao' ||
+      essay.status === 'baixa_confiabilidade' ||
+      essay.reviewRequired ||
+      essay.confidenceLevel === 'baixa'
+  ).length;
+  const avgScore = correctedEssays.length
+    ? Math.round(correctedEssays.reduce((sum, essay) => sum + (essay.totalScore ?? 0), 0) / correctedEssays.length)
+    : null;
 
   const cycleSortMode = () => {
     setSortMode((prev) =>
@@ -129,6 +147,13 @@ export default function RedacoesScreen() {
           />
         ) : (
           <>
+            <View style={styles.summaryGrid}>
+              <SummaryCard label="Pendentes" value={pendingCount} icon="time-outline" tone={pendingCount > 0 ? colors.warning : colors.mutedText} />
+              <SummaryCard label="Corrigidas" value={correctedEssays.length} icon="checkmark-circle-outline" tone={colors.success} />
+              <SummaryCard label="Revisão" value={reviewCount} icon="alert-circle-outline" tone={reviewCount > 0 ? colors.danger : colors.mutedText} />
+              <SummaryCard label="Média IA" value={avgScore ?? '--'} icon="sparkles-outline" tone={colors.accent} />
+            </View>
+
             {/* Busca */}
             <View style={[styles.searchRow, { backgroundColor: colors.input, borderColor: colors.border }]}>
               <Ionicons name="search-outline" size={16} color={colors.mutedText} />
@@ -160,6 +185,8 @@ export default function RedacoesScreen() {
                   { key: 'corrigida', label: 'Corrigidas' },
                   { key: 'processando', label: 'Em análise' },
                   { key: 'pendente', label: 'Pendentes' },
+                  { key: 'precisa_revisao', label: 'Revisão' },
+                  { key: 'baixa_confiabilidade', label: 'Baixa confiança' },
                 ] as { key: FilterStatus; label: string }[]
               ).map(({ key, label }) => (
                 <FilterChip
@@ -248,7 +275,47 @@ function FilterChip({ label, active, onPress }: { label: string; active: boolean
   );
 }
 
+function SummaryCard({ label, value, icon, tone }: { label: string; value: number | string; icon: keyof typeof Ionicons.glyphMap; tone: string }) {
+  const { colors } = useAppTheme();
+  return (
+    <Card style={styles.summaryCard}>
+      <View style={[styles.summaryIcon, { backgroundColor: tone + '16' }]}>
+        <Ionicons name={icon} size={15} color={tone} />
+      </View>
+      <Text style={[styles.summaryValue, { color: colors.text }]}>{value}</Text>
+      <Text style={[styles.summaryLabel, { color: colors.mutedText }]} numberOfLines={1}>
+        {label}
+      </Text>
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
+  summaryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.sm,
+  },
+  summaryCard: {
+    width: '48%',
+    padding: theme.spacing.md,
+    gap: 6,
+  },
+  summaryIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  summaryValue: {
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  summaryLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',

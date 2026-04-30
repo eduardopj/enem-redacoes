@@ -3,6 +3,7 @@ import { AppHeader, Button, Card, CorrectionProgress, ScreenContainer, StaggerIt
 import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
+import { isCorrectedEssay } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -39,18 +40,18 @@ export default function RedacaoDetalheScreen() {
   // Auto-navigate to resultado — on mount if already corrigida, or on transition
   useEffect(() => {
     if (!essay || didAutoNav.current) return;
-    if (essay.status === 'corrigida') {
+    if (isCorrectedEssay(essay)) {
       didAutoNav.current = true;
       router.replace(`/resultado/${essay.id}`);
       return;
     }
     const prev = prevStatusRef.current;
     prevStatusRef.current = essay.status;
-    if (prev === 'processando' && essay.status === 'corrigida') {
+    if (prev === 'processando' && isCorrectedEssay(essay)) {
       didAutoNav.current = true;
       router.replace(`/resultado/${essay.id}`);
     }
-  }, [essay?.status]);
+  }, [essay]);
 
   // AppState listener: retry queue when app comes to foreground
   useEffect(() => {
@@ -60,7 +61,7 @@ export default function RedacaoDetalheScreen() {
       }
     });
     return () => subscription.remove();
-  }, [retryQueue.length]);
+  }, [processRetryQueue, retryQueue.length]);
 
   if (!essay) {
     return (
@@ -78,7 +79,7 @@ export default function RedacaoDetalheScreen() {
   }
 
   const isProcessing = essay.status === 'processando';
-  const isCorrected = essay.status === 'corrigida';
+  const isCorrected = isCorrectedEssay(essay);
   const hasError = essay.status === 'pendente' && essay.feedback?.startsWith('Erro na correção:');
   const isInRetryQueue = retryQueue.includes(essay.id);
   const currentStep = parseStep(essay.feedback);
@@ -207,7 +208,7 @@ export default function RedacaoDetalheScreen() {
             <View style={[styles.aiCta, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.aiCtaHeader}>
                 <View style={[styles.aiCtaBadge, { backgroundColor: colors.accent + '18' }]}>
-                  <Text style={[styles.aiCtaBadgeText, { color: colors.accent }]}>🤖 Correção com IA</Text>
+                  <Text style={[styles.aiCtaBadgeText, { color: colors.accent }]}>Correção com IA</Text>
                 </View>
               </View>
               <Text style={[styles.aiCtaTitle, { color: colors.text }]}>
@@ -323,7 +324,7 @@ const styles = StyleSheet.create({
   row: { gap: theme.spacing.xs, paddingBottom: theme.spacing.sm, borderBottomWidth: 1 },
   rowLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.1 },
   rowValue: { fontSize: 16, fontWeight: '600', lineHeight: 22 },
-  blockTitle: { fontSize: 14, fontWeight: '700', letterSpacing: -0.1, marginBottom: 10 },
+  blockTitle: { fontSize: 14, fontWeight: '700', letterSpacing: 0, marginBottom: 10 },
   previewImage: { width: '100%', height: 300, borderRadius: 12 },
   errorCard: { borderWidth: 1 },
   errorHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: theme.spacing.sm },
@@ -350,7 +351,7 @@ const styles = StyleSheet.create({
   aiCtaHeader: { alignItems: 'flex-start' },
   aiCtaBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   aiCtaBadgeText: { fontSize: 11, fontWeight: '700' },
-  aiCtaTitle: { fontSize: 20, fontWeight: '700', lineHeight: 26, letterSpacing: -0.2 },
+  aiCtaTitle: { fontSize: 20, fontWeight: '700', lineHeight: 26, letterSpacing: 0 },
   aiCtaDesc: { fontSize: 15, lineHeight: 22 },
   aiCtaSteps: { borderRadius: 12, overflow: 'hidden' },
   aiCtaStep: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, padding: theme.spacing.sm },

@@ -1,6 +1,7 @@
 import { useAppTheme } from '@/theme/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 import { useKeepAwake } from 'expo-keep-awake';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 
 type CorrectionProgressProps = {
@@ -9,243 +10,179 @@ type CorrectionProgressProps = {
 };
 
 const STEPS = [
-  { n: 1, label: 'Lendo a imagem', sub: 'Identificando tipo de escrita' },
-  { n: 2, label: 'Avaliando o tema', sub: 'Verificando adequação temática' },
-  { n: 3, label: 'Pontuando competências', sub: 'Analisando as 5 competências' },
-  { n: 4, label: 'Parecer pedagógico', sub: 'Elaborando feedback completo' },
+  { n: 1, label: 'Lendo imagem', sub: 'Conferindo nitidez e folha inteira' },
+  { n: 2, label: 'Transcrevendo', sub: 'Convertendo manuscrito em texto' },
+  { n: 3, label: 'Avaliando ENEM', sub: 'Pontuando C1 a C5' },
+  { n: 4, label: 'Preparando devolutiva', sub: 'Organizando próximos passos' },
 ];
 
-const AI_MESSAGES = [
-  'Analisando caligrafia e estrutura do texto...',
-  'Verificando coerência e coesão textual...',
-  'Avaliando domínio da norma culta...',
-  'Identificando recursos argumentativos...',
-  'Analisando a proposta de intervenção social...',
-  'Calculando pontuação por competência...',
-  'Verificando adequação ao tema proposto...',
-  'Elaborando sugestões de melhoria...',
-  'Comparando com critérios oficiais do ENEM...',
-  'Finalizando o parecer pedagógico...',
-  'Transcrevendo o manuscrito...',
-  'Identificando pontos fortes e fracos...',
+const MESSAGES = [
+  'Lendo a imagem com atenção.',
+  'Transcrevendo o texto manuscrito.',
+  'Avaliando repertório e argumentação.',
+  'Calculando nota por competência.',
+  'Separando pontos fortes e prioridades.',
+  'Preparando feedback pedagógico.',
 ];
 
-const PROGRESS_TARGETS: Record<number, number> = { 1: 18, 2: 42, 3: 70, 4: 92 };
+const PROGRESS_TARGETS: Record<number, number> = { 1: 22, 2: 48, 3: 76, 4: 94 };
 
-export function CorrectionProgress({ currentStep }: CorrectionProgressProps) {
+export function CorrectionProgress({ currentStep, feedback }: CorrectionProgressProps) {
   const { colors } = useAppTheme();
   useKeepAwake();
 
-  // --- Animated values ---
-  const barAnim = useRef(new Animated.Value(5)).current;
-  const shimmerAnim = useRef(new Animated.Value(0)).current;
-  const dot1Anim = useRef(new Animated.Value(0.3)).current;
-  const dot2Anim = useRef(new Animated.Value(0.3)).current;
-  const dot3Anim = useRef(new Animated.Value(0.3)).current;
-  const msgOpacity = useRef(new Animated.Value(1)).current;
-  const glowPulse = useRef(new Animated.Value(0.6)).current;
-
-  const [msgIndex, setMsgIndex] = useState(0);
+  const progress = useRef(new Animated.Value(8)).current;
+  const shimmer = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(0.75)).current;
+  const messageOpacity = useRef(new Animated.Value(1)).current;
+  const [messageIndex, setMessageIndex] = useState(0);
   const [elapsed, setElapsed] = useState(0);
 
-  // Smooth fill to target on step change
+  const visibleMessage = useMemo(() => {
+    if (feedback && !feedback.startsWith('ETAPA')) return feedback;
+    return MESSAGES[messageIndex];
+  }, [feedback, messageIndex]);
+
   useEffect(() => {
-    const target = PROGRESS_TARGETS[currentStep] ?? 5;
-    Animated.spring(barAnim, {
-      toValue: target,
-      friction: 7,
-      tension: 40,
+    Animated.spring(progress, {
+      toValue: PROGRESS_TARGETS[currentStep] ?? 8,
+      damping: 18,
+      stiffness: 85,
       useNativeDriver: false,
     }).start();
-  }, [barAnim, currentStep]);
+  }, [currentStep, progress]);
 
-  // Shimmer loop
   useEffect(() => {
-    const anim = Animated.loop(
-      Animated.timing(shimmerAnim, {
+    const loop = Animated.loop(
+      Animated.timing(shimmer, {
         toValue: 1,
-        duration: 1400,
+        duration: 1500,
         easing: Easing.linear,
-        useNativeDriver: false,
+        useNativeDriver: true,
       })
     );
-    anim.start();
-    return () => anim.stop();
-  }, [shimmerAnim]);
+    loop.start();
+    return () => loop.stop();
+  }, [shimmer]);
 
-  // Typing dots
   useEffect(() => {
-    const makeDot = (anim: Animated.Value, delay: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(anim, { toValue: 1, duration: 260, useNativeDriver: true }),
-          Animated.timing(anim, { toValue: 0.3, duration: 260, useNativeDriver: true }),
-          Animated.delay(520),
-        ])
-      );
-    const d1 = makeDot(dot1Anim, 0);
-    const d2 = makeDot(dot2Anim, 220);
-    const d3 = makeDot(dot3Anim, 440);
-    d1.start();
-    d2.start();
-    d3.start();
-    return () => { d1.stop(); d2.stop(); d3.stop(); };
-  }, [dot1Anim, dot2Anim, dot3Anim]);
-
-  // Glow pulse
-  useEffect(() => {
-    const anim = Animated.loop(
+    const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(glowPulse, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(glowPulse, { toValue: 0.6, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0.75, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ])
     );
-    anim.start();
-    return () => anim.stop();
-  }, [glowPulse]);
+    loop.start();
+    return () => loop.stop();
+  }, [pulse]);
 
-  // Rotate messages every 3s with fade
   useEffect(() => {
     const interval = setInterval(() => {
-      Animated.timing(msgOpacity, { toValue: 0, duration: 300, useNativeDriver: true }).start(() => {
-        setMsgIndex((i) => (i + 1) % AI_MESSAGES.length);
-        Animated.timing(msgOpacity, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+      Animated.timing(messageOpacity, { toValue: 0, duration: 180, useNativeDriver: true }).start(() => {
+        setMessageIndex((index) => (index + 1) % MESSAGES.length);
+        Animated.timing(messageOpacity, { toValue: 1, duration: 240, useNativeDriver: true }).start();
       });
-    }, 3200);
+    }, 2600);
     return () => clearInterval(interval);
-  }, [msgOpacity]);
+  }, [messageOpacity]);
 
-  // Elapsed time counter
   useEffect(() => {
-    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setElapsed((value) => value + 1), 1000);
+    return () => clearInterval(timer);
   }, []);
 
-  const barWidth = barAnim.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] });
-  const shimmerX = shimmerAnim.interpolate({ inputRange: [0, 1], outputRange: [-80, 280] });
-  const pct = PROGRESS_TARGETS[currentStep] ?? 5;
-
-  const elapsedLabel =
-    elapsed < 60 ? `${elapsed}s` : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
+  const barWidth = progress.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] });
+  const shimmerX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-90, 300] });
+  const elapsedLabel = elapsed < 60 ? `${elapsed}s` : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface }]}>
-
-      {/* Header row */}
-      <View style={styles.headerRow}>
-        <View style={[styles.badgeWrap, { backgroundColor: colors.accent + '16' }]}>
-          <Animated.Text style={[styles.sparkle, { opacity: glowPulse }]}>✦</Animated.Text>
-          <Text style={[styles.badgeText, { color: colors.accent }]}>IA corrigindo</Text>
-        </View>
-        <View style={styles.timerRow}>
-          <Text style={[styles.timerText, { color: colors.mutedText }]}>{elapsedLabel}</Text>
-        </View>
-      </View>
-
-      {/* Progress bar */}
-      <View style={styles.barSection}>
-        <View style={[styles.barOuter, { backgroundColor: colors.input }]}>
-          <Animated.View
-            style={[styles.barFill, { width: barWidth, backgroundColor: colors.accent }]}
-          >
-            <Animated.View
-              style={[
-                styles.shimmer,
-                { transform: [{ translateX: shimmerX }] },
-              ]}
-            />
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View style={styles.topRow}>
+        <View style={[styles.iconWrap, { backgroundColor: colors.accent + '16' }]}>
+          <Animated.View style={{ transform: [{ scale: pulse }] }}>
+            <Ionicons name="sparkles-outline" size={22} color={colors.accent} />
           </Animated.View>
         </View>
-        <View style={styles.barMeta}>
-          <Text style={[styles.barPct, { color: colors.accent }]}>{pct}%</Text>
-          <Text style={[styles.barLabel, { color: colors.mutedText }]}>
+        <View style={styles.titleGroup}>
+          <Text style={[styles.eyebrow, { color: colors.accent }]}>CORREÇÃO EM ANDAMENTO</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Análise pedagógica</Text>
+        </View>
+        <Text style={[styles.timer, { color: colors.mutedText }]}>{elapsedLabel}</Text>
+      </View>
+
+      <View style={styles.progressBlock}>
+        <View style={[styles.track, { backgroundColor: colors.input }]}>
+          <Animated.View style={[styles.fill, { width: barWidth, backgroundColor: colors.accent }]}>
+            <Animated.View style={[styles.shimmer, { transform: [{ translateX: shimmerX }] }]} />
+          </Animated.View>
+        </View>
+        <View style={styles.progressMeta}>
+          <Text style={[styles.progressText, { color: colors.accent }]}>
+            {PROGRESS_TARGETS[currentStep]}%
+          </Text>
+          <Text style={[styles.progressHint, { color: colors.mutedText }]}>
             Etapa {currentStep} de 4
           </Text>
         </View>
       </View>
 
-      {/* Rotating AI message */}
-      <View style={[styles.msgBox, { backgroundColor: colors.input, borderColor: colors.border }]}>
+      <View style={[styles.messageBox, { backgroundColor: colors.input, borderColor: colors.border }]}>
         <Animated.Text
-          style={[styles.msgText, { color: colors.softText, opacity: msgOpacity }]}
-          numberOfLines={1}
+          numberOfLines={2}
+          style={[styles.message, { color: colors.softText, opacity: messageOpacity }]}
         >
-          {AI_MESSAGES[msgIndex]}
+          {visibleMessage}
         </Animated.Text>
-        <View style={styles.dotsRow}>
-          <Animated.View style={[styles.dot, { backgroundColor: colors.accent, opacity: dot1Anim }]} />
-          <Animated.View style={[styles.dot, { backgroundColor: colors.accent, opacity: dot2Anim }]} />
-          <Animated.View style={[styles.dot, { backgroundColor: colors.accent, opacity: dot3Anim }]} />
-        </View>
       </View>
 
-      {/* Steps */}
       <View style={styles.steps}>
         {STEPS.map((step) => {
           const isDone = step.n < currentStep;
           const isActive = step.n === currentStep;
-          const isPending = step.n > currentStep;
 
           return (
             <View key={step.n} style={styles.stepRow}>
-              {/* Icon */}
               <View
                 style={[
                   styles.stepIcon,
-                  isDone && { backgroundColor: colors.success + '20', borderColor: colors.success },
-                  isActive && { backgroundColor: colors.accent + '20', borderColor: colors.accent },
-                  isPending && { backgroundColor: colors.input, borderColor: colors.border },
+                  { borderColor: colors.border, backgroundColor: colors.input },
+                  isDone && { borderColor: colors.success, backgroundColor: colors.successSoft },
+                  isActive && { borderColor: colors.accent, backgroundColor: colors.accent + '14' },
                 ]}
               >
                 {isDone ? (
-                  <Text style={[styles.stepCheck, { color: colors.success }]}>✓</Text>
+                  <Ionicons name="checkmark" size={14} color={colors.success} />
                 ) : isActive ? (
-                  <Animated.View
-                    style={[
-                      styles.activeDot,
-                      { backgroundColor: colors.accent, transform: [{ scale: glowPulse }] },
-                    ]}
-                  />
+                  <Animated.View style={[styles.activeDot, { backgroundColor: colors.accent, transform: [{ scale: pulse }] }]} />
                 ) : (
                   <View style={[styles.pendingDot, { backgroundColor: colors.border }]} />
                 )}
               </View>
-
-              {/* Label */}
               <View style={styles.stepText}>
                 <Text
                   style={[
                     styles.stepLabel,
+                    { color: colors.mutedText },
                     isDone && { color: colors.success },
-                    isActive && { color: colors.text, fontWeight: '700' },
-                    isPending && { color: colors.mutedText },
+                    isActive && { color: colors.text, fontWeight: '800' },
                   ]}
                 >
                   {step.label}
                 </Text>
-                {isActive && (
-                  <Text style={[styles.stepSub, { color: colors.mutedText }]}>{step.sub}</Text>
-                )}
+                {isActive ? <Text style={[styles.stepSub, { color: colors.mutedText }]}>{step.sub}</Text> : null}
               </View>
-
-              {/* Right state */}
-              {isDone && (
-                <Text style={[styles.stepDoneLabel, { color: colors.success }]}>Concluído</Text>
-              )}
-              {isActive && (
-                <View style={[styles.activePill, { backgroundColor: colors.accent + '18' }]}>
-                  <Text style={[styles.activePillText, { color: colors.accent }]}>Em análise</Text>
+              {isActive ? (
+                <View style={[styles.livePill, { backgroundColor: colors.accent + '14' }]}>
+                  <Text style={[styles.liveText, { color: colors.accent }]}>agora</Text>
                 </View>
-              )}
+              ) : null}
             </View>
           );
         })}
       </View>
 
-      {/* Footer hint */}
-      <Text style={[styles.footerHint, { color: colors.mutedText, borderTopColor: colors.border }]}>
-        Não feche o app durante a correção
+      <Text style={[styles.footer, { color: colors.mutedText, borderTopColor: colors.border }]}>
+        Mantenha o app aberto. O resultado aparece automaticamente.
       </Text>
     </View>
   );
@@ -253,80 +190,55 @@ export function CorrectionProgress({ currentStep }: CorrectionProgressProps) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
-    padding: 20,
-    gap: 18,
-    shadowColor: '#1B2559',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.09,
-    shadowRadius: 20,
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 18,
+    gap: 16,
+    shadowColor: '#3157D5',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 22,
     elevation: 4,
   },
-  headerRow: {
+  topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 12,
   },
-  badgeWrap: {
-    flexDirection: 'row',
+  iconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
+    justifyContent: 'center',
   },
-  sparkle: { fontSize: 13 },
-  badgeText: { fontSize: 13, fontWeight: '700' },
-  timerRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  timerText: { fontSize: 13, fontWeight: '600', letterSpacing: 0.2 },
-
-  // Bar
-  barSection: { gap: 8 },
-  barOuter: {
-    height: 8,
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
-  barFill: {
+  titleGroup: { flex: 1, gap: 2 },
+  eyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 0.6 },
+  title: { fontSize: 18, fontWeight: '800', lineHeight: 23 },
+  timer: { fontSize: 12, fontWeight: '700' },
+  progressBlock: { gap: 8 },
+  track: { height: 9, borderRadius: 999, overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: 999, overflow: 'hidden' },
+  shimmer: {
+    width: 70,
     height: '100%',
     borderRadius: 999,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  shimmer: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: 60,
     backgroundColor: 'rgba(255,255,255,0.45)',
-    borderRadius: 999,
   },
-  barMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  barPct: { fontSize: 13, fontWeight: '800', letterSpacing: -0.2 },
-  barLabel: { fontSize: 12, fontWeight: '500' },
-
-  // Message box
-  msgBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
+  progressMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  progressText: { fontSize: 13, fontWeight: '900' },
+  progressHint: { fontSize: 12, fontWeight: '600' },
+  messageBox: {
     borderWidth: 1,
-    gap: 10,
+    borderRadius: 13,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 46,
+    justifyContent: 'center',
   },
-  msgText: { flex: 1, fontSize: 13, lineHeight: 18 },
-  dotsRow: { flexDirection: 'row', gap: 4, alignItems: 'center' },
-  dot: { width: 5, height: 5, borderRadius: 3 },
-
-  // Steps
-  steps: { gap: 14 },
-  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  message: { fontSize: 13, lineHeight: 18 },
+  steps: { gap: 12 },
+  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 11 },
   stepIcon: {
     width: 28,
     height: 28,
@@ -334,23 +246,19 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    flexShrink: 0,
   },
-  stepCheck: { fontSize: 13, fontWeight: '800' },
   activeDot: { width: 10, height: 10, borderRadius: 5 },
-  pendingDot: { width: 8, height: 8, borderRadius: 4 },
-  stepText: { flex: 1, gap: 2 },
-  stepLabel: { fontSize: 14, lineHeight: 20 },
+  pendingDot: { width: 7, height: 7, borderRadius: 4 },
+  stepText: { flex: 1, gap: 1 },
+  stepLabel: { fontSize: 14, lineHeight: 18, fontWeight: '650' },
   stepSub: { fontSize: 11, lineHeight: 15 },
-  stepDoneLabel: { fontSize: 11, fontWeight: '700' },
-  activePill: { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999 },
-  activePillText: { fontSize: 10, fontWeight: '700' },
-
-  footerHint: {
-    fontSize: 11,
-    textAlign: 'center',
+  livePill: { borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 },
+  liveText: { fontSize: 10, fontWeight: '900' },
+  footer: {
     borderTopWidth: 1,
-    paddingTop: 14,
-    letterSpacing: 0.1,
+    paddingTop: 13,
+    textAlign: 'center',
+    fontSize: 11,
+    lineHeight: 15,
   },
 });

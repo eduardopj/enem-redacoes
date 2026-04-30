@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   avatarText: { fontSize: 15, fontWeight: '700' },
   content: { flex: 1, gap: 5 },
-  name: { fontSize: 15, fontWeight: '700', lineHeight: 20, letterSpacing: -0.1 },
+  name: { fontSize: 15, fontWeight: '700', lineHeight: 20, letterSpacing: 0 },
   metaRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   classPill: {
     flexDirection: 'row',
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   },
   classText: { fontSize: 11, fontWeight: '500' },
   scoreWrap: { alignItems: 'flex-end', gap: 2 },
-  scoreNum: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5, lineHeight: 24 },
+  scoreNum: { fontSize: 22, fontWeight: '800', letterSpacing: 0, lineHeight: 24 },
   scoreSub: { fontSize: 10, fontWeight: '600' },
   noScore: { fontSize: 11, fontWeight: '500' },
   arrowWrap: {

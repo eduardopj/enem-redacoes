@@ -27,7 +27,7 @@ export function AnimatedNumber({ value, style }: Props) {
       animVal.stopAnimation();
       animVal.removeListener(id);
     };
-  }, [value]);
+  }, [animVal, value]);
 
   return <Text style={style}>{display}</Text>;
 }

@@ -1,5 +1,5 @@
 import { OPENAI_CONFIG } from '@/constants/openai';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 type SaveEssayPayload = {
   themeTitle: string;

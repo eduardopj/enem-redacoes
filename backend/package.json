@@ -10,7 +10,8 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "build": "npm rebuild better-sqlite3"
+    "build": "npm rebuild better-sqlite3",
+    "test": "node --test src/**/*.test.js"
   },
   "dependencies": {
     "better-sqlite3": "^12.9.0",

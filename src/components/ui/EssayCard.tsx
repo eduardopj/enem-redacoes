@@ -1,11 +1,11 @@
-import { formatDateTime, formatRelativeDate } from '@/utils/analytics';
+import { formatRelativeDate } from '@/utils/analytics';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { theme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { StatusBadge } from './StatusBadge';
 
-type EssayStatus = 'pendente' | 'processando' | 'corrigida';
+type EssayStatus = 'pendente' | 'processando' | 'corrigida' | 'precisa_revisao' | 'baixa_confiabilidade';
 
 type Competencies = {
   c1: number; c2: number; c3: number; c4: number; c5: number;
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '800',
     lineHeight: 24,
-    letterSpacing: -0.5,
+    letterSpacing: 0,
   },
   scoreLabel: {
     fontSize: 10,

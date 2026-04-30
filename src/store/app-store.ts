@@ -18,6 +18,12 @@ type RegisteredUser = {
 
 type AuthResult = { success: true } | { success: false; error: string };
 
+const DEFAULT_TEACHER: Teacher = {
+  id: 'local-teacher',
+  name: 'Professor',
+  email: 'professor@enemredacoes.local',
+};
+
 type CreateTurmaInput = {
   name: string;
   period?: 'manhã' | 'tarde' | 'noite' | 'integral';
@@ -86,6 +92,8 @@ type AppState = {
   retryQueue: string[];
 
   // Auth — professor
+  ensureTeacherSession: () => void;
+  setTeacherProfile: (name?: string, email?: string) => void;
   signup: (name: string, email: string, password: string) => AuthResult;
   login: (email: string, password: string) => AuthResult;
   logout: () => void;
@@ -155,6 +163,23 @@ export const useAppStore = create<AppState>()(
       setHasHydrated: (value) => set({ hasHydrated: value }),
 
       // ── Auth — professor ─────────────────────────────────────────────────
+
+      ensureTeacherSession: () => {
+        if (get().currentTeacher) return;
+        set({ currentTeacher: DEFAULT_TEACHER });
+      },
+
+      setTeacherProfile: (name, email) => {
+        const current = get().currentTeacher ?? DEFAULT_TEACHER;
+        set({
+          currentTeacher: {
+            ...current,
+            id: current.id || DEFAULT_TEACHER.id,
+            name: name?.trim() || current.name || DEFAULT_TEACHER.name,
+            email: email?.trim().toLowerCase() || current.email || DEFAULT_TEACHER.email,
+          },
+        });
+      },
 
       signup: (name, email, password) => {
         const normalizedEmail = email.trim().toLowerCase();
@@ -406,6 +431,10 @@ export const useAppStore = create<AppState>()(
               documentName: input.documentName,
               documentUri: input.documentUri,
               status: 'pendente',
+              sourceType: input.imageUri ? 'image' : 'document',
+              confidenceLevel: 'media',
+              reviewRequired: false,
+              correctionAttempts: 0,
               strengths: [],
               weaknesses: [],
               improvements: [],
@@ -414,6 +443,7 @@ export const useAppStore = create<AppState>()(
               generalObservation: '',
               congratulations: '',
               createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
             },
             ...state.essays,
           ],
@@ -575,12 +605,19 @@ export const useAppStore = create<AppState>()(
 
         if (!essay) throw new Error('Redação não encontrada.');
         const isTextMode = essay.inputMode === 'digitada' && !!essay.essayText;
-        if (!isTextMode && !essay.imageUri) throw new Error('Para a correção com IA, envie uma foto, faça upload ou digite o texto da redação.');
+        if (!isTextMode && !essay.imageUri) throw new Error('Para corrigir com IA, envie uma imagem da redação.');
 
         set((state) => ({
           essays: state.essays.map((item) =>
             item.id === essayId
-              ? { ...item, status: 'processando', feedback: 'ETAPA 1/4 • LENDO A IMAGEM E IDENTIFICANDO O TIPO DE ESCRITA' }
+              ? {
+                  ...item,
+                  status: 'processando',
+                  errorMessage: undefined,
+                  correctionAttempts: (item.correctionAttempts ?? 0) + 1,
+                  updatedAt: new Date().toISOString(),
+                  feedback: 'ETAPA 1/4 - lendo a imagem'
+                }
               : item
           ),
         }));
@@ -597,7 +634,7 @@ export const useAppStore = create<AppState>()(
           set((state) => ({
             essays: state.essays.map((item) =>
               item.id === essayId
-                ? { ...item, status: 'processando', transcription: result.transcription, transcriptionNotes: result.transcriptionNotes, transcriptionConfidence: result.transcriptionConfidence, writingMode: result.writingMode, legibility: result.legibility, themeAdequacy: result.themeAdequacy, scoreReliability: result.scoreReliability, feedback: 'ETAPA 2/4 • TRANSCRIÇÃO CONCLUÍDA E LEITURA TEMÁTICA REALIZADA' }
+                ? { ...item, status: 'processando', transcription: result.transcription, transcriptionNotes: result.transcriptionNotes, transcriptionConfidence: result.transcriptionConfidence, writingMode: result.writingMode, legibility: result.legibility, themeAdequacy: result.themeAdequacy, scoreReliability: result.scoreReliability, confidenceLevel: result.scoreReliability.level, reviewRequired: result.scoreReliability.level === 'baixa' || result.transcriptionConfidence === 'baixa', updatedAt: new Date().toISOString(), feedback: 'ETAPA 2/4 - transcrevendo texto' }
                 : item
             ),
           }));
@@ -607,7 +644,7 @@ export const useAppStore = create<AppState>()(
           set((state) => ({
             essays: state.essays.map((item) =>
               item.id === essayId
-                ? { ...item, status: 'processando', competencies: result.competencies, competencyFeedbacks: result.competencyFeedbacks, totalScore: result.totalScore, feedback: 'ETAPA 3/4 • PONTUANDO AS CINCO COMPETÊNCIAS' }
+                ? { ...item, status: 'processando', competencies: result.competencies, competencyFeedbacks: result.competencyFeedbacks, totalScore: result.totalScore, updatedAt: new Date().toISOString(), feedback: 'ETAPA 3/4 - analisando competências' }
                 : item
             ),
           }));
@@ -617,7 +654,7 @@ export const useAppStore = create<AppState>()(
           set((state) => ({
             essays: state.essays.map((item) =>
               item.id === essayId
-                ? { ...item, status: 'processando', strengths: result.strengths, weaknesses: result.weaknesses, improvements: result.improvements, generalObservation: result.generalObservation, congratulations: result.congratulations, feedback: 'ETAPA 4/4 • CONSOLIDANDO O PARECER PEDAGÓGICO' }
+                ? { ...item, status: 'processando', strengths: result.strengths, weaknesses: result.weaknesses, improvements: result.improvements, generalObservation: result.generalObservation, congratulations: result.congratulations, updatedAt: new Date().toISOString(), feedback: 'ETAPA 4/4 - preparando devolutiva' }
                 : item
             ),
           }));
@@ -631,6 +668,7 @@ export const useAppStore = create<AppState>()(
                     ...item,
                     status: 'corrigida',
                     correctedAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
                     themeTitle: (item.themeTitle === 'Tema Livre' && result.detectedTheme)
                       ? result.detectedTheme
                       : item.themeTitle,
@@ -641,6 +679,9 @@ export const useAppStore = create<AppState>()(
                     legibility: result.legibility,
                     themeAdequacy: result.themeAdequacy,
                     scoreReliability: result.scoreReliability,
+                    confidenceLevel: result.scoreReliability.level,
+                    reviewRequired: result.scoreReliability.level === 'baixa' || result.transcriptionConfidence === 'baixa',
+                    errorMessage: undefined,
                     totalScore: result.totalScore,
                     competencies: result.competencies,
                     competencyFeedbacks: result.competencyFeedbacks,
@@ -681,12 +722,18 @@ export const useAppStore = create<AppState>()(
 
         } catch (error) {
           const message =
-            error instanceof Error ? error.message : 'Falha ao corrigir a redação com OpenAI.';
+            error instanceof Error ? error.message : 'Falha ao corrigir a redação com IA.';
 
           set((state) => ({
             essays: state.essays.map((item) =>
               item.id === essayId
-                ? { ...item, status: 'pendente', feedback: `Erro na correção: ${message}` }
+                ? {
+                    ...item,
+                    status: 'pendente',
+                    errorMessage: message,
+                    updatedAt: new Date().toISOString(),
+                    feedback: `Erro na correção: ${message}`
+                  }
                 : item
             ),
           }));
@@ -748,6 +795,9 @@ export const useAppStore = create<AppState>()(
               ? { ...essay, status: 'pendente', feedback: undefined }
               : essay
           );
+          if (!state.currentTeacher) {
+            state.currentTeacher = DEFAULT_TEACHER;
+          }
           state.setHasHydrated(true);
         }
       },

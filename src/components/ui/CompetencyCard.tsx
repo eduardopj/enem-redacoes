@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     lineHeight: 22,
-    letterSpacing: -0.1,
+    letterSpacing: 0,
   },
   scoreWrap: {
     borderRadius: 12,
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     lineHeight: 24,
-    letterSpacing: -0.3,
+    letterSpacing: 0,
   },
   scoreMax: {
     fontSize: 12,

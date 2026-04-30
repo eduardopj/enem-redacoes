@@ -2,7 +2,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Button, ScreenContainer } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
 import { useAppTheme } from '@/theme/ThemeContext';
-import { Atividade, Essay, Student } from '@/types/app';
+import { Atividade, Essay } from '@/types/app';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -66,7 +66,7 @@ export default function TurmaDetailScreen() {
   useEffect(() => {
     setSyncing(true);
     fetchStudentEssaysFromBackend().finally(() => setSyncing(false));
-  }, []);
+  }, [fetchStudentEssaysFromBackend]);
 
   const turma = useMemo(() => turmas.find((t) => t.id === id), [turmas, id]);
 
@@ -395,7 +395,7 @@ export default function TurmaDetailScreen() {
             {/* Student rows */}
             {ranked.map((entry, i) => {
               const { student, avg, best, totalEssays: te, delta } = entry;
-              const medals = ['🥇', '🥈', '🥉'];
+              const medals = ['1º', '2º', '3º'];
               const isTop3 = i < 3 && avg !== null;
               const color = avg !== null ? scoreColor(avg) : colors.mutedText;
               return (
@@ -581,11 +581,11 @@ const styles = StyleSheet.create({
   heroContent: { gap: 6 },
   heroBadge: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   heroBadgeText: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.75)' },
-  heroTitle: { fontSize: 28, fontWeight: '800', color: '#fff', letterSpacing: -0.6, lineHeight: 32 },
+  heroTitle: { fontSize: 28, fontWeight: '800', color: '#fff', letterSpacing: 0, lineHeight: 32 },
   heroSub: { fontSize: 14, color: 'rgba(255,255,255,0.75)' },
   heroStats: { flexDirection: 'row', gap: 0 },
   heroStat: { flex: 1, alignItems: 'center', gap: 2 },
-  heroStatValue: { fontSize: 28, fontWeight: '800', color: '#fff', letterSpacing: -0.8 },
+  heroStatValue: { fontSize: 28, fontWeight: '800', color: '#fff', letterSpacing: 0 },
   heroStatLabel: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.65)' },
 
   // Quick actions
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   kpiIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  kpiValue: { fontSize: 20, fontWeight: '800', letterSpacing: -0.5 },
+  kpiValue: { fontSize: 20, fontWeight: '800', letterSpacing: 0 },
   kpiLabel: { fontSize: 9, fontWeight: '600', textAlign: 'center', letterSpacing: 0.1 },
 
   // Cards
@@ -631,7 +631,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cardTitle: { fontSize: 15, fontWeight: '700', letterSpacing: -0.1 },
+  cardTitle: { fontSize: 15, fontWeight: '700', letterSpacing: 0 },
   cardSub: { fontSize: 12 },
   countBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   countBadgeText: { fontSize: 11, fontWeight: '700' },
@@ -695,7 +695,7 @@ const styles = StyleSheet.create({
   deltaPill: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 },
   deltaText: { fontSize: 10, fontWeight: '700' },
   studentRight: { alignItems: 'flex-end', gap: 1 },
-  studentScore: { fontSize: 20, fontWeight: '700', letterSpacing: -0.4 },
+  studentScore: { fontSize: 20, fontWeight: '700', letterSpacing: 0 },
   studentScoreSub: { fontSize: 9, fontWeight: '600' },
 
   // Empty

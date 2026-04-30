@@ -1,4 +1,9 @@
-export type EssayStatus = 'pendente' | 'processando' | 'corrigida';
+export type EssayStatus =
+  | 'pendente'
+  | 'processando'
+  | 'corrigida'
+  | 'precisa_revisao'
+  | 'baixa_confiabilidade';
 
 export type Teacher = {
   id: string;
@@ -54,6 +59,8 @@ export type ThemeItem = {
 };
 
 export type EssayInputMode = 'manuscrita' | 'digitada' | 'upload';
+export type EssaySourceType = 'image' | 'document';
+export type ConfidenceLevel = 'alta' | 'media' | 'baixa';
 
 export type Atividade = {
   id: string;
@@ -78,6 +85,11 @@ export type Essay = {
   documentName?: string;
   documentUri?: string;
   status: EssayStatus;
+  sourceType?: EssaySourceType;
+  confidenceLevel?: ConfidenceLevel;
+  reviewRequired?: boolean;
+  errorMessage?: string;
+  correctionAttempts?: number;
   totalScore?: number;
   teacherScore?: number;   // manual grade added by teacher (0–1000)
   teacherNote?: string;    // teacher's own written assessment
@@ -130,5 +142,6 @@ export type Essay = {
     }[];
   };
   createdAt?: string;
+  updatedAt?: string;
   correctedAt?: string;
 };

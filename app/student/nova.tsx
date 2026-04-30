@@ -17,7 +17,6 @@ import {
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -575,7 +574,7 @@ export default function StudentNovaScreen() {
 const styles = StyleSheet.create({
   titleRow: { paddingTop: 4, gap: 4, marginBottom: 4 },
   eyebrow: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  title: { fontSize: 26, fontWeight: '700', letterSpacing: -0.5, lineHeight: 32 },
+  title: { fontSize: 26, fontWeight: '700', letterSpacing: 0, lineHeight: 32 },
 
   stepHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
   stepBadge: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
@@ -652,7 +651,7 @@ const styles = StyleSheet.create({
   // Modal
   modalSafe: { flex: 1 },
   modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
-  modalTitle: { fontSize: 18, fontWeight: '700', letterSpacing: -0.3 },
+  modalTitle: { fontSize: 18, fontWeight: '700', letterSpacing: 0 },
   modalSearch: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 12, borderWidth: 1, padding: 12, marginHorizontal: 16, marginVertical: 12 },
   modalSearchInput: { flex: 1, fontSize: 15 },
   modalList: { paddingHorizontal: 16, paddingBottom: 40, gap: 0 },

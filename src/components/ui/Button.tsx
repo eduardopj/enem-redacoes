@@ -2,13 +2,8 @@ import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import { ReactNode, useRef } from 'react';
+import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
@@ -36,21 +31,27 @@ export function Button({
   size = 'md',
 }: ButtonProps) {
   const { colors } = useAppTheme();
-  const scale = useSharedValue(1);
+  const scale = useRef(new Animated.Value(1)).current;
 
   const isDisabled = disabled || loading;
 
-  const animatedScale = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
   const handlePressIn = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    scale.value = withSpring(0.97, { damping: 18, stiffness: 260 });
+    Animated.spring(scale, {
+      toValue: 0.97,
+      damping: 18,
+      stiffness: 260,
+      useNativeDriver: true,
+    }).start();
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 18, stiffness: 260 });
+    Animated.spring(scale, {
+      toValue: 1,
+      damping: 18,
+      stiffness: 260,
+      useNativeDriver: true,
+    }).start();
   };
 
   const bgColor = {
@@ -79,7 +80,7 @@ export function Button({
   const fontSize = size === 'sm' ? 13 : 15;
 
   return (
-    <Animated.View style={[animatedScale, style]}>
+    <Animated.View style={[{ transform: [{ scale }] }, style]}>
       <Pressable
         onPress={onPress}
         disabled={isDisabled}
@@ -102,7 +103,9 @@ export function Button({
               {leftIcon ? (
                 <Ionicons name={leftIcon} size={size === 'sm' ? 16 : 18} color={iconColor} />
               ) : null}
-              <Text style={[styles.label, { color: textColor, fontSize }]}>{title}</Text>
+              <Text style={[styles.label, { color: textColor, fontSize }]} numberOfLines={2}>
+                {title}
+              </Text>
               {rightSlot}
             </>
           )}
@@ -128,9 +131,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
+    flexWrap: 'wrap',
   },
   label: {
+    flexShrink: 1,
     fontWeight: '600',
     letterSpacing: 0.1,
+    textAlign: 'center',
   },
 });

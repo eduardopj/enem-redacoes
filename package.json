@@ -8,7 +8,10 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test:analytics": "node scripts/test-analytics.mjs",
+    "validate": "npm run lint && npm run test:analytics",
+    "package:backend": "tar --exclude=backend/node_modules --exclude=backend/.env --exclude=backend/data -czf backend-deploy.tar.gz backend"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

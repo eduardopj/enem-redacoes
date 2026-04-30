@@ -2,6 +2,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import {
   AppHeader,
   Button,
+  Card,
   EmptyState,
   ScreenContainer,
   StaggerItem,
@@ -82,6 +83,17 @@ export default function AlunosScreen() {
   };
 
   const hasStudents = teacherStudents.length > 0;
+  const studentsWithEssays = teacherStudents.filter((student) => (studentStats[student.id]?.count ?? 0) > 0).length;
+  const attentionStudents = teacherStudents.filter((student) => {
+    const stats = studentStats[student.id];
+    return !stats || stats.count === 0 || stats.trend === 'down' || (stats.avg !== null && stats.avg < 600);
+  }).length;
+  const classAverage = teacherStudents
+    .map((student) => studentStats[student.id]?.avg)
+    .filter((score): score is number => typeof score === 'number');
+  const averageScore = classAverage.length
+    ? Math.round(classAverage.reduce((sum, score) => sum + score, 0) / classAverage.length)
+    : null;
 
   return (
     <ProtectedRoute>
@@ -110,6 +122,12 @@ export default function AlunosScreen() {
           />
         ) : (
           <>
+            <View style={styles.summaryGrid}>
+              <SummaryCard label="Com redação" value={studentsWithEssays} icon="document-text-outline" tone={colors.success} />
+              <SummaryCard label="Atenção" value={attentionStudents} icon="alert-circle-outline" tone={attentionStudents > 0 ? colors.warning : colors.mutedText} />
+              <SummaryCard label="Média" value={averageScore ?? '--'} icon="analytics-outline" tone={colors.accent} />
+            </View>
+
             {/* Busca */}
             <View style={[styles.searchRow, { backgroundColor: colors.input, borderColor: colors.border }]}>
               <Ionicons name="search-outline" size={16} color={colors.mutedText} />
@@ -226,7 +244,47 @@ export default function AlunosScreen() {
   );
 }
 
+function SummaryCard({ label, value, icon, tone }: { label: string; value: number | string; icon: keyof typeof Ionicons.glyphMap; tone: string }) {
+  const { colors } = useAppTheme();
+  return (
+    <Card style={styles.summaryCard}>
+      <View style={[styles.summaryIcon, { backgroundColor: tone + '16' }]}>
+        <Ionicons name={icon} size={15} color={tone} />
+      </View>
+      <Text style={[styles.summaryValue, { color: colors.text }]}>{value}</Text>
+      <Text style={[styles.summaryLabel, { color: colors.mutedText }]} numberOfLines={1}>
+        {label}
+      </Text>
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
+  summaryGrid: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  summaryCard: {
+    flex: 1,
+    minWidth: 0,
+    padding: theme.spacing.md,
+    gap: 6,
+  },
+  summaryIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  summaryValue: {
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  summaryLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',

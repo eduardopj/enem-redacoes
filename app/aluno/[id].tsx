@@ -1,12 +1,10 @@
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { AppHeader, Button, Card, EmptyState, ScreenContainer, StatusBadge } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
-import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Essay } from '@/types/app';
 import {
   competencyPct,
-  formatDate,
   formatDateTime,
   formatRelativeDate,
   getCompetencyFocusTip,
@@ -17,6 +15,7 @@ import {
   getTrendColor,
   getTrendIcon,
   getTrendLabel,
+  isCorrectedEssay,
   scorePct,
 } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
@@ -109,7 +108,6 @@ export default function AlunoDetalheScreen() {
   const trendColor = getTrendColor(stats.trend, colors);
   const trendLabel = getTrendLabel(stats.trend, Math.abs(stats.trendDelta));
   const avgColor = stats.averageScore ? getScoreColor(stats.averageScore, colors) : colors.text;
-  const avgLabel = stats.averageScore ? getScoreLabel(stats.averageScore) : '';
 
   const compKeys = ['c1', 'c2', 'c3', 'c4', 'c5'];
   const compList = compKeys
@@ -119,12 +117,16 @@ export default function AlunoDetalheScreen() {
   const focusAreas = compList.slice(0, 2);
 
   const correctedSorted = [...studentEssays]
-    .filter((e) => e.status === 'corrigida')
+    .filter(isCorrectedEssay)
     .sort((a, b) => (a.correctedAt ?? a.createdAt ?? '').localeCompare(b.correctedAt ?? b.createdAt ?? ''));
 
   const sortedEssays = [...studentEssays].sort(
     (a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? '')
   );
+  const pendingEssay = sortedEssays.find(
+    (essay) => essay.status === 'pendente' || essay.status === 'precisa_revisao' || essay.status === 'baixa_confiabilidade'
+  );
+  const nextFocus = focusAreas[0];
 
   const aboveNational =
     stats.averageScore !== null ? stats.averageScore - NATIONAL_AVG : null;
@@ -242,6 +244,32 @@ export default function AlunoDetalheScreen() {
           leftIcon="create-outline"
           onPress={() => router.push(`/nova-redacao?studentId=${student.id}` as any)}
         />
+        <Button
+          title="Gerar relatório do aluno"
+          variant="secondary"
+          leftIcon="analytics-outline"
+          onPress={() => router.push(`/relatorio-aluno/${student.id}` as any)}
+        />
+
+        {pendingEssay ? (
+          <SmartActionCard
+            icon="flash-outline"
+            title="Próxima ação"
+            description={`Há uma redação de "${pendingEssay.themeTitle}" pronta para correção ou revisão.`}
+            buttonLabel="Abrir redação"
+            onPress={() => router.push(`/redacao/${pendingEssay.id}` as any)}
+            colors={colors}
+          />
+        ) : nextFocus ? (
+          <SmartActionCard
+            icon="bulb-outline"
+            title="Foco pedagógico"
+            description={`Trabalhe ${getCompetencyLabel(nextFocus.key, true)} na próxima proposta. É onde há maior ganho possível agora.`}
+            buttonLabel="Nova redação guiada"
+            onPress={() => router.push(`/nova-redacao?studentId=${student.id}` as any)}
+            colors={colors}
+          />
+        ) : null}
 
         {/* ── Código de acesso do aluno ── */}
         <Card>
@@ -288,14 +316,30 @@ export default function AlunoDetalheScreen() {
           </Text>
         </Card>
 
-        {/* ── Evolução de notas ── */}
-        {correctedSorted.length >= 2 && (
+        {/* Evolução de notas */}
+        {correctedSorted.length > 0 && (
           <Card>
             <View style={styles.cardHeaderRow}>
               <Text style={[styles.sectionLabel, { color: colors.softText }]}>Evolução das notas</Text>
               <Text style={[styles.hintText, { color: colors.mutedText }]}>mais antiga → mais recente</Text>
             </View>
+            <View style={styles.evolutionSummary}>
+              <EvolutionMetric label="Primeira" value={correctedSorted[0]?.totalScore ?? '--'} colors={colors} />
+              <EvolutionMetric label="Última" value={correctedSorted[correctedSorted.length - 1]?.totalScore ?? '--'} colors={colors} />
+              <EvolutionMetric
+                label="Evolução"
+                value={
+                  correctedSorted.length >= 2
+                    ? `${(correctedSorted[correctedSorted.length - 1]?.totalScore ?? 0) - (correctedSorted[0]?.totalScore ?? 0) >= 0 ? '+' : ''}${(correctedSorted[correctedSorted.length - 1]?.totalScore ?? 0) - (correctedSorted[0]?.totalScore ?? 0)}`
+                    : '--'
+                }
+                colors={colors}
+              />
+            </View>
             <EvoChart essays={correctedSorted} colors={colors} />
+            {correctedSorted.length === 1 ? (
+              <Text style={[styles.evolutionHint, { color: colors.mutedText }]}>Corrija mais uma redação para visualizar tendência e variação de nota.</Text>
+            ) : null}
           </Card>
         )}
 
@@ -432,6 +476,48 @@ function MiniStat({ label, value, color, colors }: {
   );
 }
 
+function EvolutionMetric({ label, value, colors }: { label: string; value: number | string; colors: any }) {
+  const numeric = typeof value === 'number' ? value : Number(String(value).replace('+', ''));
+  const color = Number.isFinite(numeric)
+    ? numeric >= 0 && label === 'Evolução'
+      ? colors.success
+      : label === 'Evolução'
+        ? colors.danger
+        : scoreGradientColor(Number(numeric))
+    : colors.text;
+
+  return (
+    <View style={[styles.evolutionMetric, { backgroundColor: colors.input }]}>
+      <Text style={[styles.evolutionMetricValue, { color }]}>{value}</Text>
+      <Text style={[styles.evolutionMetricLabel, { color: colors.mutedText }]}>{label}</Text>
+    </View>
+  );
+}
+
+function SmartActionCard({ icon, title, description, buttonLabel, onPress, colors }: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  description: string;
+  buttonLabel: string;
+  onPress: () => void;
+  colors: any;
+}) {
+  return (
+    <Card variant="flat">
+      <View style={styles.smartAction}>
+        <View style={[styles.smartIcon, { backgroundColor: colors.accent + '18' }]}>
+          <Ionicons name={icon} size={18} color={colors.accent} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.smartTitle, { color: colors.text }]}>{title}</Text>
+          <Text style={[styles.smartText, { color: colors.mutedText }]}>{description}</Text>
+        </View>
+      </View>
+      <Button title={buttonLabel} leftIcon="arrow-forward-outline" onPress={onPress} />
+    </Card>
+  );
+}
+
 function EvoChart({ essays, colors }: { essays: Essay[]; colors: any }) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -475,7 +561,7 @@ function EvoChart({ essays, colors }: { essays: Essay[]; colors: any }) {
 function EssayRow({ essay, index, isLast, onPress, onDelete, colors }: {
   essay: Essay; index: number; isLast: boolean; onPress: () => void; onDelete: () => void; colors: any;
 }) {
-  const isCorrected = essay.status === 'corrigida';
+  const isCorrected = isCorrectedEssay(essay);
   const scoreColor = isCorrected && essay.totalScore ? scoreGradientColor(essay.totalScore) : colors.mutedText;
   const displayDate = essay.correctedAt ?? essay.createdAt;
   const scoreLabel = isCorrected && essay.totalScore ? getScoreLabel(essay.totalScore) : '';
@@ -528,7 +614,7 @@ function EssayRow({ essay, index, isLast, onPress, onDelete, colors }: {
 }
 
 const styles = StyleSheet.create({
-  sectionLabel: { fontSize: 14, fontWeight: '700', letterSpacing: -0.1, marginBottom: 12 },
+  sectionLabel: { fontSize: 14, fontWeight: '700', letterSpacing: 0, marginBottom: 12 },
   emptyText: { fontSize: 14, lineHeight: 22, textAlign: 'center' },
   emptyTitle: { fontSize: 17, fontWeight: '700', textAlign: 'center' },
   emptyWrap: { alignItems: 'center', gap: 10, paddingVertical: 20 },
@@ -543,12 +629,12 @@ const styles = StyleSheet.create({
   },
   avatarText: { fontSize: 18, fontWeight: '700', color: '#fff' },
   heroInfo: { flex: 1, gap: 6 },
-  heroName: { fontSize: 17, fontWeight: '700', lineHeight: 22, letterSpacing: -0.2 },
+  heroName: { fontSize: 17, fontWeight: '700', lineHeight: 22, letterSpacing: 0 },
   heroMeta: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   heroPill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   heroPillText: { fontSize: 11, fontWeight: '500' },
   heroScore: { alignItems: 'flex-end', gap: 2 },
-  heroScoreNum: { fontSize: 40, fontWeight: '700', lineHeight: 42, letterSpacing: -1 },
+  heroScoreNum: { fontSize: 40, fontWeight: '700', lineHeight: 42, letterSpacing: 0 },
   heroScoreSub: { fontSize: 11, fontWeight: '500' },
 
   // National context
@@ -559,7 +645,7 @@ const styles = StyleSheet.create({
   miniStatsRow: { flexDirection: 'row', paddingTop: 14, borderTopWidth: 1 },
   miniStatBlock: { flex: 1, alignItems: 'center', gap: 3 },
   miniStatLabel: { fontSize: 10, fontWeight: '600', letterSpacing: 0.1, textAlign: 'center' },
-  miniStatValue: { fontSize: 18, fontWeight: '700', lineHeight: 22, letterSpacing: -0.4 },
+  miniStatValue: { fontSize: 18, fontWeight: '700', lineHeight: 22, letterSpacing: 0 },
   miniStatDiv: { width: 1, marginVertical: 4 },
 
   // Trend
@@ -567,7 +653,18 @@ const styles = StyleSheet.create({
   trendText: { flex: 1, fontSize: 13, lineHeight: 20 },
   trendDate: { fontSize: 11 },
 
+  // Smart action
+  smartAction: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
+  smartIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  smartTitle: { fontSize: 14, fontWeight: '800', marginBottom: 2 },
+  smartText: { fontSize: 12, lineHeight: 18 },
+
   // Evolution chart
+  evolutionSummary: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  evolutionMetric: { flex: 1, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 9, alignItems: 'center' },
+  evolutionMetricValue: { fontSize: 18, fontWeight: '900', lineHeight: 22 },
+  evolutionMetricLabel: { fontSize: 10, fontWeight: '800', marginTop: 2 },
+  evolutionHint: { fontSize: 12, lineHeight: 18, marginTop: 10, textAlign: 'center' },
   evoWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 140 },
   evoBar: { width: 56, alignItems: 'center', gap: 2, height: '100%', justifyContent: 'flex-end' },
   evoDelta: { fontSize: 10, fontWeight: '700' },
@@ -632,7 +729,7 @@ const styles = StyleSheet.create({
   scoreLabelText: { fontSize: 10, fontWeight: '700' },
   essayDateTime: { fontSize: 11, lineHeight: 16 },
   essayRight: { alignItems: 'flex-end', gap: 3, minWidth: 44 },
-  essayScore: { fontSize: 22, lineHeight: 26, fontWeight: '700', textAlign: 'right', letterSpacing: -0.5 },
+  essayScore: { fontSize: 22, lineHeight: 26, fontWeight: '700', textAlign: 'right', letterSpacing: 0 },
   essayScoreLabel: { fontSize: 10, fontWeight: '600', textAlign: 'right' },
   deleteBtn: { width: 28, height: 28, borderRadius: 6, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
 });

@@ -9,6 +9,10 @@ import {
   getScoreLabel,
   scorePct,
   getCompetencyLabel,
+  isCorrectedEssay,
+  getLowConfidenceCorrections,
+  getStudentsNeedingAttention,
+  getTopImprovingStudents,
 } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -44,15 +48,22 @@ export default function DashboardScreen() {
   }, [currentTeacher, essays]);
 
   const pendingEssays = teacherEssays.filter((e) => e.status === 'pendente');
-  const correctedEssays = teacherEssays.filter((e) => e.status === 'corrigida');
+  const correctedEssays = teacherEssays.filter(isCorrectedEssay);
   const lastEssay = teacherEssays[0];
+  const lowConfidenceEssays = useMemo(() => getLowConfidenceCorrections(teacherEssays), [teacherEssays]);
+  const attentionStudents = useMemo(
+    () => getStudentsNeedingAttention(teacherStudents, teacherEssays).slice(0, 3),
+    [teacherStudents, teacherEssays]
+  );
+  const improvingStudents = useMemo(
+    () => getTopImprovingStudents(teacherStudents, teacherEssays, 3),
+    [teacherStudents, teacherEssays]
+  );
 
   const classStats = useMemo(
     () => getClassStats(teacherEssays, teacherStudents),
     [teacherEssays, teacherStudents]
   );
-
-  const isNewUser = teacherStudents.length === 0 && teacherEssays.length === 0;
 
   const myTurmas = useMemo(
     () => turmas.filter((t) => t.teacherId === currentTeacher?.id).slice(0, 3),
@@ -64,7 +75,7 @@ export default function DashboardScreen() {
       myTurmas.map((t) => {
         const ss = students.filter((s) => s.turmaId === t.id);
         const ces = essays.filter(
-          (e) => ss.some((s) => s.id === e.studentId) && e.status === 'corrigida'
+          (e) => ss.some((s) => s.id === e.studentId) && isCorrectedEssay(e)
         );
         const scores = ces.map((e) => e.totalScore ?? 0).filter((s) => s > 0);
         const avg = scores.length
@@ -127,9 +138,8 @@ export default function DashboardScreen() {
         <StaggerItem index={0}>
           <AppHeader
             eyebrow="Bem-vindo de volta"
-            title={`Olá, ${teacherFirstName} 👋`}
+            title={`Olá, ${teacherFirstName}`}
             subtitle="Visão geral da turma"
-            showLogout
           />
         </StaggerItem>
 
@@ -152,7 +162,7 @@ export default function DashboardScreen() {
           </Pressable>
         </StaggerItem>
 
-        {/* KPIs — grid 2×2 */}
+        {/* KPIs - grid 2x2 */}
         <StaggerItem index={2}>
           <View style={styles.kpiGrid}>
             <KpiCard
@@ -240,6 +250,52 @@ export default function DashboardScreen() {
         ) : null}
 
         {/* Média da turma — só se houver correções */}
+        {(pendingEssays.length > 0 || lowConfidenceEssays.length > 0 || attentionStudents.length > 0 || improvingStudents.length > 0) ? (
+          <StaggerItem index={4}>
+            <Card>
+              <View style={styles.cardHeader}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Painel pedagógico</Text>
+                <Pressable onPress={() => router.push('/analytics' as any)}>
+                  <Text style={[styles.linkText, { color: colors.accent }]}>Análise</Text>
+                </Pressable>
+              </View>
+              <View style={styles.insightGrid}>
+                <InsightMini
+                  label="Atenção"
+                  value={attentionStudents.length + lowConfidenceEssays.length}
+                  text={lowConfidenceEssays.length ? 'Revisar baixa confiança' : 'Alunos para acompanhar'}
+                  icon="alert-circle-outline"
+                  color={colors.warning}
+                  colors={colors}
+                />
+                <InsightMini
+                  label="Evolução"
+                  value={improvingStudents.length}
+                  text={improvingStudents[0]?.student.name ?? 'Sem tendência ainda'}
+                  icon="trending-up-outline"
+                  color={colors.success}
+                  colors={colors}
+                />
+              </View>
+              {attentionStudents[0] ? (
+                <Pressable
+                  onPress={() => router.push(`/aluno/${attentionStudents[0].student.id}` as any)}
+                  style={[styles.nextStudentRow, { backgroundColor: colors.input }]}
+                >
+                  <View style={[styles.nextStudentIcon, { backgroundColor: colors.warningSoft }]}>
+                    <Ionicons name="school-outline" size={16} color={colors.warning} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.nextStudentTitle, { color: colors.text }]}>Aluno para observar</Text>
+                    <Text style={[styles.nextStudentText, { color: colors.mutedText }]}>{attentionStudents[0].student.name}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={colors.mutedText} />
+                </Pressable>
+              ) : null}
+            </Card>
+          </StaggerItem>
+        ) : null}
+
         {correctedEssays.length > 0 ? (
           <StaggerItem index={4}>
             <Card>
@@ -343,7 +399,7 @@ export default function DashboardScreen() {
           </StaggerItem>
         ) : null}
 
-        {/* ── Minhas turmas ── */}
+        {/* Minhas turmas */}
         <StaggerItem index={7}>
           <Card>
             <View style={styles.sectionRow}>
@@ -439,7 +495,7 @@ export default function DashboardScreen() {
   );
 }
 
-// ─── Sub-components ────────────────────────────────────────────────────────
+// Sub-components
 
 function KpiCard({ label, value, icon, iconBg, iconColor, onPress, alert = false, colors }: {
   label: string; value: number; icon: ComponentProps<typeof Ionicons>['name']; iconBg: string; iconColor: string; onPress?: () => void; alert?: boolean; colors: any;
@@ -475,6 +531,21 @@ function ClassKpi({ label, value, sub, color, colors }: {
       <Text style={[styles.classKpiLabel, { color: colors.mutedText }]}>{label}</Text>
       <Text style={[styles.classKpiValue, { color }]}>{value}</Text>
       {sub ? <Text style={[styles.classKpiSub, { color: colors.mutedText }]}>{sub}</Text> : null}
+    </View>
+  );
+}
+
+function InsightMini({ label, value, text, icon, color, colors }: {
+  label: string; value: number; text: string; icon: ComponentProps<typeof Ionicons>['name']; color: string; colors: any;
+}) {
+  return (
+    <View style={[styles.insightMini, { backgroundColor: color + '10', borderColor: color + '25' }]}>
+      <View style={[styles.insightMiniIcon, { backgroundColor: color + '18' }]}>
+        <Ionicons name={icon} size={17} color={color} />
+      </View>
+      <Text style={[styles.insightMiniLabel, { color: colors.mutedText }]}>{label}</Text>
+      <Text style={[styles.insightMiniValue, { color }]}>{value}</Text>
+      <Text style={[styles.insightMiniText, { color: colors.softText }]} numberOfLines={1}>{text}</Text>
     </View>
   );
 }
@@ -564,7 +635,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17,
     fontWeight: '700',
-    letterSpacing: -0.2,
+    letterSpacing: 0,
     marginBottom: 4,
   },
   cardHeader: {
@@ -653,7 +724,7 @@ const styles = StyleSheet.create({
   kpiValue: {
     fontSize: 34,
     fontWeight: '800',
-    letterSpacing: -1,
+    letterSpacing: 0,
     lineHeight: 38,
   },
   kpiLabel: {
@@ -686,7 +757,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     lineHeight: 34,
-    letterSpacing: -0.6,
+    letterSpacing: 0,
   },
   classKpiSub: {
     fontSize: 11,
@@ -707,6 +778,45 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
+  insightGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  insightMini: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+    gap: 4,
+  },
+  insightMiniIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  insightMiniLabel: { fontSize: 10, fontWeight: '700' },
+  insightMiniValue: { fontSize: 26, fontWeight: '800', lineHeight: 30 },
+  insightMiniText: { fontSize: 11, lineHeight: 15 },
+  nextStudentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: 12,
+    padding: 12,
+  },
+  nextStudentIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nextStudentTitle: { fontSize: 13, fontWeight: '800', lineHeight: 17 },
+  nextStudentText: { fontSize: 12, lineHeight: 16 },
 
   // Top students
   topList: { gap: 0 },

@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   // ── Form ──
   header: { alignItems: 'center', gap: 12, marginBottom: 28, paddingTop: 8 },
   headerIcon: { width: 68, height: 68, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 24, fontWeight: '700', letterSpacing: -0.4, textAlign: 'center' },
+  title: { fontSize: 24, fontWeight: '700', letterSpacing: 0, textAlign: 'center' },
   sub: { fontSize: 14, lineHeight: 21, textAlign: 'center' },
   form: { gap: 20, paddingBottom: 40 },
   fieldWrap: { gap: 8 },
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', gap: 8, marginBottom: 16,
   },
   successCheck: { marginBottom: 4 },
-  successTitle: { fontSize: 26, fontWeight: '800', color: '#fff', letterSpacing: -0.5 },
+  successTitle: { fontSize: 26, fontWeight: '800', color: '#fff', letterSpacing: 0 },
   successTurmaName: { fontSize: 20, fontWeight: '700', color: 'rgba(255,255,255,0.9)' },
   successSub: { fontSize: 13, color: 'rgba(255,255,255,0.7)' },
 

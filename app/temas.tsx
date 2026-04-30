@@ -15,86 +15,89 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+const FREE_THEME_ID = '__tema_livre__';
+
 export default function TemasScreen() {
   const { selectForStudentId } = useLocalSearchParams<{ selectForStudentId?: string }>();
   const allThemes = useAppStore((state) => state.themes);
   const currentTeacher = useAppStore((state) => state.currentTeacher);
   const deleteTheme = useAppStore((state) => state.deleteTheme);
   const { colors } = useAppTheme();
-
   const [search, setSearch] = useState('');
 
   const orderedThemes = useMemo(() => {
     if (!currentTeacher) return [];
     return [...allThemes]
-      .filter((t) => t.teacherId === currentTeacher.id)
+      .filter((item) => item.teacherId === currentTeacher.id)
       .sort((a, b) => a.title.localeCompare(b.title));
   }, [allThemes, currentTeacher]);
 
   const filteredThemes = useMemo(() => {
-    if (!search.trim()) return orderedThemes;
     const q = search.trim().toLowerCase();
+    if (!q) return orderedThemes;
     return orderedThemes.filter(
-      (t) => t.title.toLowerCase().includes(q) || t.category.toLowerCase().includes(q)
+      (item) => item.title.toLowerCase().includes(q) || item.category.toLowerCase().includes(q)
     );
   }, [orderedThemes, search]);
 
-  const isSelectionMode = !!selectForStudentId;
+  const isSelectionMode = Boolean(selectForStudentId);
   const hasThemes = orderedThemes.length > 0;
 
-  const handleOpenTheme = (themeId: string) => {
+  function handleOpenTheme(themeId: string) {
     if (selectForStudentId) {
       router.push(`/nova-redacao?studentId=${selectForStudentId}&themeId=${themeId}`);
       return;
     }
+
+    if (themeId === FREE_THEME_ID) {
+      router.push(`/nova-redacao?themeId=${FREE_THEME_ID}`);
+      return;
+    }
+
     router.push(`/tema/${themeId}`);
-  };
+  }
 
-  const handleDelete = (themeId: string, themeTitle: string) => {
-    Alert.alert(
-      'Excluir tema',
-      `Deseja realmente excluir o tema "${themeTitle}"?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Excluir', style: 'destructive', onPress: () => deleteTheme(themeId) },
-      ]
-    );
-  };
-
-  const handleCreateTheme = () => {
+  function handleCreateTheme() {
     if (isSelectionMode) {
       router.push(`/novo-tema?selectForStudentId=${selectForStudentId}`);
       return;
     }
     router.push('/novo-tema');
-  };
+  }
+
+  function handleDelete(themeId: string, themeTitle: string) {
+    Alert.alert('Excluir tema', `Deseja excluir o tema "${themeTitle}"?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Excluir', style: 'destructive', onPress: () => deleteTheme(themeId) },
+    ]);
+  }
 
   return (
     <ProtectedRoute>
       <ScreenContainer showBack>
         <AppHeader
           eyebrow="Temas"
-          title={isSelectionMode ? 'Escolher tema da redação' : 'Biblioteca de temas'}
+          title={isSelectionMode ? 'Escolher tema' : 'Biblioteca de temas'}
           subtitle={
             isSelectionMode
-              ? 'Escolha um tema para continuar o cadastro da redação deste aluno.'
-              : 'Crie e organize os temas das redações.'
+              ? 'Use tema livre ou escolha um tema cadastrado.'
+              : 'Tema livre sempre disponível. Cadastre temas para organizar as correções.'
           }
         />
 
-        {hasThemes ? (
-          <Button
-            title="Cadastrar novo tema"
-            leftIcon="add-outline"
-            onPress={handleCreateTheme}
-          />
-        ) : null}
+        <ThemeCard
+          title="Tema Livre"
+          category="A IA identifica o tema automaticamente"
+          onPress={() => handleOpenTheme(FREE_THEME_ID)}
+        />
+
+        <Button title="Cadastrar novo tema" leftIcon="add-outline" onPress={handleCreateTheme} />
 
         {!hasThemes ? (
           <EmptyState
             icon="book-outline"
-            title="Nenhum tema disponível"
-            description="Cadastre um tema para começar a usar nas redações."
+            title="Nenhum tema cadastrado"
+            description="Você já pode usar Tema Livre. Cadastre temas quando quiser comparar desempenho por proposta."
             buttonLabel="Cadastrar tema"
             onPress={handleCreateTheme}
           />
@@ -104,7 +107,7 @@ export default function TemasScreen() {
               <Ionicons name="search-outline" size={16} color={colors.mutedText} />
               <TextInput
                 style={[styles.searchInput, { color: colors.text }]}
-                placeholder="Buscar por título ou categoria..."
+                placeholder="Buscar por título ou eixo..."
                 placeholderTextColor={colors.mutedText}
                 value={search}
                 onChangeText={setSearch}
@@ -123,13 +126,13 @@ export default function TemasScreen() {
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.list}
               scrollEnabled={false}
-              renderItem={({ item: themeItem, index }) => (
+              renderItem={({ item, index }) => (
                 <StaggerItem index={index}>
                   <ThemeCard
-                    title={themeItem.title}
-                    category={themeItem.category}
-                    onPress={() => handleOpenTheme(themeItem.id)}
-                    onDelete={() => handleDelete(themeItem.id, themeItem.title)}
+                    title={item.title}
+                    category={item.category}
+                    onPress={() => handleOpenTheme(item.id)}
+                    onDelete={() => handleDelete(item.id, item.title)}
                   />
                 </StaggerItem>
               )}

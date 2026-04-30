@@ -24,7 +24,7 @@ export function ProgressBar({ value, color, height = 10, delay = 0 }: ProgressBa
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
-  }, [value, containerWidth, delay]);
+  }, [animWidth, value, containerWidth, delay]);
 
   const fillColor = color ?? colors.accent;
 

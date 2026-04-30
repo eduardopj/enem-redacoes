@@ -1,33 +1,33 @@
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
-import { useCallback, useEffect } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import { useCallback, useEffect, useRef } from 'react';
+import { Animated, Pressable, StyleSheet } from 'react-native';
 
 export function ThemeToggle() {
   const { isDark, toggleTheme, colors } = useAppTheme();
-  const rotate = useSharedValue(0);
-  const scale = useSharedValue(1);
+  const rotate = useRef(new Animated.Value(isDark ? 180 : 0)).current;
+  const scale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    rotate.value = withTiming(isDark ? 180 : 0, { duration: 400 });
+    Animated.timing(rotate, {
+      toValue: isDark ? 180 : 0,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
   }, [isDark, rotate]);
 
   const handlePress = useCallback(() => {
-    scale.value = withSpring(0.82, { damping: 10, stiffness: 260 }, () => {
-      scale.value = withSpring(1, { damping: 10, stiffness: 260 });
-    });
+    Animated.sequence([
+      Animated.spring(scale, { toValue: 0.82, damping: 10, stiffness: 260, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, damping: 10, stiffness: 260, useNativeDriver: true }),
+    ]).start();
     toggleTheme();
   }, [scale, toggleTheme]);
 
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotate.value}deg` }, { scale: scale.value }],
-  }));
+  const rotation = rotate.interpolate({
+    inputRange: [0, 180],
+    outputRange: ['0deg', '180deg'],
+  });
 
   return (
     <Pressable
@@ -35,7 +35,7 @@ export function ThemeToggle() {
       style={[styles.btn, { backgroundColor: colors.surface }]}
       hitSlop={10}
     >
-      <Animated.View style={animStyle}>
+      <Animated.View style={{ transform: [{ rotate: rotation }, { scale }] }}>
         <Ionicons
           name={isDark ? 'moon-outline' : 'sunny-outline'}
           size={18}

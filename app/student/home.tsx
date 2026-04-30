@@ -25,14 +25,14 @@ const COMP_COLORS: Record<string, string> = {
   c1: '#3B82F6', c2: '#8B5CF6', c3: '#10B981', c4: '#F59E0B', c5: '#F43F5E',
 };
 
-function getLevelInfo(avg: number): { level: string; emoji: string; color: string } {
-  if (avg >= 900) return { level: 'Mestre', emoji: '🏆', color: '#F59E0B' };
-  if (avg >= 800) return { level: 'Avançado', emoji: '⭐', color: '#10B981' };
-  if (avg >= 700) return { level: 'Intermediário+', emoji: '📈', color: '#3B82F6' };
-  if (avg >= 600) return { level: 'Intermediário', emoji: '📚', color: '#8B5CF6' };
-  if (avg >= 500) return { level: 'Básico+', emoji: '✏️', color: '#F97316' };
-  if (avg >= 400) return { level: 'Básico', emoji: '🌱', color: '#EF4444' };
-  return { level: 'Iniciante', emoji: '🎯', color: '#94A3B8' };
+function getLevelInfo(avg: number): { level: string; icon: keyof typeof Ionicons.glyphMap; color: string } {
+  if (avg >= 900) return { level: 'Mestre', icon: 'trophy-outline', color: '#F59E0B' };
+  if (avg >= 800) return { level: 'Avançado', icon: 'star-outline', color: '#10B981' };
+  if (avg >= 700) return { level: 'Intermediário+', icon: 'trending-up-outline', color: '#3B82F6' };
+  if (avg >= 600) return { level: 'Intermediário', icon: 'book-outline', color: '#8B5CF6' };
+  if (avg >= 500) return { level: 'Básico+', icon: 'create-outline', color: '#F97316' };
+  if (avg >= 400) return { level: 'Básico', icon: 'leaf-outline', color: '#EF4444' };
+  return { level: 'Iniciante', icon: 'flag-outline', color: '#94A3B8' };
 }
 
 function getGreeting(): string {
@@ -78,7 +78,7 @@ function VerticalBar({ value, max, color }: { value: number; max: number; color:
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
-  }, [value, max, trackH]);
+  }, [animH, value, max, trackH]);
   return (
     <View
       style={{ width: 10, height: 36, borderRadius: 5, overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.08)' }}
@@ -150,11 +150,11 @@ export default function StudentHomeScreen() {
           <View style={styles.greetRow}>
             <View style={{ flex: 1 }}>
               <Text style={[styles.greetSub, { color: colors.mutedText }]}>{getGreeting()},</Text>
-              <Text style={[styles.greetName, { color: colors.text }]}>{name} 👋</Text>
+              <Text style={[styles.greetName, { color: colors.text }]}>{name}</Text>
             </View>
             {levelInfo && (
               <View style={[styles.levelBadge, { backgroundColor: levelInfo.color + '18', borderColor: levelInfo.color + '30' }]}>
-                <Text style={styles.levelEmoji}>{levelInfo.emoji}</Text>
+                <Ionicons name={levelInfo.icon} size={14} color={levelInfo.color} />
                 <Text style={[styles.levelText, { color: levelInfo.color }]}>{levelInfo.level}</Text>
               </View>
             )}
@@ -419,13 +419,12 @@ export default function StudentHomeScreen() {
 const styles = StyleSheet.create({
   greetRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 4 },
   greetSub: { fontSize: 13, fontWeight: '500' },
-  greetName: { fontSize: 26, fontWeight: '700', letterSpacing: -0.5, lineHeight: 32 },
+  greetName: { fontSize: 26, fontWeight: '700', letterSpacing: 0, lineHeight: 32 },
   levelBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 12, paddingVertical: 6,
     borderRadius: 999, borderWidth: 1,
   },
-  levelEmoji: { fontSize: 14 },
   levelText: { fontSize: 12, fontWeight: '700' },
 
   // Hero card
@@ -437,14 +436,14 @@ const styles = StyleSheet.create({
   },
   heroScoreRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   heroScoreMain: { alignItems: 'center', gap: 4, minWidth: 80 },
-  heroScoreNum: { fontSize: 52, fontWeight: '800', letterSpacing: -2, lineHeight: 58 },
+  heroScoreNum: { fontSize: 52, fontWeight: '800', letterSpacing: 0, lineHeight: 58 },
   heroScoreLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.1 },
   trendPill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, marginTop: 2 },
   trendText: { fontSize: 11, fontWeight: '700' },
   heroStatsDivider: { width: 1, height: 60, backgroundColor: 'rgba(0,0,0,0.08)' },
   heroStatsCol: { flex: 1, gap: 6 },
   heroStatItem: { alignItems: 'center' },
-  heroStatNum: { fontSize: 18, fontWeight: '700', letterSpacing: -0.3 },
+  heroStatNum: { fontSize: 18, fontWeight: '700', letterSpacing: 0 },
   heroStatLabel: { fontSize: 9, fontWeight: '600', letterSpacing: 0.1 },
   heroStatDivider: { height: 1, width: '80%' },
   heroProgressTrack: { height: 6, borderRadius: 3, overflow: 'hidden' },
@@ -460,7 +459,7 @@ const styles = StyleSheet.create({
     padding: 28, alignItems: 'center', gap: 12,
   },
   emptyHeroIcon: { width: 68, height: 68, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  emptyHeroTitle: { fontSize: 20, fontWeight: '700', letterSpacing: -0.3 },
+  emptyHeroTitle: { fontSize: 20, fontWeight: '700', letterSpacing: 0 },
   emptyHeroSub: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
   emptyHeroCta: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
@@ -489,7 +488,7 @@ const styles = StyleSheet.create({
   lastEssayTheme: { fontSize: 15, fontWeight: '600', lineHeight: 20 },
   lastEssayMeta: { flexDirection: 'row' },
   lastEssayScore: { borderRadius: 12, padding: 10, alignItems: 'center', minWidth: 64 },
-  lastEssayScoreNum: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
+  lastEssayScoreNum: { fontSize: 22, fontWeight: '800', letterSpacing: 0 },
   lastEssayScoreMax: { fontSize: 10, fontWeight: '600' },
   msgBox: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 8,

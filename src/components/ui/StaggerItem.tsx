@@ -1,35 +1,31 @@
-import { PropsWithChildren, useEffect } from 'react';
-import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withDelay,
-    withSpring,
-    withTiming,
-} from 'react-native-reanimated';
+import { PropsWithChildren, useEffect, useRef } from 'react';
+import { Animated } from 'react-native';
 
 type StaggerItemProps = PropsWithChildren<{
   index?: number;
 }>;
 
 export function StaggerItem({ children, index = 0 }: StaggerItemProps) {
-  const opacity = useSharedValue(0);
-  const translateY = useSharedValue(20);
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
-    opacity.value = withDelay(index * 50, withTiming(1, { duration: 320 }));
-    translateY.value = withDelay(
-      index * 50,
-      withSpring(0, {
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 320,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+      Animated.spring(translateY, {
+        toValue: 0,
+        delay: index * 50,
         damping: 16,
         stiffness: 140,
-      })
-    );
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, [index, opacity, translateY]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  return <Animated.View style={animatedStyle}>{children}</Animated.View>;
+  return <Animated.View style={{ opacity, transform: [{ translateY }] }}>{children}</Animated.View>;
 }

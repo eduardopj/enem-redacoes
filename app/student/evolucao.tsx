@@ -53,7 +53,7 @@ function AnimatedBarFill({ pct, color, trackHeight = 70, delay = 0 }: {
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
-  }, [pct, trackHeight]);
+  }, [animH, delay, pct, trackHeight]);
   return <Animated.View style={{ width: '100%', height: animH, backgroundColor: color, borderRadius: 6 }} />;
 }
 
@@ -114,7 +114,7 @@ const timelineStyles = StyleSheet.create({
   deltaText: { fontSize: 8, fontWeight: '700' },
   barTrack: { width: '70%', height: 70, borderRadius: 6, overflow: 'hidden', justifyContent: 'flex-end' },
   barFill: { width: '100%', borderRadius: 6 },
-  scoreLabel: { fontSize: 10, fontWeight: '800', letterSpacing: -0.3 },
+  scoreLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 0 },
   dateLabel: { fontSize: 8, fontWeight: '500', textAlign: 'center' },
 });
 
@@ -191,7 +191,7 @@ const compStyles = StyleSheet.create({
   label: { fontSize: 13, fontWeight: '700', lineHeight: 18 },
   levelLabel: { fontSize: 11, fontWeight: '600' },
   scoreWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 2 },
-  scoreNum: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5, lineHeight: 26 },
+  scoreNum: { fontSize: 22, fontWeight: '800', letterSpacing: 0, lineHeight: 26 },
   scoreMax: { fontSize: 11, fontWeight: '600', marginBottom: 2 },
   trendPill: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 999 },
   trendText: { fontSize: 10, fontWeight: '700' },
@@ -403,14 +403,14 @@ export default function StudentEvolucaoScreen() {
 const styles = StyleSheet.create({
   titleRow: { paddingTop: 4, gap: 2 },
   eyebrow: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  title: { fontSize: 26, fontWeight: '700', letterSpacing: -0.5, lineHeight: 32 },
+  title: { fontSize: 26, fontWeight: '700', letterSpacing: 0, lineHeight: 32 },
 
   kpiRow: { flexDirection: 'row', gap: 8 },
   kpiCard: {
     flex: 1, borderRadius: 14, borderWidth: 1, padding: 10,
     alignItems: 'center', gap: 2,
   },
-  kpiNum: { fontSize: 20, fontWeight: '800', letterSpacing: -0.5, lineHeight: 24 },
+  kpiNum: { fontSize: 20, fontWeight: '800', letterSpacing: 0, lineHeight: 24 },
   kpiLabel: { fontSize: 9, fontWeight: '600', letterSpacing: 0.1, textAlign: 'center' },
   kpiTrendRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
 

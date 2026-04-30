@@ -1,8 +1,6 @@
 import { ThemeProvider, useAppTheme } from '@/theme/ThemeContext';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import 'react-native-reanimated';
 import { LogBox } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -30,12 +28,10 @@ function ThemedStack() {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <ThemeProvider>
-          <ThemedStack />
-        </ThemeProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <ThemedStack />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

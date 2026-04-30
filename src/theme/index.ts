@@ -19,17 +19,17 @@ const fonts = {
 };
 
 const lightColors = {
-  background: '#F0F2FA',
-  text: '#1B2559',
-  accent: '#4E76F8',
-  input: '#F5F7FD',
-  border: '#E4E7F2',
+  background: '#F7F4ED',
+  text: '#1F2A37',
+  accent: '#3157D5',
+  input: '#F1EEE7',
+  border: '#E6E0D6',
   surface: '#FFFFFF',
 
-  mutedText: '#8E9AB8',
-  softText: '#4A5878',
+  mutedText: '#8A8175',
+  softText: '#4D5562',
 
-  black: '#1B2559',
+  black: '#1F2A37',
   white: '#FFFFFF',
 
   success: '#22C55E',
@@ -38,7 +38,7 @@ const lightColors = {
   warning: '#F59E0B',
   warningSoft: '#FEF3C7',
 
-  info: '#3B82F6',
+  info: '#2563EB',
   infoSoft: '#DBEAFE',
 
   danger: '#EF4444',
@@ -126,7 +126,7 @@ export const theme = {
     }),
     strong: Platform.select({
       ios: {
-        shadowColor: '#4E76F8',
+        shadowColor: '#3157D5',
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.18,
         shadowRadius: 20,
@@ -144,35 +144,35 @@ export const theme = {
       fontSize: 40,
       lineHeight: 44,
       fontWeight: '700' as const,
-      letterSpacing: -1.0,
+      letterSpacing: 0,
     },
     h1: {
       fontFamily: fonts.display,
       fontSize: 32,
       lineHeight: 38,
       fontWeight: '700' as const,
-      letterSpacing: -0.6,
+      letterSpacing: 0,
     },
     h2: {
       fontFamily: fonts.display,
       fontSize: 26,
       lineHeight: 32,
       fontWeight: '700' as const,
-      letterSpacing: -0.4,
+      letterSpacing: 0,
     },
     h3: {
       fontFamily: fonts.display,
       fontSize: 20,
       lineHeight: 26,
       fontWeight: '600' as const,
-      letterSpacing: -0.2,
+      letterSpacing: 0,
     },
     metric: {
       fontFamily: fonts.display,
       fontSize: 48,
       lineHeight: 52,
       fontWeight: '700' as const,
-      letterSpacing: -1.4,
+      letterSpacing: 0,
     },
     title: {
       fontFamily: fonts.body,

@@ -1,15 +1,7 @@
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
-import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
+import { useEffect, useRef } from 'react';
+import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { Card } from './Card';
 
 type GlobalLoadingProps = {
@@ -22,42 +14,44 @@ export function GlobalLoading({
   subtitle = 'Aguarde enquanto a redação está sendo transcrita e avaliada.',
 }: GlobalLoadingProps) {
   const { colors } = useAppTheme();
-  const dot1 = useSharedValue(0.35);
-  const dot2 = useSharedValue(0.35);
-  const dot3 = useSharedValue(0.35);
-  const bar = useSharedValue(0);
+  const dot1 = useRef(new Animated.Value(0.35)).current;
+  const dot2 = useRef(new Animated.Value(0.35)).current;
+  const dot3 = useRef(new Animated.Value(0.35)).current;
+  const bar = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    dot1.value = withRepeat(
-      withSequence(withTiming(1, { duration: 320 }), withTiming(0.35, { duration: 320 })),
-      -1,
-      false
-    );
-    dot2.value = withRepeat(
-      withSequence(
-        withTiming(0.35, { duration: 160 }),
-        withTiming(1, { duration: 320 }),
-        withTiming(0.35, { duration: 320 })
+    const animateDot = (dot: Animated.Value, delay: number) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(dot, { toValue: 1, duration: 320, useNativeDriver: true }),
+          Animated.timing(dot, { toValue: 0.35, duration: 320, useNativeDriver: true }),
+        ])
+      );
+
+    bar.setValue(0);
+    const loops = [
+      animateDot(dot1, 0),
+      animateDot(dot2, 160),
+      animateDot(dot3, 320),
+      Animated.loop(
+        Animated.timing(bar, {
+          toValue: 1,
+          duration: 2200,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
       ),
-      -1,
-      false
-    );
-    dot3.value = withRepeat(
-      withSequence(
-        withTiming(0.35, { duration: 320 }),
-        withTiming(1, { duration: 320 }),
-        withTiming(0.35, { duration: 320 })
-      ),
-      -1,
-      false
-    );
-    bar.value = withRepeat(withTiming(1, { duration: 2200, easing: Easing.linear }), -1, false);
+    ];
+
+    loops.forEach((loop) => loop.start());
+    return () => loops.forEach((loop) => loop.stop());
   }, [bar, dot1, dot2, dot3]);
 
-  const dotStyle1 = useAnimatedStyle(() => ({ opacity: dot1.value }));
-  const dotStyle2 = useAnimatedStyle(() => ({ opacity: dot2.value }));
-  const dotStyle3 = useAnimatedStyle(() => ({ opacity: dot3.value }));
-  const barStyle = useAnimatedStyle(() => ({ transform: [{ translateX: -260 + bar.value * 520 }] }));
+  const barTranslate = bar.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-260, 260],
+  });
 
   return (
     <Card>
@@ -82,13 +76,18 @@ export function GlobalLoading({
         </View>
 
         <View style={[styles.progressTrack, { borderColor: colors.border, backgroundColor: colors.input }]}>
-          <Animated.View style={[styles.progressBeam, { backgroundColor: colors.accent }, barStyle]} />
+          <Animated.View
+            style={[
+              styles.progressBeam,
+              { backgroundColor: colors.accent, transform: [{ translateX: barTranslate }] },
+            ]}
+          />
         </View>
 
         <View style={styles.dots}>
-          <Animated.View style={[styles.dot, { backgroundColor: colors.accent }, dotStyle1]} />
-          <Animated.View style={[styles.dot, { backgroundColor: colors.accent }, dotStyle2]} />
-          <Animated.View style={[styles.dot, { backgroundColor: colors.accent }, dotStyle3]} />
+          <Animated.View style={[styles.dot, { backgroundColor: colors.accent, opacity: dot1 }]} />
+          <Animated.View style={[styles.dot, { backgroundColor: colors.accent, opacity: dot2 }]} />
+          <Animated.View style={[styles.dot, { backgroundColor: colors.accent, opacity: dot3 }]} />
         </View>
       </View>
     </Card>

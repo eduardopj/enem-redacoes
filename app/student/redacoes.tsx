@@ -7,9 +7,8 @@ import { Essay } from '@/types/app';
 import { getScoreColor } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { useMemo, useRef, useState } from 'react';
+import { Animated, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 type Filter = 'todas' | 'corrigida' | 'processando' | 'pendente';
 type Sort = 'data' | 'nota_desc' | 'nota_asc';
@@ -42,14 +41,21 @@ const barStyles = StyleSheet.create({
 
 function FilterChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   const { colors } = useAppTheme();
-  const scale = useSharedValue(1);
-  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const scale = useRef(new Animated.Value(1)).current;
+  const animateScale = (toValue: number) => {
+    Animated.spring(scale, {
+      toValue,
+      stiffness: 350,
+      damping: 15,
+      useNativeDriver: true,
+    }).start();
+  };
   return (
-    <Animated.View style={animStyle}>
+    <Animated.View style={{ transform: [{ scale }] }}>
       <Pressable
         onPress={onPress}
-        onPressIn={() => { scale.value = withSpring(0.92, { stiffness: 350, damping: 15 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { stiffness: 350, damping: 15 }); }}
+        onPressIn={() => animateScale(0.92)}
+        onPressOut={() => animateScale(1)}
         style={[styles.chip, { borderColor: active ? colors.accent : colors.border, backgroundColor: active ? colors.input : colors.surface }]}
       >
         <Text style={[styles.chipText, { color: active ? colors.accent : colors.softText }]}>{label}</Text>
@@ -187,8 +193,15 @@ function StudentEssayCard({ essay, colors }: { essay: Essay; colors: any }) {
   const scoreColor = essay.status === 'corrigida' && essay.totalScore != null
     ? getScoreColor(essay.totalScore, colors)
     : colors.mutedText;
-  const scale = useSharedValue(1);
-  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const scale = useRef(new Animated.Value(1)).current;
+  const animateScale = (toValue: number) => {
+    Animated.spring(scale, {
+      toValue,
+      stiffness: 250,
+      damping: 18,
+      useNativeDriver: true,
+    }).start();
+  };
 
   const handlePress = () => {
     if (essay.status === 'corrigida') {
@@ -199,12 +212,12 @@ function StudentEssayCard({ essay, colors }: { essay: Essay; colors: any }) {
   };
 
   return (
-    <Animated.View style={animStyle}>
+    <Animated.View style={{ transform: [{ scale }] }}>
     <Card>
       <Pressable
         onPress={handlePress}
-        onPressIn={() => { scale.value = withSpring(0.97, { stiffness: 250, damping: 18 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { stiffness: 250, damping: 18 }); }}
+        onPressIn={() => animateScale(0.97)}
+        onPressOut={() => animateScale(1)}
       >
         <View style={cardStyles.topRow}>
           {/* Score pill or status */}
@@ -271,7 +284,7 @@ function getScoreLabel(score: number, _colors: any): string {
 const cardStyles = StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
   scorePill: { borderRadius: 12, padding: 8, alignItems: 'center', minWidth: 56, justifyContent: 'center' },
-  scoreNum: { fontSize: 20, fontWeight: '800', letterSpacing: -0.5, lineHeight: 24 },
+  scoreNum: { fontSize: 20, fontWeight: '800', letterSpacing: 0, lineHeight: 24 },
   scoreDenom: { fontSize: 10, fontWeight: '600' },
   themeTitle: { fontSize: 14, fontWeight: '600', lineHeight: 20, marginBottom: 2 },
   date: { fontSize: 11, lineHeight: 16 },
@@ -286,7 +299,7 @@ const cardStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4 },
   eyebrow: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  title: { fontSize: 26, fontWeight: '700', letterSpacing: -0.5, lineHeight: 32 },
+  title: { fontSize: 26, fontWeight: '700', letterSpacing: 0, lineHeight: 32 },
   newBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12,
