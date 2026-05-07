@@ -14,7 +14,7 @@ export function TopBar({ showHomeButton = true, showBack = false, title }: TopBa
   const { colors } = useAppTheme();
 
   return (
-    <View style={[styles.bar, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+    <View style={[styles.bar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
       <View style={styles.left}>
         {showBack ? (
           <Pressable

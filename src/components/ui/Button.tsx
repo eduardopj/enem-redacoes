@@ -64,7 +64,7 @@ export function Button({
     outline: 'transparent',
     success: colors.success,
     dark: colors.darkBlock,
-    soft: colors.accentSoft,
+    soft: colors.surfaceSoft,
   };
 
   const textColor: Record<ButtonVariant, string> = {
@@ -72,10 +72,10 @@ export function Button({
     secondary: colors.accent,
     ghost: colors.accent,
     danger: colors.danger,
-    outline: colors.text,
+    outline: colors.softText,
     success: '#FFFFFF',
     dark: colors.darkBlockFg,
-    soft: colors.accent,
+    soft: colors.softText,
   };
 
   const iconColor: Record<ButtonVariant, string> = {
@@ -83,10 +83,10 @@ export function Button({
     secondary: colors.accent,
     ghost: colors.accent,
     danger: colors.danger,
-    outline: colors.text,
+    outline: colors.softText,
     success: '#FFFFFF',
     dark: colors.darkBlockFg,
-    soft: colors.accent,
+    soft: colors.softText,
   };
 
   const hasBorder = variant === 'outline';
@@ -95,16 +95,16 @@ export function Button({
     secondary: 'transparent',
     ghost: 'transparent',
     danger: 'transparent',
-    outline: colors.borderStrong,
+    outline: colors.border,
     success: 'transparent',
     dark: 'transparent',
     soft: 'transparent',
   };
 
   const sizeConfig = {
-    sm: { minH: 38, px: theme.spacing.md, fontSize: 13, iconSize: 15 },
-    md: { minH: 50, px: theme.spacing.lg, fontSize: 14, iconSize: 17 },
-    lg: { minH: 56, px: theme.spacing.xl, fontSize: 15, iconSize: 18 },
+    sm: { minH: 40, px: theme.spacing.md, fontSize: 14, iconSize: 16 },
+    md: { minH: 50, px: theme.spacing.lg, fontSize: 15, iconSize: 18 },
+    lg: { minH: 56, px: theme.spacing.xl, fontSize: 16, iconSize: 19 },
   }[size];
 
   return (
@@ -154,24 +154,24 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: theme.radius.md,
+    borderRadius: 16,
     overflow: 'hidden',
     justifyContent: 'center',
   },
   disabled: {
-    opacity: 0.44,
+    opacity: 0.42,
   },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: theme.spacing.xs,
-    paddingVertical: 11,
+    paddingVertical: 12,
     flexWrap: 'wrap',
   },
   label: {
     flexShrink: 1,
-    fontWeight: '600',
+    fontWeight: '700',
     letterSpacing: 0.1,
     textAlign: 'center',
   },

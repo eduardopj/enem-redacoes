@@ -49,7 +49,7 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
   if (isFab) {
     return (
       <Pressable onPress={handlePress} style={styles.fabWrap} hitSlop={8}>
-        <Animated.View style={[styles.fabPill, { backgroundColor: colors.success, transform: [{ scale }] }]}>
+        <Animated.View style={[styles.fabPill, { backgroundColor: colors.accent, transform: [{ scale }] }]}>
           <Ionicons name="add" size={18} color="#fff" />
           <Text style={styles.fabPillLabel}>Nova</Text>
         </Animated.View>

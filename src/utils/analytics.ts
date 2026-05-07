@@ -29,18 +29,24 @@ export function getScoreColor(
   score: number,
   colors: { success: string; accent: string; warning: string; danger: string; mutedText: string }
 ): string {
-  if (score >= 750) return colors.success;
-  if (score >= 600) return colors.accent;
-  if (score >= 450) return colors.warning;
+  if (score >= 900) return colors.success;
+  if (score >= 550) return colors.accent;
+  if (score >= 380) return colors.warning;
   return colors.danger;
 }
 
 // ─── Competency helpers ────────────────────────────────────────────────────
 
-export function getCompColors(colors: {
-  accent: string; secondary: string; success: string; warning: string; danger: string;
-}): Record<string, string> {
-  return { c1: colors.accent, c2: colors.secondary, c3: colors.success, c4: colors.warning, c5: colors.danger };
+export const COMP_COLORS = {
+  c1: '#4F46E5',
+  c2: '#7C3AED',
+  c3: '#0891B2',
+  c4: '#D97706',
+  c5: '#DB2777',
+} as const;
+
+export function getCompColors(_colors?: unknown): Record<string, string> {
+  return COMP_COLORS;
 }
 
 export const COMPETENCY_LABELS: Record<string, string> = {

@@ -54,7 +54,7 @@ export function Card({ children, style, variant = 'default', accentBorder, noPad
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.xl,
     padding: theme.spacing.md,
     ...theme.shadows.card,
     position: 'relative',
