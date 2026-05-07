@@ -23,6 +23,7 @@ export * from './InsightCard';
 export * from './NoiseLayer';
 export * from './ProgressBar';
 export * from './ScoreSummaryCard';
+export * from './ScoreCelebration';
 export * from './ScreenContainer';
 export * from './SectionHeader';
 export * from './Skeleton';

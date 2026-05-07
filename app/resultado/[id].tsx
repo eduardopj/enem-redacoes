@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   CompetencyProgress,
+  ScoreCelebration,
   ScreenContainer,
   StatusBadge,
 } from '@/components/ui';
@@ -87,6 +88,7 @@ export default function ResultadoScreen() {
   const currentTeacher = useAppStore((state) => state.currentTeacher);
   const updateEssayTeacherEval = useAppStore((state) => state.updateEssayTeacherEval);
 
+  const [showCelebration, setShowCelebration] = useState(true);
   const [activeTab, setActiveTab] = useState<ResultTab>('resumo');
   const [teacherOpen, setTeacherOpen] = useState(false);
   const [teacherScoreInput, setTeacherScoreInput] = useState('');
@@ -150,6 +152,11 @@ export default function ResultadoScreen() {
 
   return (
     <ProtectedRoute allowStudent>
+      <ScoreCelebration
+        score={aiScore}
+        visible={showCelebration}
+        onDismiss={() => setShowCelebration(false)}
+      />
       <ScreenContainer showBack>
         <AppHeader eyebrow="Resultado" title={studentName} subtitle={essay.themeTitle} />
 
