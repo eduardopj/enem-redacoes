@@ -88,7 +88,7 @@ export function ScreenContainer({
       <TopBar showBack={showBack} showHomeButton={showHomeButton} />
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior="padding"
         keyboardVerticalOffset={0}
       >
         <Animated.ScrollView

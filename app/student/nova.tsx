@@ -13,9 +13,7 @@ import { useMemo, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -279,11 +277,6 @@ export default function StudentNovaScreen() {
 
   return (
     <StudentRoute>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
-      >
         <ScreenContainer showStudentNav>
           {/* Header */}
           <View style={styles.titleRow}>
@@ -569,7 +562,6 @@ export default function StudentNovaScreen() {
             onClose={() => setShowThemePicker(false)}
           />
         </ScreenContainer>
-      </KeyboardAvoidingView>
     </StudentRoute>
   );
 }

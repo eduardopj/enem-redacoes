@@ -7,8 +7,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -156,93 +154,89 @@ export default function NovaTurmaScreen() {
   return (
     <ProtectedRoute>
       <ScreenContainer showBack>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <View style={styles.header}>
-              <View style={[styles.headerIcon, { backgroundColor: colors.accent + '18' }]}>
-                <Ionicons name="people" size={28} color={colors.accent} />
-              </View>
-              <Text style={[styles.title, { color: colors.text }]}>Nova turma</Text>
-              <Text style={[styles.sub, { color: colors.mutedText }]}>
-                Organize seus alunos por turma para um acompanhamento mais preciso.
-              </Text>
+        <View style={styles.header}>
+          <View style={[styles.headerIcon, { backgroundColor: colors.accent + '18' }]}>
+            <Ionicons name="people" size={28} color={colors.accent} />
+          </View>
+          <Text style={[styles.title, { color: colors.text }]}>Nova turma</Text>
+          <Text style={[styles.sub, { color: colors.mutedText }]}>
+            Organize seus alunos por turma para um acompanhamento mais preciso.
+          </Text>
+        </View>
+
+        <View style={styles.form}>
+          <Field label="Nome da turma *" error={nameError}>
+            <View style={[styles.inputRow, { backgroundColor: colors.input, borderColor: nameError ? colors.danger : colors.border }]}>
+              <Ionicons name="school-outline" size={18} color={colors.mutedText} />
+              <TextInput
+                style={[styles.input, { color: colors.text }]}
+                placeholder="Ex: 3º Ano A, 9º Ano B..."
+                placeholderTextColor={colors.mutedText}
+                value={name}
+                onChangeText={(t) => { setName(t); setNameError(''); }}
+                returnKeyType="next"
+                autoFocus
+              />
             </View>
+          </Field>
 
-            <View style={styles.form}>
-              <Field label="Nome da turma *" error={nameError}>
-                <View style={[styles.inputRow, { backgroundColor: colors.input, borderColor: nameError ? colors.danger : colors.border }]}>
-                  <Ionicons name="school-outline" size={18} color={colors.mutedText} />
-                  <TextInput
-                    style={[styles.input, { color: colors.text }]}
-                    placeholder="Ex: 3º Ano A, 9º Ano B..."
-                    placeholderTextColor={colors.mutedText}
-                    value={name}
-                    onChangeText={(t) => { setName(t); setNameError(''); }}
-                    returnKeyType="next"
-                    autoFocus
-                  />
-                </View>
-              </Field>
-
-              <View style={styles.fieldWrap}>
-                <Text style={[styles.label, { color: colors.softText }]}>Período</Text>
-                <View style={styles.periodGrid}>
-                  {PERIODS.map((p) => {
-                    const active = period === p.value;
-                    return (
-                      <Pressable
-                        key={p.value}
-                        onPress={() => setPeriod(active ? undefined : p.value)}
-                        style={[
-                          styles.periodBtn,
-                          active
-                            ? { backgroundColor: colors.accent, borderColor: colors.accent }
-                            : { backgroundColor: colors.input, borderColor: colors.border },
-                        ]}
-                      >
-                        <Ionicons name={p.icon as any} size={18} color={active ? '#fff' : colors.mutedText} />
-                        <Text style={[styles.periodLabel, { color: active ? '#fff' : colors.softText }]}>
-                          {p.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
-
-              <Field label="Ano letivo">
-                <View style={[styles.inputRow, { backgroundColor: colors.input, borderColor: colors.border }]}>
-                  <Ionicons name="calendar-outline" size={18} color={colors.mutedText} />
-                  <TextInput
-                    style={[styles.input, { color: colors.text }]}
-                    placeholder="2026"
-                    placeholderTextColor={colors.mutedText}
-                    value={year}
-                    onChangeText={setYear}
-                    keyboardType="numeric"
-                    maxLength={4}
-                  />
-                </View>
-              </Field>
-
-              <Field label="Disciplina">
-                <View style={[styles.inputRow, { backgroundColor: colors.input, borderColor: colors.border }]}>
-                  <Ionicons name="book-outline" size={18} color={colors.mutedText} />
-                  <TextInput
-                    style={[styles.input, { color: colors.text }]}
-                    placeholder="Língua Portuguesa"
-                    placeholderTextColor={colors.mutedText}
-                    value={subject}
-                    onChangeText={setSubject}
-                    returnKeyType="done"
-                  />
-                </View>
-              </Field>
-
-              <Button title="Criar turma" leftIcon="people-outline" onPress={handleSave} />
+          <View style={styles.fieldWrap}>
+            <Text style={[styles.label, { color: colors.softText }]}>Período</Text>
+            <View style={styles.periodGrid}>
+              {PERIODS.map((p) => {
+                const active = period === p.value;
+                return (
+                  <Pressable
+                    key={p.value}
+                    onPress={() => setPeriod(active ? undefined : p.value)}
+                    style={[
+                      styles.periodBtn,
+                      active
+                        ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                        : { backgroundColor: colors.input, borderColor: colors.border },
+                    ]}
+                  >
+                    <Ionicons name={p.icon as any} size={18} color={active ? '#fff' : colors.mutedText} />
+                    <Text style={[styles.periodLabel, { color: active ? '#fff' : colors.softText }]}>
+                      {p.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+          </View>
+
+          <Field label="Ano letivo">
+            <View style={[styles.inputRow, { backgroundColor: colors.input, borderColor: colors.border }]}>
+              <Ionicons name="calendar-outline" size={18} color={colors.mutedText} />
+              <TextInput
+                style={[styles.input, { color: colors.text }]}
+                placeholder="2026"
+                placeholderTextColor={colors.mutedText}
+                value={year}
+                onChangeText={setYear}
+                keyboardType="numeric"
+                maxLength={4}
+              />
+            </View>
+          </Field>
+
+          <Field label="Disciplina">
+            <View style={[styles.inputRow, { backgroundColor: colors.input, borderColor: colors.border }]}>
+              <Ionicons name="book-outline" size={18} color={colors.mutedText} />
+              <TextInput
+                style={[styles.input, { color: colors.text }]}
+                placeholder="Língua Portuguesa"
+                placeholderTextColor={colors.mutedText}
+                value={subject}
+                onChangeText={setSubject}
+                returnKeyType="done"
+              />
+            </View>
+          </Field>
+
+          <Button title="Criar turma" leftIcon="people-outline" onPress={handleSave} />
+        </View>
       </ScreenContainer>
     </ProtectedRoute>
   );
