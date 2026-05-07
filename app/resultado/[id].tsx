@@ -12,7 +12,7 @@ import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Essay } from '@/types/app';
-import { getScoreColor, getScoreLabel, isCorrectedEssay } from '@/utils/analytics';
+import { getCompColors, getScoreColor, getScoreLabel, isCorrectedEssay } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -20,14 +20,6 @@ import { useMemo, useState } from 'react';
 import { Alert, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 type ResultTab = 'resumo' | 'competencias' | 'plano' | 'texto';
-
-const COMP_COLORS: Record<string, string> = {
-  c1: '#3B82F6',
-  c2: '#8B5CF6',
-  c3: '#10B981',
-  c4: '#F59E0B',
-  c5: '#F43F5E',
-};
 
 const COMP_LABELS: Record<string, string> = {
   c1: 'C1 - Norma culta',
@@ -131,6 +123,7 @@ export default function ResultadoScreen() {
     essay.reviewRequired ||
     essay.status === 'baixa_confiabilidade';
   const gap = scoreGap(essay.totalScore, essay.teacherScore);
+  const teacherReviewed = Boolean(essay.teacherReviewedAt);
 
   async function handleShare() {
     await Share.share({
@@ -201,9 +194,19 @@ export default function ResultadoScreen() {
             <View style={[styles.teacherPanel, { borderTopColor: colors.border }]}>
               <View style={styles.teacherTop}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.teacherTitle, { color: colors.text }]}>Avaliação do professor</Text>
+                  <View style={styles.teacherTitleRow}>
+                    <Text style={[styles.teacherTitle, { color: colors.text }]}>Avaliação do professor</Text>
+                    {teacherReviewed ? (
+                      <View style={[styles.teacherReviewedPill, { backgroundColor: colors.successSoft }]}>
+                        <Ionicons name="shield-checkmark-outline" size={12} color={colors.success} />
+                        <Text style={[styles.teacherReviewedText, { color: colors.success }]}>Revisada</Text>
+                      </View>
+                    ) : null}
+                  </View>
                   <Text style={[styles.teacherSub, { color: colors.mutedText }]}>
-                    Destaque sua nota final e observações manuais.
+                    {teacherReviewed
+                      ? 'Nota final validada pelo professor.'
+                      : 'Destaque sua nota final e observações manuais.'}
                   </Text>
                 </View>
                 <Pressable onPress={teacherOpen ? () => setTeacherOpen(false) : openTeacherEval} style={[styles.iconButton, { backgroundColor: colors.input }]}>
@@ -226,6 +229,11 @@ export default function ResultadoScreen() {
                     {gap != null ? (
                       <Text style={[styles.teacherGap, { color: gap >= 0 ? colors.success : colors.warning }]}>
                         {gap >= 0 ? '+' : ''}{gap} pts em relação à IA
+                      </Text>
+                    ) : null}
+                    {teacherReviewed ? (
+                      <Text style={[styles.teacherReviewedDate, { color: colors.mutedText }]}>
+                        Revisão humana salva
                       </Text>
                     ) : null}
                   </View>
@@ -279,7 +287,20 @@ export default function ResultadoScreen() {
         {activeTab === 'texto' ? <TextoTab essay={essay} colors={colors} /> : null}
 
         <View style={styles.actions}>
-          <Button title="Gerar devolutiva" leftIcon="share-social-outline" onPress={handleShare} />
+          <Button
+            title="Gerar devolutiva"
+            variant="dark"
+            leftIcon="share-social-outline"
+            onPress={handleShare}
+          />
+          {currentTeacher && !teacherReviewed ? (
+            <Button
+              title="Revisar como professor"
+              variant="outline"
+              leftIcon="shield-checkmark-outline"
+              onPress={openTeacherEval}
+            />
+          ) : null}
           <Button
             title="Nova redação"
             variant="secondary"
@@ -288,7 +309,7 @@ export default function ResultadoScreen() {
           />
           <Button
             title="Voltar ao aluno"
-            variant="ghost"
+            variant="soft"
             leftIcon="person-outline"
             onPress={() => router.push(`/aluno/${essay.studentId}` as any)}
           />
@@ -338,7 +359,7 @@ function CompetenciasTab({ essay, colors }: { essay: Essay; colors: any }) {
               title={COMP_LABELS[key] ?? key.toUpperCase()}
               subtitle={`${score}/200 - toque para ver diagnóstico`}
             >
-              <CompetencyProgress label={COMP_LABELS[key] ?? key.toUpperCase()} score={score} color={COMP_COLORS[key]} />
+              <CompetencyProgress label={COMP_LABELS[key] ?? key.toUpperCase()} score={score} color={getCompColors(colors)[key]} />
               {feedback ? (
                 <View style={styles.feedbackBlock}>
                   <FeedbackLine title="Diagnóstico" text={feedback.diagnosis} colors={colors} />
@@ -479,7 +500,10 @@ const styles = StyleSheet.create({
   aiText: { fontSize: 12, lineHeight: 17 },
   teacherPanel: { borderTopWidth: 1, paddingTop: theme.spacing.md, gap: theme.spacing.md },
   teacherTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  teacherTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   teacherTitle: { fontSize: 15, fontWeight: '800' },
+  teacherReviewedPill: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4 },
+  teacherReviewedText: { fontSize: 10, fontWeight: '900' },
   teacherSub: { fontSize: 12, lineHeight: 17, marginTop: 2 },
   iconButton: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   teacherPreviewRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
@@ -488,6 +512,7 @@ const styles = StyleSheet.create({
   teacherScoreLabel: { fontSize: 10, fontWeight: '700' },
   teacherNote: { fontSize: 13, lineHeight: 19 },
   teacherGap: { fontSize: 12, fontWeight: '800', marginTop: 4 },
+  teacherReviewedDate: { fontSize: 11, fontWeight: '700', marginTop: 3 },
   teacherForm: { gap: 10 },
   teacherInput: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, minHeight: 48, fontSize: 16, fontWeight: '800' },
   teacherTextarea: { borderWidth: 1, borderRadius: 12, padding: 14, minHeight: 96, textAlignVertical: 'top', fontSize: 14, lineHeight: 20 },

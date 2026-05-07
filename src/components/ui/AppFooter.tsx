@@ -15,11 +15,12 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { icon: 'home-outline', iconActive: 'home', label: 'Início', route: '/dashboard' },
-  { icon: 'documents-outline', iconActive: 'documents', label: 'Redações', route: '/redacoes' },
+  { icon: 'sparkles-outline', iconActive: 'sparkles', label: 'Correções', route: '/correcoes' },
   { icon: 'people-outline', iconActive: 'people', label: 'Alunos', route: '/alunos' },
   { icon: 'library-outline', iconActive: 'library', label: 'Temas', route: '/temas' },
   { icon: 'bar-chart-outline', iconActive: 'bar-chart', label: 'Análise', route: '/analytics' },
 ];
+
 const ANDROID_BOTTOM_GUARD = 34;
 
 export function AppFooter() {
@@ -40,13 +41,14 @@ export function AppFooter() {
           {
             backgroundColor: colors.surface,
             paddingBottom: safeBottom,
-            shadowColor: '#3157D5',
+            borderTopColor: colors.border,
+            shadowColor: '#101828',
           },
         ]}
       >
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.route;
-          const showBadge = item.route === '/redacoes' && retryQueue.length > 0;
+          const showBadge = item.route === '/correcoes' && retryQueue.length > 0;
 
           return (
             <Pressable
@@ -93,11 +95,12 @@ export function AppFooter() {
         styles.container,
         {
           backgroundColor: colors.surface,
+          borderTopColor: colors.border,
           paddingBottom: safeBottom,
         },
       ]}
     >
-      <Text style={[styles.text, { color: colors.border }]}>enem ia · v{version}</Text>
+      <Text style={[styles.text, { color: colors.mutedText }]}>enem ia · v{version}</Text>
     </View>
   );
 }
@@ -105,23 +108,25 @@ export function AppFooter() {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    paddingTop: 8,
-    borderTopWidth: 0,
-    shadowColor: '#3157D5',
+    paddingTop: 10,
+    borderTopWidth: 1,
+    shadowColor: '#101828',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.04,
     shadowRadius: 10,
     elevation: 6,
   },
   text: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 0.6,
     textAlign: 'center',
+    fontWeight: '600',
   },
   navContainer: {
     flexDirection: 'row',
     paddingTop: 6,
     paddingHorizontal: 8,
+    borderTopWidth: 1,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.05,
     shadowRadius: 14,

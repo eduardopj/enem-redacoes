@@ -165,6 +165,7 @@ export default function StudentNovaScreen() {
   const [themeTitle, setThemeTitle] = useState(initialTheme ? decodeURIComponent(initialTheme) : '');
   const [imageUri, setImageUri] = useState('');
   const [imageName, setImageName] = useState('');
+  const [imageMimeType, setImageMimeType] = useState('image/jpeg');
   const [essayText, setEssayText] = useState('');
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -188,6 +189,7 @@ export default function StudentNovaScreen() {
   function clearImage() {
     setImageUri('');
     setImageName('');
+    setImageMimeType('image/jpeg');
   }
 
   async function takePhoto() {
@@ -196,11 +198,12 @@ export default function StudentNovaScreen() {
       Alert.alert('Permissão necessária', 'Precisamos acessar sua câmera.');
       return;
     }
-    const result = await ImagePicker.launchCameraAsync({ quality: 0.85, allowsEditing: false });
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.68, allowsEditing: false });
     if (result.canceled || !result.assets?.[0]) return;
     const asset = result.assets[0];
     setImageUri(asset.uri);
     setImageName(asset.fileName ?? 'redacao.jpg');
+    setImageMimeType(asset.mimeType ?? 'image/jpeg');
   }
 
   async function pickFromGallery() {
@@ -211,13 +214,14 @@ export default function StudentNovaScreen() {
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
+      quality: 0.72,
       allowsEditing: false,
     });
     if (result.canceled || !result.assets?.[0]) return;
     const asset = result.assets[0];
     setImageUri(asset.uri);
     setImageName(asset.fileName ?? 'redacao.jpg');
+    setImageMimeType(asset.mimeType ?? 'image/jpeg');
   }
 
   async function pickFile() {
@@ -258,6 +262,7 @@ export default function StudentNovaScreen() {
       essayText: mode === 'digitada' ? essayText.trim() : undefined,
       imageUri: mode !== 'digitada' ? imageUri : undefined,
       imageName: mode !== 'digitada' ? imageName : undefined,
+      imageMimeType: mode !== 'digitada' ? imageMimeType : undefined,
     });
 
     if (!essayId) {
@@ -329,9 +334,9 @@ export default function StudentNovaScreen() {
           {/* ── Step 2: Theme ── */}
           <Card>
             <View style={styles.stepHeader}>
-              <View style={[styles.stepBadge, { backgroundColor: themeTitle ? '#22C55E18' : colors.accent + '18' }]}>
+              <View style={[styles.stepBadge, { backgroundColor: themeTitle ? colors.success + '18' : colors.accent + '18' }]}>
                 {themeTitle
-                  ? <Ionicons name="checkmark" size={14} color="#22C55E" />
+                  ? <Ionicons name="checkmark" size={14} color={colors.success} />
                   : <Text style={[styles.stepNum, { color: colors.accent }]}>2</Text>
                 }
               </View>
@@ -363,9 +368,9 @@ export default function StudentNovaScreen() {
           {/* ── Step 3: Content (mode-dependent) ── */}
           <Card>
             <View style={styles.stepHeader}>
-              <View style={[styles.stepBadge, { backgroundColor: hasContent ? '#22C55E18' : colors.accent + '18' }]}>
+              <View style={[styles.stepBadge, { backgroundColor: hasContent ? colors.success + '18' : colors.accent + '18' }]}>
                 {hasContent
-                  ? <Ionicons name="checkmark" size={14} color="#22C55E" />
+                  ? <Ionicons name="checkmark" size={14} color={colors.success} />
                   : <Text style={[styles.stepNum, { color: colors.accent }]}>3</Text>
                 }
               </View>
@@ -582,7 +587,7 @@ const styles = StyleSheet.create({
   stepLabel: { fontSize: 15, fontWeight: '700' },
 
   // Mode selector
-  modeCard: { borderRadius: 18, padding: 18, gap: 14, marginBottom: 12, shadowColor: '#1B2559', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 14, elevation: 3 },
+  modeCard: { borderRadius: 18, padding: 18, gap: 14, marginBottom: 12, shadowColor: '#101828', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 14, elevation: 3 },
   modeRow: { flexDirection: 'row', gap: 10 },
   modeOption: {
     flex: 1, borderRadius: 14, borderWidth: 1.5,

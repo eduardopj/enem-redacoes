@@ -46,40 +46,35 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       label: 'Pendente',
       color: colors.warning,
       backgroundColor: colors.warningSoft,
-      dot: '#F59E0B',
     },
     processando: {
       label: 'Em análise',
       color: colors.info,
       backgroundColor: colors.infoSoft,
-      dot: '#3B82F6',
     },
     corrigida: {
       label: 'Corrigida',
       color: colors.success,
       backgroundColor: colors.successSoft,
-      dot: '#22C55E',
     },
     precisa_revisao: {
       label: 'Revisar',
       color: colors.warning,
       backgroundColor: colors.warningSoft,
-      dot: '#F59E0B',
     },
     baixa_confiabilidade: {
       label: 'Baixa confiança',
       color: colors.danger,
       backgroundColor: colors.dangerSoft,
-      dot: '#EF4444',
     },
   }[status];
 
   return (
     <View style={[styles.badge, { backgroundColor: config.backgroundColor }]}>
       {status === 'processando' ? (
-        <PulsingDot color={config.dot} />
+        <PulsingDot color={config.color} />
       ) : (
-        <View style={[styles.dot, { backgroundColor: config.dot }]} />
+        <View style={[styles.dot, { backgroundColor: config.color }]} />
       )}
       <Text style={[styles.text, { color: config.color }]}>{config.label}</Text>
     </View>
@@ -92,13 +87,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: 999,
   },
   dotWrap: {
-    width: 8,
-    height: 8,
+    width: 7,
+    height: 7,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -114,7 +109,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   text: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     letterSpacing: 0.1,
   },

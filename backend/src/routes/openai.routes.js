@@ -3,7 +3,7 @@ import { correctEssayWithOpenAI } from '../services/openai.service.js';
 
 const router = Router();
 
-const MAX_BASE64_CHARS = Number(process.env.MAX_IMAGE_BASE64_CHARS ?? 18_000_000);
+const MAX_BASE64_CHARS = Number(process.env.MAX_IMAGE_BASE64_CHARS ?? 24_000_000);
 const ALLOWED_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 function sendError(res, status, code, message) {

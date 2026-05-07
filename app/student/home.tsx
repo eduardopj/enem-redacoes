@@ -4,7 +4,7 @@ import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Essay } from '@/types/app';
-import { getScoreColor } from '@/utils/analytics';
+import { getCompColors, getScoreColor } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
@@ -21,18 +21,14 @@ const COMP_LABELS: Record<string, string> = {
   c5: 'Intervenção',
 };
 
-const COMP_COLORS: Record<string, string> = {
-  c1: '#3B82F6', c2: '#8B5CF6', c3: '#10B981', c4: '#F59E0B', c5: '#F43F5E',
-};
-
-function getLevelInfo(avg: number): { level: string; icon: keyof typeof Ionicons.glyphMap; color: string } {
-  if (avg >= 900) return { level: 'Mestre', icon: 'trophy-outline', color: '#F59E0B' };
-  if (avg >= 800) return { level: 'Avançado', icon: 'star-outline', color: '#10B981' };
-  if (avg >= 700) return { level: 'Intermediário+', icon: 'trending-up-outline', color: '#3B82F6' };
-  if (avg >= 600) return { level: 'Intermediário', icon: 'book-outline', color: '#8B5CF6' };
-  if (avg >= 500) return { level: 'Básico+', icon: 'create-outline', color: '#F97316' };
-  if (avg >= 400) return { level: 'Básico', icon: 'leaf-outline', color: '#EF4444' };
-  return { level: 'Iniciante', icon: 'flag-outline', color: '#94A3B8' };
+function getLevelInfo(avg: number, colors: any): { level: string; icon: keyof typeof Ionicons.glyphMap; color: string } {
+  if (avg >= 900) return { level: 'Mestre', icon: 'trophy-outline', color: colors.warning };
+  if (avg >= 800) return { level: 'Avançado', icon: 'star-outline', color: colors.success };
+  if (avg >= 700) return { level: 'Intermediário+', icon: 'trending-up-outline', color: colors.info };
+  if (avg >= 600) return { level: 'Intermediário', icon: 'book-outline', color: colors.secondary };
+  if (avg >= 500) return { level: 'Básico+', icon: 'create-outline', color: colors.warning };
+  if (avg >= 400) return { level: 'Básico', icon: 'leaf-outline', color: colors.danger };
+  return { level: 'Iniciante', icon: 'flag-outline', color: colors.mutedText };
 }
 
 function getGreeting(): string {
@@ -129,7 +125,8 @@ export default function StudentHomeScreen() {
   const weak = useMemo(() => weakestComp(myEssays), [myEssays]);
   const processing = useMemo(() => myEssays.filter(e => e.status === 'processando'), [myEssays]);
   const pending = useMemo(() => myEssays.filter(e => e.status === 'pendente' && !e.feedback?.startsWith('Erro')), [myEssays]);
-  const levelInfo = avg != null ? getLevelInfo(avg) : null;
+  const compColors = getCompColors(colors);
+  const levelInfo = avg != null ? getLevelInfo(avg, colors) : null;
   const scoreColor = avg != null ? getScoreColor(avg, colors) : colors.mutedText;
 
   const atividadesPendentes = useMemo(
@@ -170,13 +167,13 @@ export default function StudentHomeScreen() {
                   <AnimatedNumber value={avg ?? 0} style={[styles.heroScoreNum, { color: scoreColor }]} />
                   <Text style={[styles.heroScoreLabel, { color: colors.mutedText }]}>média atual</Text>
                   {trend != null && (
-                    <View style={[styles.trendPill, { backgroundColor: trend >= 0 ? '#22C55E18' : '#EF444418' }]}>
+                    <View style={[styles.trendPill, { backgroundColor: trend >= 0 ? colors.success + '18' : colors.danger + '18' }]}>
                       <Ionicons
                         name={trend >= 0 ? 'trending-up' : 'trending-down'}
                         size={12}
-                        color={trend >= 0 ? '#22C55E' : '#EF4444'}
+                        color={trend >= 0 ? colors.success : colors.danger}
                       />
-                      <Text style={[styles.trendText, { color: trend >= 0 ? '#22C55E' : '#EF4444' }]}>
+                      <Text style={[styles.trendText, { color: trend >= 0 ? colors.success : colors.danger }]}>
                         {trend >= 0 ? '+' : ''}{trend} pts
                       </Text>
                     </View>
@@ -302,7 +299,7 @@ export default function StudentHomeScreen() {
           <StaggerItem index={4}>
             <Card>
               <View style={styles.sectionHeader}>
-                <Ionicons name="checkmark-circle" size={15} color="#22C55E" />
+                <Ionicons name="checkmark-circle" size={15} color={colors.success} />
                 <Text style={[styles.sectionLabel, { color: colors.softText }]}>Última redação corrigida</Text>
               </View>
               <Pressable onPress={() => router.push(`/resultado/${lastCorrected.id}`)}>
@@ -342,24 +339,24 @@ export default function StudentHomeScreen() {
         {/* ── Weak competency tip ── */}
         {weak && correctedEssays.length >= 2 && (
           <StaggerItem index={4}>
-            <View style={[styles.tipCard, { backgroundColor: COMP_COLORS[weak.key] + '0E', borderColor: COMP_COLORS[weak.key] + '28' }]}>
+            <View style={[styles.tipCard, { backgroundColor: compColors[weak.key] + '0E', borderColor: compColors[weak.key] + '28' }]}>
               <View style={styles.tipHeader}>
-                <View style={[styles.tipIconWrap, { backgroundColor: COMP_COLORS[weak.key] + '18' }]}>
-                  <Ionicons name="bulb-outline" size={16} color={COMP_COLORS[weak.key]} />
+                <View style={[styles.tipIconWrap, { backgroundColor: compColors[weak.key] + '18' }]}>
+                  <Ionicons name="bulb-outline" size={16} color={compColors[weak.key]} />
                 </View>
                 <Text style={[styles.tipTitle, { color: colors.text }]}>Foque aqui para crescer</Text>
               </View>
               <View style={styles.tipCompRow}>
-                <View style={[styles.tipCompBadge, { backgroundColor: COMP_COLORS[weak.key] + '22' }]}>
-                  <Text style={[styles.tipCompKey, { color: COMP_COLORS[weak.key] }]}>{weak.key.toUpperCase()}</Text>
+                <View style={[styles.tipCompBadge, { backgroundColor: compColors[weak.key] + '22' }]}>
+                  <Text style={[styles.tipCompKey, { color: compColors[weak.key] }]}>{weak.key.toUpperCase()}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.tipCompName, { color: colors.text }]}>{COMP_LABELS[weak.key]}</Text>
-                  <Text style={[styles.tipCompScore, { color: COMP_COLORS[weak.key] }]}>
+                  <Text style={[styles.tipCompScore, { color: compColors[weak.key] }]}>
                     Média: {weak.avg}/200
                   </Text>
                 </View>
-                <VerticalBar value={weak.avg} max={200} color={COMP_COLORS[weak.key]} />
+                <VerticalBar value={weak.avg} max={200} color={compColors[weak.key]} />
               </View>
             </View>
           </StaggerItem>
@@ -431,7 +428,7 @@ const styles = StyleSheet.create({
   heroCard: {
     borderRadius: 18, borderWidth: 1,
     padding: theme.spacing.lg, gap: 12,
-    shadowColor: '#1B2559', shadowOffset: { width: 0, height: 4 },
+    shadowColor: '#101828', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.07, shadowRadius: 12, elevation: 3,
   },
   heroScoreRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
@@ -474,9 +471,6 @@ const styles = StyleSheet.create({
   },
   processingDot: {
     width: 10, height: 10, borderRadius: 5,
-    backgroundColor: '#3B82F6',
-    shadowColor: '#3B82F6', shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8, shadowRadius: 4,
   },
   processingTitle: { fontSize: 14, fontWeight: '700', lineHeight: 18 },
   processingSub: { fontSize: 12, lineHeight: 16 },
@@ -546,7 +540,7 @@ const styles = StyleSheet.create({
   atividadesCard: {
     borderRadius: 18, borderWidth: 1,
     padding: 16, gap: 14,
-    shadowColor: '#1B2559', shadowOffset: { width: 0, height: 3 },
+    shadowColor: '#101828', shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.06, shadowRadius: 12, elevation: 2,
   },
   atividadesHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },

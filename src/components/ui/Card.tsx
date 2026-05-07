@@ -5,24 +5,36 @@ import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 
 type CardProps = PropsWithChildren<{
   style?: StyleProp<ViewStyle>;
-  variant?: 'default' | 'accent' | 'flat';
+  variant?: 'default' | 'accent' | 'flat' | 'dark' | 'outlined';
   accentBorder?: string;
+  noPadding?: boolean;
 }>;
 
-export function Card({ children, style, variant = 'default', accentBorder }: CardProps) {
+export function Card({ children, style, variant = 'default', accentBorder, noPadding }: CardProps) {
   const { colors } = useAppTheme();
+
+  const bgColor = {
+    default: colors.surface,
+    accent: colors.accent,
+    flat: colors.input,
+    dark: colors.black,
+    outlined: colors.surface,
+  }[variant];
+
+  const borderStyle = variant === 'default' || variant === 'outlined'
+    ? { borderWidth: 1, borderColor: colors.border }
+    : {};
 
   return (
     <View
       style={[
         styles.card,
-        { backgroundColor: colors.surface },
-        variant === 'accent' && { backgroundColor: colors.accent },
-        variant === 'flat' && { backgroundColor: colors.input },
+        noPadding && styles.noPadding,
+        { backgroundColor: bgColor },
+        borderStyle,
         style,
       ]}
     >
-      {/* Optional colored left accent strip */}
       {accentBorder ? (
         <View
           style={[
@@ -43,10 +55,13 @@ export function Card({ children, style, variant = 'default', accentBorder }: Car
 const styles = StyleSheet.create({
   card: {
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
+    padding: theme.spacing.md,
     ...theme.shadows.card,
     position: 'relative',
     overflow: 'hidden',
+  },
+  noPadding: {
+    padding: 0,
   },
   accentStrip: {
     position: 'absolute',

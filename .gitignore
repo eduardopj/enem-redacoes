@@ -47,3 +47,4 @@ app-example
 # backend runtime data
 data/
 backend.tar.gz
+backend-deploy.tar.gz

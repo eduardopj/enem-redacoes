@@ -147,9 +147,9 @@ export default function DashboardScreen() {
         <StaggerItem index={1}>
           <Pressable
             onPress={contextualAction.onPress}
-            style={[styles.actionCard, { backgroundColor: colors.accent }]}
+            style={[styles.actionCard, { backgroundColor: colors.text }]}
           >
-            <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(255,255,255,0.18)' }]}>
+            <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(255,255,255,0.13)' }]}>
               <Ionicons name={contextualAction.icon} size={24} color="#fff" />
             </View>
             <View style={styles.actionText}>
@@ -157,7 +157,7 @@ export default function DashboardScreen() {
               <Text style={styles.actionSub}>{contextualAction.subtitle}</Text>
             </View>
             <View style={styles.actionBtn}>
-              <Ionicons name="arrow-forward" size={18} color={colors.accent} />
+              <Ionicons name="arrow-forward" size={18} color={colors.text} />
             </View>
           </Pressable>
         </StaggerItem>
@@ -478,6 +478,7 @@ export default function DashboardScreen() {
               <View style={styles.lastBtn}>
                 <Button
                   title={lastEssay.status === 'corrigida' ? 'Ver resultado' : 'Abrir redação'}
+                  variant="dark"
                   leftIcon={lastEssay.status === 'corrigida' ? 'analytics-outline' : 'eye-outline'}
                   onPress={() =>
                     lastEssay.status === 'corrigida'
@@ -503,11 +504,10 @@ function KpiCard({ label, value, icon, iconBg, iconColor, onPress, alert = false
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.kpiCard, { backgroundColor: colors.surface }]}
+      style={[styles.kpiCard, { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }]}
     >
-      {/* Icon badge */}
       <View style={[styles.kpiIconWrap, { backgroundColor: iconBg }]}>
-        <Ionicons name={icon} size={22} color={iconColor} />
+        <Ionicons name={icon} size={20} color={iconColor} />
         {alert ? (
           <View style={[styles.kpiAlert, { backgroundColor: colors.warning }]} />
         ) : null}
@@ -596,14 +596,10 @@ function OnboardingStep({ number, title, desc, onPress, done, icon, isLast, colo
   );
 }
 
-function scoreGradientColor(score: number): string {
-  if (score >= 900) return '#16A34A';
-  if (score >= 800) return '#22C55E';
-  if (score >= 700) return '#84CC16';
-  if (score >= 600) return '#EAB308';
-  if (score >= 500) return '#F97316';
-  if (score >= 400) return '#EF4444';
-  return '#DC2626';
+function scoreGradientColor(score: number, colors: any): string {
+  if (score >= 700) return colors.success;
+  if (score >= 500) return colors.warning;
+  return colors.danger;
 }
 
 function MiniBarChart({ essays, getStudentName, colors }: {
@@ -615,7 +611,7 @@ function MiniBarChart({ essays, getStudentName, colors }: {
         const score = essay.totalScore ?? 0;
         const pct = (score / 1000) * 100;
         const name = getStudentName(essay.studentId).split(' ')[0];
-        const barColor = scoreGradientColor(score);
+        const barColor = scoreGradientColor(score, colors);
         return (
           <Pressable key={essay.id} onPress={() => router.push(`/resultado/${essay.id}` as any)} style={styles.barItem}>
             <Text style={[styles.barScore, { color: colors.text }]}>{score}</Text>
@@ -651,32 +647,32 @@ const styles = StyleSheet.create({
 
   // Contextual action card
   actionCard: {
-    borderRadius: 20,
-    padding: 18,
+    borderRadius: 18,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    shadowColor: '#4E76F8',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.26,
-    shadowRadius: 20,
-    elevation: 8,
+    gap: 12,
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 6,
   },
   actionIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
-  actionText: { flex: 1, gap: 3 },
-  actionTitle: { color: '#fff', fontSize: 15, fontWeight: '700', lineHeight: 20 },
-  actionSub: { color: 'rgba(255,255,255,0.75)', fontSize: 12, lineHeight: 16 },
+  actionText: { flex: 1, gap: 2 },
+  actionTitle: { color: '#fff', fontSize: 14, fontWeight: '700', lineHeight: 19 },
+  actionSub: { color: 'rgba(255,255,255,0.70)', fontSize: 12, lineHeight: 16 },
   actionBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
@@ -693,49 +689,44 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: '45%',
     borderRadius: 18,
-    padding: 16,
-    gap: 4,
-    shadowColor: '#1B2559',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.07,
-    shadowRadius: 14,
-    elevation: 3,
+    padding: 14,
+    gap: 3,
     position: 'relative',
   },
   kpiIconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
     position: 'relative',
   },
   kpiAlert: {
     position: 'absolute',
     top: 2,
     right: 2,
-    width: 10,
-    height: 10,
+    width: 9,
+    height: 9,
     borderRadius: 5,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: '#fff',
   },
   kpiValue: {
-    fontSize: 34,
+    fontSize: 26,
     fontWeight: '800',
-    letterSpacing: 0,
-    lineHeight: 38,
+    letterSpacing: -0.3,
+    lineHeight: 30,
   },
   kpiLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
-    lineHeight: 16,
+    lineHeight: 15,
   },
   kpiChevron: {
     position: 'absolute',
-    top: 14,
-    right: 14,
+    top: 12,
+    right: 12,
   },
 
   // Class KPI
@@ -754,10 +745,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
   classKpiValue: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700',
-    lineHeight: 34,
-    letterSpacing: 0,
+    lineHeight: 28,
+    letterSpacing: -0.3,
   },
   classKpiSub: {
     fontSize: 11,
@@ -799,7 +790,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   insightMiniLabel: { fontSize: 10, fontWeight: '700' },
-  insightMiniValue: { fontSize: 26, fontWeight: '800', lineHeight: 30 },
+  insightMiniValue: { fontSize: 22, fontWeight: '800', lineHeight: 26 },
   insightMiniText: { fontSize: 11, lineHeight: 15 },
   nextStudentRow: {
     flexDirection: 'row',

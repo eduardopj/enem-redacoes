@@ -7,6 +7,7 @@ import {
   competencyPct,
   formatDateTime,
   formatRelativeDate,
+  getCompColors,
   getCompetencyFocusTip,
   getCompetencyLabel,
   getScoreColor,
@@ -24,14 +25,6 @@ import { useMemo, useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
-const COMP_COLORS: Record<string, string> = {
-  c1: '#3B82F6',
-  c2: '#8B5CF6',
-  c3: '#10B981',
-  c4: '#F59E0B',
-  c5: '#F43F5E',
-};
-
 const COMP_LEVEL: Record<number, string> = {
   200: 'Excelente',
   160: 'Bom',
@@ -47,14 +40,10 @@ function compLevel(val: number): string {
   return COMP_LEVEL[band] ?? '';
 }
 
-function scoreGradientColor(score: number): string {
-  if (score >= 900) return '#16A34A';
-  if (score >= 800) return '#22C55E';
-  if (score >= 700) return '#84CC16';
-  if (score >= 600) return '#EAB308';
-  if (score >= 500) return '#F97316';
-  if (score >= 400) return '#EF4444';
-  return '#DC2626';
+function scoreGradientColor(score: number, colors: any): string {
+  if (score >= 700) return colors.success;
+  if (score >= 500) return colors.warning;
+  return colors.danger;
 }
 
 function getInitials(name: string): string {
@@ -196,13 +185,13 @@ export default function AlunoDetalheScreen() {
 
           {/* Contexto nacional */}
           {aboveNational !== null && (
-            <View style={[styles.nationalRow, { backgroundColor: aboveNational >= 0 ? '#DCFCE7' : '#FEE2E2', borderRadius: 10 }]}>
+            <View style={[styles.nationalRow, { backgroundColor: aboveNational >= 0 ? colors.successSoft : colors.dangerSoft, borderRadius: 10 }]}>
               <Ionicons
                 name={aboveNational >= 0 ? 'trending-up' : 'trending-down'}
                 size={14}
-                color={aboveNational >= 0 ? '#16A34A' : '#EF4444'}
+                color={aboveNational >= 0 ? colors.success : colors.danger}
               />
-              <Text style={[styles.nationalText, { color: aboveNational >= 0 ? '#16A34A' : '#EF4444' }]}>
+              <Text style={[styles.nationalText, { color: aboveNational >= 0 ? colors.success : colors.danger }]}>
                 {aboveNational >= 0
                   ? `+${aboveNational} pts acima da média nacional ENEM 2023 (~624 pts)`
                   : `${Math.abs(aboveNational)} pts abaixo da média nacional ENEM 2023 (~624 pts)`}
@@ -216,9 +205,9 @@ export default function AlunoDetalheScreen() {
             <View style={[styles.miniStatDiv, { backgroundColor: colors.border }]} />
             <MiniStat label="Pendentes" value={stats.pendingEssays} colors={colors} />
             <View style={[styles.miniStatDiv, { backgroundColor: colors.border }]} />
-            <MiniStat label="Melhor nota" value={stats.highestScore ?? '--'} color={stats.highestScore ? scoreGradientColor(stats.highestScore) : undefined} colors={colors} />
+            <MiniStat label="Melhor nota" value={stats.highestScore ?? '--'} color={stats.highestScore ? scoreGradientColor(stats.highestScore, colors) : undefined} colors={colors} />
             <View style={[styles.miniStatDiv, { backgroundColor: colors.border }]} />
-            <MiniStat label="Menor nota" value={stats.lowestScore ?? '--'} color={stats.lowestScore ? scoreGradientColor(stats.lowestScore) : undefined} colors={colors} />
+            <MiniStat label="Menor nota" value={stats.lowestScore ?? '--'} color={stats.lowestScore ? scoreGradientColor(stats.lowestScore, colors) : undefined} colors={colors} />
           </View>
 
           {/* Tendência */}
@@ -352,7 +341,7 @@ export default function AlunoDetalheScreen() {
                 const val = stats.avgCompetencies[k];
                 if (val === 0) return null;
                 const pct = competencyPct(val);
-                const barColor = COMP_COLORS[k] ?? '#3B82F6';
+                const barColor = getCompColors(colors)[k] ?? colors.accent;
                 const isWeakest = k === stats.weakestCompetency;
                 const level = compLevel(val);
                 return (
@@ -393,7 +382,7 @@ export default function AlunoDetalheScreen() {
             </View>
             <View style={styles.focusList}>
               {focusAreas.map((area) => {
-                const areaColor = COMP_COLORS[area.key] ?? colors.warning;
+                const areaColor = getCompColors(colors)[area.key] ?? colors.warning;
                 const gain = 200 - area.val;
                 return (
                   <View key={area.key} style={[styles.focusItem, { borderColor: areaColor + '40', backgroundColor: areaColor + '0C' }]}>
@@ -483,7 +472,7 @@ function EvolutionMetric({ label, value, colors }: { label: string; value: numbe
       ? colors.success
       : label === 'Evolução'
         ? colors.danger
-        : scoreGradientColor(Number(numeric))
+        : scoreGradientColor(Number(numeric), colors)
     : colors.text;
 
   return (
@@ -525,7 +514,7 @@ function EvoChart({ essays, colors }: { essays: Essay[]; colors: any }) {
         {essays.map((essay, i) => {
           const score = essay.totalScore ?? 0;
           const pct = scorePct(score);
-          const barColor = scoreGradientColor(score);
+          const barColor = scoreGradientColor(score, colors);
           const prev = i > 0 ? (essays[i - 1].totalScore ?? 0) : null;
           const delta = prev !== null ? score - prev : null;
           const dateStr = essay.correctedAt ?? essay.createdAt;
@@ -539,7 +528,7 @@ function EvoChart({ essays, colors }: { essays: Essay[]; colors: any }) {
               style={styles.evoBar}
             >
               {delta !== null ? (
-                <Text style={[styles.evoDelta, { color: delta >= 0 ? '#22C55E' : '#EF4444' }]}>
+                <Text style={[styles.evoDelta, { color: delta >= 0 ? colors.success : colors.danger }]}>
                   {delta >= 0 ? '+' : ''}{delta}
                 </Text>
               ) : (
@@ -562,7 +551,7 @@ function EssayRow({ essay, index, isLast, onPress, onDelete, colors }: {
   essay: Essay; index: number; isLast: boolean; onPress: () => void; onDelete: () => void; colors: any;
 }) {
   const isCorrected = isCorrectedEssay(essay);
-  const scoreColor = isCorrected && essay.totalScore ? scoreGradientColor(essay.totalScore) : colors.mutedText;
+  const scoreColor = isCorrected && essay.totalScore ? scoreGradientColor(essay.totalScore, colors) : colors.mutedText;
   const displayDate = essay.correctedAt ?? essay.createdAt;
   const scoreLabel = isCorrected && essay.totalScore ? getScoreLabel(essay.totalScore) : '';
 

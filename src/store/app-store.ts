@@ -50,6 +50,7 @@ type CreateEssayInput = {
   essayText?: string;
   imageName?: string;
   imageUri?: string;
+  imageMimeType?: string;
   documentName?: string;
   documentUri?: string;
 };
@@ -134,13 +135,16 @@ type AppState = {
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function isNetworkError(message: string): boolean {
+  const lower = message.toLowerCase();
   return (
-    message.includes('Network request failed') ||
-    message.includes('fetch') ||
-    message.includes('network') ||
-    message.includes('connect') ||
-    message.includes('timeout') ||
-    message.includes('ECONNREFUSED')
+    lower.includes('network request failed') ||
+    lower.includes('fetch') ||
+    lower.includes('network') ||
+    lower.includes('connect') ||
+    lower.includes('conectar') ||
+    lower.includes('servidor') ||
+    lower.includes('timeout') ||
+    lower.includes('econnrefused')
   );
 }
 
@@ -428,6 +432,7 @@ export const useAppStore = create<AppState>()(
               essayText: input.essayText,
               imageName: input.imageName,
               imageUri: input.imageUri,
+              imageMimeType: input.imageMimeType,
               documentName: input.documentName,
               documentUri: input.documentUri,
               status: 'pendente',
@@ -477,9 +482,22 @@ export const useAppStore = create<AppState>()(
         })),
 
       updateEssayTeacherEval: (essayId, teacherScore, teacherNote) => {
+        const reviewedAt = teacherScore != null || teacherNote.trim()
+          ? new Date().toISOString()
+          : undefined;
+
         set((state) => ({
           essays: state.essays.map((essay) =>
-            essay.id === essayId ? { ...essay, teacherScore, teacherNote } : essay
+            essay.id === essayId
+              ? {
+                  ...essay,
+                  teacherScore,
+                  teacherNote,
+                  teacherReviewedAt: reviewedAt,
+                  reviewRequired: reviewedAt ? false : essay.reviewRequired,
+                  updatedAt: new Date().toISOString(),
+                }
+              : essay
           ),
         }));
         pushTeacherEvalToBackend(essayId, teacherScore, teacherNote).catch(() => {});
@@ -628,7 +646,7 @@ export const useAppStore = create<AppState>()(
           const result = await correctEssayWithOpenAI(
             isTextMode
               ? { themeTitle: essay.themeTitle, essayText: essay.essayText }
-              : { themeTitle: essay.themeTitle, imageUri: essay.imageUri }
+              : { themeTitle: essay.themeTitle, imageUri: essay.imageUri, imageMimeType: essay.imageMimeType }
           );
 
           set((state) => ({

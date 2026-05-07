@@ -127,11 +127,12 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 20,
-    paddingTop: theme.spacing.sm,
+    paddingTop: theme.spacing.lg,
     gap: theme.spacing.md,
   },
   staticContent: {
     flex: 1,
     paddingHorizontal: 20,
+    paddingTop: theme.spacing.lg,
   },
 });

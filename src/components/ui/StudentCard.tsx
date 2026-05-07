@@ -14,19 +14,6 @@ type StudentCardProps = {
   onDelete?: () => void;
 };
 
-function scoreColor(score: number): string {
-  if (score >= 800) return '#22C55E';
-  if (score >= 600) return '#EAB308';
-  if (score >= 400) return '#F97316';
-  return '#EF4444';
-}
-
-function trendMeta(trend: 'up' | 'down' | 'stable'): { icon: keyof typeof Ionicons.glyphMap; color: string } {
-  if (trend === 'up') return { icon: 'trending-up', color: '#22C55E' };
-  if (trend === 'down') return { icon: 'trending-down', color: '#EF4444' };
-  return { icon: 'remove-outline', color: '#8E9AB8' };
-}
-
 export function StudentCard({
   name,
   className,
@@ -47,19 +34,31 @@ export function StudentCard({
     .toUpperCase();
 
   const hasStats = avgScore !== undefined && avgScore !== null;
-  const sColor = hasStats ? scoreColor(avgScore!) : colors.mutedText;
-  const tm = trend ? trendMeta(trend) : null;
+
+  const sColor = hasStats
+    ? avgScore! >= 700 ? colors.success
+      : avgScore! >= 500 ? colors.warning
+      : colors.danger
+    : colors.mutedText;
+
+  const trendIcon: keyof typeof Ionicons.glyphMap | null =
+    trend === 'up' ? 'trending-up' :
+    trend === 'down' ? 'trending-down' :
+    trend === 'stable' ? 'remove-outline' : null;
+
+  const trendColor =
+    trend === 'up' ? colors.success :
+    trend === 'down' ? colors.danger :
+    colors.mutedText;
 
   return (
     <Card>
       <View style={styles.row}>
         <Pressable onPress={onPress} style={styles.mainArea}>
-          {/* Avatar */}
-          <View style={[styles.avatar, { backgroundColor: hasStats ? sColor + '20' : colors.accent + '18' }]}>
+          <View style={[styles.avatar, { backgroundColor: hasStats ? sColor + '16' : colors.accentSoft }]}>
             <Text style={[styles.avatarText, { color: hasStats ? sColor : colors.accent }]}>{initials}</Text>
           </View>
 
-          {/* Info */}
           <View style={styles.content}>
             <Text style={[styles.name, { color: colors.text }]}>{name}</Text>
             <View style={styles.metaRow}>
@@ -78,21 +77,20 @@ export function StudentCard({
             </View>
           </View>
 
-          {/* Score + trend */}
           <View style={styles.scoreWrap}>
             {hasStats ? (
               <>
                 <Text style={[styles.scoreNum, { color: sColor }]}>{avgScore}</Text>
                 <Text style={[styles.scoreSub, { color: colors.mutedText }]}>pts</Text>
-                {tm && (
-                  <Ionicons name={tm.icon} size={14} color={tm.color} />
-                )}
+                {trendIcon ? (
+                  <Ionicons name={trendIcon} size={13} color={trendColor} />
+                ) : null}
               </>
             ) : essayCount === 0 ? (
               <Text style={[styles.noScore, { color: colors.mutedText }]}>sem notas</Text>
             ) : (
               <View style={[styles.arrowWrap, { backgroundColor: colors.input }]}>
-                <Ionicons name="chevron-forward" size={16} color={colors.softText} />
+                <Ionicons name="chevron-forward" size={15} color={colors.softText} />
               </View>
             )}
           </View>
@@ -103,7 +101,7 @@ export function StudentCard({
             onPress={onDelete}
             style={[styles.deleteButton, { backgroundColor: colors.dangerSoft }]}
           >
-            <Ionicons name="trash-outline" size={16} color={colors.danger} />
+            <Ionicons name="trash-outline" size={15} color={colors.danger} />
           </Pressable>
         ) : null}
       </View>
@@ -112,49 +110,49 @@ export function StudentCard({
 }
 
 const styles = StyleSheet.create({
-  row: { gap: theme.spacing.sm },
+  row: { gap: theme.spacing.xs },
   mainArea: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,
+    gap: theme.spacing.sm,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
-  avatarText: { fontSize: 15, fontWeight: '700' },
-  content: { flex: 1, gap: 5 },
-  name: { fontSize: 15, fontWeight: '700', lineHeight: 20, letterSpacing: 0 },
-  metaRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
+  avatarText: { fontSize: 13, fontWeight: '700' },
+  content: { flex: 1, gap: 4 },
+  name: { fontSize: 14, fontWeight: '700', lineHeight: 19, letterSpacing: 0 },
+  metaRow: { flexDirection: 'row', gap: 5, flexWrap: 'wrap' },
   classPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 7,
+    gap: 3,
+    paddingHorizontal: 6,
     paddingVertical: 3,
     borderRadius: 999,
   },
-  classText: { fontSize: 11, fontWeight: '500' },
+  classText: { fontSize: 10, fontWeight: '500' },
   scoreWrap: { alignItems: 'flex-end', gap: 2 },
-  scoreNum: { fontSize: 22, fontWeight: '800', letterSpacing: 0, lineHeight: 24 },
+  scoreNum: { fontSize: 20, fontWeight: '800', letterSpacing: -0.3, lineHeight: 22 },
   scoreSub: { fontSize: 10, fontWeight: '600' },
   noScore: { fontSize: 11, fontWeight: '500' },
   arrowWrap: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   deleteButton: {
     alignSelf: 'flex-end',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
   },

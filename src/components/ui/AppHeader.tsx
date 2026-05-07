@@ -36,19 +36,15 @@ export function AppHeader({ eyebrow, title, subtitle, showLogout }: AppHeaderPro
   return (
     <View style={styles.container}>
       <View style={styles.row}>
-        {/* Avatar with subtle ring */}
-        <View style={[styles.avatarRing, { borderColor: colors.accent + '30' }]}>
+        <View style={[styles.avatarRing, { borderColor: colors.border }]}>
           <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
         </View>
 
-        {/* Text */}
         <View style={styles.textGroup}>
           {eyebrow ? (
-            <View style={[styles.eyebrowBadge, { backgroundColor: colors.accent + '12' }]}>
-              <Text style={[styles.eyebrow, { color: colors.accent }]}>{eyebrow}</Text>
-            </View>
+            <Text style={[styles.eyebrow, { color: colors.mutedText }]}>{eyebrow}</Text>
           ) : null}
           <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
           {subtitle ? (
@@ -56,7 +52,6 @@ export function AppHeader({ eyebrow, title, subtitle, showLogout }: AppHeaderPro
           ) : null}
         </View>
 
-        {/* Actions */}
         {showLogout ? (
           <Pressable
             onPress={handleLogout}
@@ -73,71 +68,59 @@ export function AppHeader({ eyebrow, title, subtitle, showLogout }: AppHeaderPro
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: theme.spacing.xs,
-    paddingBottom: theme.spacing.sm,
+    paddingTop: theme.spacing.xxs,
+    paddingBottom: theme.spacing.xs,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,
+    gap: theme.spacing.sm,
   },
   avatarRing: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    borderWidth: 2,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#4E76F8',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  avatarText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  textGroup: {
-    flex: 1,
-    gap: 3,
-  },
-  eyebrowBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-    marginBottom: 2,
-  },
-  eyebrow: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    letterSpacing: 0,
-    lineHeight: 28,
-  },
-  subtitle: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  actionBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  textGroup: {
+    flex: 1,
+    gap: 2,
+  },
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: '500',
+    letterSpacing: 0.2,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+    lineHeight: 26,
+  },
+  subtitle: {
+    fontSize: 13,
+    lineHeight: 17,
+  },
+  actionBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',

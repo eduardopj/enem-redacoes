@@ -4,6 +4,7 @@ import { useAppStore } from '@/store/app-store';
 import { useAppTheme } from '@/theme/ThemeContext';
 import {
   getClassStats,
+  getCompColors,
   getCompetencyLabel,
   getCorrectionInsights,
   getScoreColor,
@@ -18,16 +19,10 @@ import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const NATIONAL_AVG = 624;
-const COMP_COLORS: Record<string, string> = {
-  c1: '#3B82F6',
-  c2: '#8B5CF6',
-  c3: '#10B981',
-  c4: '#F59E0B',
-  c5: '#F43F5E',
-};
 
 export default function AnalyticsScreen() {
   const { colors } = useAppTheme();
+  const compColors = getCompColors(colors);
   const currentTeacher = useAppStore((state) => state.currentTeacher);
   const students = useAppStore((state) => state.students);
   const essays = useAppStore((state) => state.essays);
@@ -141,7 +136,7 @@ export default function AnalyticsScreen() {
             {Object.entries(classStats.avgCompetencies).map(([key, score]) => {
               if (!score) return null;
               const pct = Math.max(4, (score / 200) * 100);
-              const color = COMP_COLORS[key] ?? colors.accent;
+              const color = compColors[key] ?? colors.accent;
               return (
                 <View key={key} style={styles.compRow}>
                   <View style={styles.compHeader}>

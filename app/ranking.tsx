@@ -7,20 +7,18 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-function scoreColor(score: number): string {
-  if (score >= 900) return '#16A34A';
-  if (score >= 700) return '#22C55E';
-  if (score >= 500) return '#EAB308';
-  if (score >= 300) return '#F97316';
-  return '#EF4444';
+function scoreColor(score: number, colors: any): string {
+  if (score >= 700) return colors.success;
+  if (score >= 500) return colors.warning;
+  return colors.danger;
 }
 
-function trendIcon(scores: number[]): { name: any; color: string } {
-  if (scores.length < 2) return { name: 'remove-outline', color: '#8E9AB8' };
+function trendIcon(scores: number[], colors: any): { name: any; color: string } {
+  if (scores.length < 2) return { name: 'remove-outline', color: colors.mutedText };
   const delta = scores[scores.length - 1] - scores[scores.length - 2];
-  if (delta > 20) return { name: 'trending-up', color: '#22C55E' };
-  if (delta < -20) return { name: 'trending-down', color: '#EF4444' };
-  return { name: 'remove-outline', color: '#8E9AB8' };
+  if (delta > 20) return { name: 'trending-up', color: colors.success };
+  if (delta < -20) return { name: 'trending-down', color: colors.danger };
+  return { name: 'remove-outline', color: colors.mutedText };
 }
 
 const MEDAL_BG = ['#FFF7E0', '#F0F4FF', '#FFF1EE'];
@@ -71,7 +69,7 @@ export default function RankingScreen() {
         const scores = ces.map((e) => e.totalScore ?? 0);
         const average = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
         const best = scores.length ? Math.max(...scores) : null;
-        const trend = trendIcon(scores);
+        const trend = trendIcon(scores, colors);
         return { student: s, scores, average, best, trend, totalEssays: ces.length };
       })
       .sort((a, b) => {
@@ -149,7 +147,7 @@ export default function RankingScreen() {
         <View style={[styles.mainTabs, { backgroundColor: colors.input }]}>
           <Pressable
             onPress={() => setMainTab('alunos')}
-            style={[styles.mainTab, mainTab === 'alunos' && { backgroundColor: colors.surface, shadowColor: '#1B2559', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 3 }]}
+            style={[styles.mainTab, mainTab === 'alunos' && { backgroundColor: colors.surface, shadowColor: '#101828', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 3 }]}
           >
             <Ionicons name="people" size={15} color={mainTab === 'alunos' ? colors.accent : colors.mutedText} />
             <Text style={[styles.mainTabText, { color: mainTab === 'alunos' ? colors.accent : colors.mutedText }]}>
@@ -158,7 +156,7 @@ export default function RankingScreen() {
           </Pressable>
           <Pressable
             onPress={() => setMainTab('turmas')}
-            style={[styles.mainTab, mainTab === 'turmas' && { backgroundColor: colors.surface, shadowColor: '#1B2559', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 3 }]}
+            style={[styles.mainTab, mainTab === 'turmas' && { backgroundColor: colors.surface, shadowColor: '#101828', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 3 }]}
           >
             <Ionicons name="school" size={15} color={mainTab === 'turmas' ? colors.accent : colors.mutedText} />
             <Text style={[styles.mainTabText, { color: mainTab === 'turmas' ? colors.accent : colors.mutedText }]}>
@@ -198,7 +196,7 @@ export default function RankingScreen() {
               <>
                 {classAvg !== null && (
                   <View style={[styles.summaryBar, { backgroundColor: colors.surface }]}>
-                    <SummaryChip label="Média" value={String(classAvg)} color={scoreColor(classAvg)} colors={colors} />
+                    <SummaryChip label="Média" value={String(classAvg)} color={scoreColor(classAvg, colors)} colors={colors} />
                     <View style={[styles.summaryDiv, { backgroundColor: colors.border }]} />
                     <SummaryChip label="Alunos" value={String(ranking.length)} color={colors.accent} colors={colors} />
                     <View style={[styles.summaryDiv, { backgroundColor: colors.border }]} />
@@ -219,7 +217,7 @@ export default function RankingScreen() {
                   {ranking.map((entry, i) => {
                     const isTop3 = i < 3;
                     const avg = entry.average;
-                    const color = avg !== null ? scoreColor(avg) : colors.mutedText;
+                    const color = avg !== null ? scoreColor(avg, colors) : colors.mutedText;
                     return (
                       <Pressable
                         key={entry.student.id}
@@ -281,7 +279,7 @@ export default function RankingScreen() {
                   <SummaryChip
                     label="Melhor turma"
                     value={turmaRanking[0]?.avg !== null ? String(turmaRanking[0]?.avg) : '—'}
-                    color={turmaRanking[0]?.avg ? scoreColor(turmaRanking[0].avg) : colors.mutedText}
+                    color={turmaRanking[0]?.avg ? scoreColor(turmaRanking[0].avg, colors) : colors.mutedText}
                     colors={colors}
                   />
                   <View style={[styles.summaryDiv, { backgroundColor: colors.border }]} />
@@ -328,7 +326,7 @@ export default function RankingScreen() {
                         </View>
                         {avg !== null ? (
                           <View style={styles.turmaAvgBlock}>
-                            <Text style={[styles.turmaAvgValue, { color: scoreColor(avg) }]}>{avg}</Text>
+                            <Text style={[styles.turmaAvgValue, { color: scoreColor(avg, colors) }]}>{avg}</Text>
                             <Text style={[styles.turmaAvgSub, { color: colors.mutedText }]}>pts</Text>
                           </View>
                         ) : (
@@ -340,8 +338,8 @@ export default function RankingScreen() {
                       <View style={[styles.turmaStatsRow, { borderTopColor: colors.border }]}>
                         <TurmaStatChip icon="people" value={String(studentCount)} label="Alunos" color={colors.accent} colors={colors} />
                         <TurmaStatChip icon="document-text" value={String(essayCount)} label="Redações" color={colors.info} colors={colors} />
-                        {best !== null && <TurmaStatChip icon="star" value={String(best)} label="Melhor" color="#F59E0B" colors={colors} />}
-                        <TurmaStatChip icon="checkmark-circle" value={`${pctAbove700}%`} label="≥700pts" color={pctAbove700 >= 50 ? '#22C55E' : '#EAB308'} colors={colors} />
+                        {best !== null && <TurmaStatChip icon="star" value={String(best)} label="Melhor" color={colors.warning} colors={colors} />}
+                        <TurmaStatChip icon="checkmark-circle" value={`${pctAbove700}%`} label="≥700pts" color={pctAbove700 >= 50 ? colors.success : colors.warning} colors={colors} />
                       </View>
 
                       {/* Pending alert */}
@@ -407,7 +405,7 @@ function TurmaStatChip({ icon, value, label, color, colors }: { icon: any; value
 function PodiumCard({ rank, entry, height, medalBg, medalBorder, medal, colors }: {
   rank: number; entry: any; height: number; medalBg: string; medalBorder: string; medal: string; colors: any;
 }) {
-  const color = entry.average !== null ? scoreColor(entry.average) : colors.mutedText;
+  const color = entry.average !== null ? scoreColor(entry.average, colors) : colors.mutedText;
   const initials = entry.student.name.split(' ').filter(Boolean).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase();
   return (
     <View style={[styles.podiumItem, { flex: rank === 1 ? 1.2 : 1 }]}>
@@ -485,7 +483,7 @@ const styles = StyleSheet.create({
   // Summary bar
   summaryBar: {
     flexDirection: 'row', borderRadius: 16, paddingVertical: 14, paddingHorizontal: 8,
-    shadowColor: '#1B2559', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 2,
+    shadowColor: '#101828', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 2,
   },
   summaryChip: { flex: 1, alignItems: 'center', gap: 3 },
   summaryChipLabel: { fontSize: 10, fontWeight: '600', textAlign: 'center' },
@@ -506,7 +504,7 @@ const styles = StyleSheet.create({
   // List
   listCard: {
     borderRadius: 18, padding: 18,
-    shadowColor: '#1B2559', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2, gap: 2,
+    shadowColor: '#101828', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2, gap: 2,
   },
   listTitle: { fontSize: 13, fontWeight: '700', letterSpacing: 0, marginBottom: 6 },
   listRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13 },
@@ -525,7 +523,7 @@ const styles = StyleSheet.create({
   // Turma cards
   turmaCard: {
     borderRadius: 18, padding: 18, gap: 14,
-    shadowColor: '#1B2559', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 14, elevation: 3,
+    shadowColor: '#101828', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 14, elevation: 3,
   },
   turmaCardTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   turmaRankBadge: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },

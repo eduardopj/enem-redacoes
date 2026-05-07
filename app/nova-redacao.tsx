@@ -13,6 +13,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const IMAGE_QUALITY_THRESHOLD_KB = 150;
+const MAX_IMAGE_SIZE_MB = 10;
+const CAMERA_IMAGE_QUALITY = 0.68;
+const LIBRARY_IMAGE_QUALITY = 0.72;
 
 // ─── Indicador de progresso ──────────────────────────────────────────────────
 
@@ -33,16 +36,16 @@ function StepIndicator({ steps }: { steps: boolean[] }) {
                 style={[
                   pStyles.dot,
                   complete
-                    ? { backgroundColor: colors.accent }
+                    ? { backgroundColor: colors.success }
                     : isActive
-                    ? { backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.accent }
-                    : { backgroundColor: colors.border },
+                    ? { backgroundColor: colors.accent }
+                    : { backgroundColor: colors.input, borderWidth: 1, borderColor: colors.border },
                 ]}
               >
                 {complete ? (
-                  <Ionicons name="checkmark" size={11} color="#fff" />
+                  <Ionicons name="checkmark" size={10} color="#fff" />
                 ) : (
-                  <Text style={[pStyles.dotNum, { color: isActive ? colors.accent : colors.mutedText }]}>
+                  <Text style={[pStyles.dotNum, { color: isActive ? '#fff' : colors.mutedText }]}>
                     {i + 1}
                   </Text>
                 )}
@@ -51,8 +54,8 @@ function StepIndicator({ steps }: { steps: boolean[] }) {
                 style={[
                   pStyles.stepLabel,
                   {
-                    color: complete ? colors.accent : isActive ? colors.text : colors.mutedText,
-                    fontWeight: complete || isActive ? '700' : '500',
+                    color: complete ? colors.success : isActive ? colors.accent : colors.mutedText,
+                    fontWeight: complete || isActive ? '700' : '400',
                   },
                 ]}
               >
@@ -60,7 +63,7 @@ function StepIndicator({ steps }: { steps: boolean[] }) {
               </Text>
             </View>
             {i < steps.length - 1 ? (
-              <View style={[pStyles.line, { backgroundColor: complete ? colors.accent : colors.border }]} />
+              <View style={[pStyles.line, { backgroundColor: complete ? colors.success : colors.border }]} />
             ) : null}
           </React.Fragment>
         );
@@ -70,12 +73,12 @@ function StepIndicator({ steps }: { steps: boolean[] }) {
 }
 
 const pStyles = StyleSheet.create({
-  wrap: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', paddingVertical: 8 },
-  stepCol: { alignItems: 'center', gap: 5, minWidth: 56 },
-  dot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  dotNum: { fontSize: 11, fontWeight: '700' },
-  stepLabel: { fontSize: 10, letterSpacing: 0.2, lineHeight: 13 },
-  line: { flex: 1, height: 2, borderRadius: 1, marginTop: 13 },
+  wrap: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', paddingVertical: 6 },
+  stepCol: { alignItems: 'center', gap: 4, minWidth: 52 },
+  dot: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  dotNum: { fontSize: 10, fontWeight: '700' },
+  stepLabel: { fontSize: 10, letterSpacing: 0.1, lineHeight: 13 },
+  line: { flex: 1, height: 1.5, borderRadius: 1, marginTop: 11 },
 });
 
 // ─── Chip de seleção ─────────────────────────────────────────────────────────
@@ -136,6 +139,7 @@ export default function NovaRedacaoScreen() {
   const [filterTurmaId, setFilterTurmaId] = useState<string>('');
   const [imageUri, setImageUri] = useState('');
   const [imageName, setImageName] = useState('');
+  const [imageMimeType, setImageMimeType] = useState('image/jpeg');
   const [autoCorrect, setAutoCorrect] = useState(true);
 
   useEffect(() => { if (studentIdParam) setSelectedStudentId(studentIdParam); }, [studentIdParam]);
@@ -162,6 +166,15 @@ export default function NovaRedacaoScreen() {
     try {
       const info = await FileSystem.getInfoAsync(uri, { size: true });
       if (info.exists && 'size' in info && typeof info.size === 'number') {
+        const sizeMb = info.size / 1024 / 1024;
+        if (sizeMb > MAX_IMAGE_SIZE_MB) {
+          Alert.alert(
+            'Imagem muito pesada',
+            `A foto tem ${sizeMb.toFixed(1)}MB. Para a correção funcionar melhor, tire outra foto em boa luz ou escolha uma imagem menor.`
+          );
+          return false;
+        }
+
         if (info.size < IMAGE_QUALITY_THRESHOLD_KB * 1024) {
           return new Promise((resolve) =>
             Alert.alert(
@@ -182,6 +195,7 @@ export default function NovaRedacaoScreen() {
   const clearFile = () => {
     setImageUri('');
     setImageName('');
+    setImageMimeType('image/jpeg');
   };
 
   const handleTakePhoto = async () => {
@@ -190,23 +204,39 @@ export default function NovaRedacaoScreen() {
       Alert.alert('Permissão necessária', 'Autorize o uso da câmera nas configurações do dispositivo.');
       return;
     }
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], allowsEditing: false, quality: 1 });
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: CAMERA_IMAGE_QUALITY,
+    });
     if (result.canceled) return;
     const asset = result.assets?.[0];
     if (!asset?.uri) return;
     if (!(await checkImageQuality(asset.uri))) return;
     setImageUri(asset.uri);
     setImageName(asset.fileName ?? 'foto-redacao.jpg');
+    setImageMimeType(asset.mimeType ?? 'image/jpeg');
   };
 
   const handlePickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: false, quality: 1 });
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permissão necessária', 'Autorize o acesso às fotos para escolher a imagem da redação.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: LIBRARY_IMAGE_QUALITY,
+    });
     if (result.canceled) return;
     const asset = result.assets?.[0];
     if (!asset?.uri) return;
     if (!(await checkImageQuality(asset.uri))) return;
     setImageUri(asset.uri);
     setImageName(asset.fileName ?? 'imagem-redacao.jpg');
+    setImageMimeType(asset.mimeType ?? 'image/jpeg');
   };
 
   const handleSubmit = async () => {
@@ -218,6 +248,7 @@ export default function NovaRedacaoScreen() {
       themeTitle: selectedTheme.title,
       imageUri: imageUri || undefined,
       imageName: imageName || undefined,
+      imageMimeType,
     });
 
     if (!essayId) {
@@ -417,8 +448,8 @@ export default function NovaRedacaoScreen() {
                 onPress={handleTakePhoto}
                 style={[styles.cameraBtn, { backgroundColor: colors.text }]}
               >
-                <View style={[styles.cameraIcon, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-                  <Ionicons name="camera" size={28} color="#fff" />
+                <View style={[styles.cameraIcon, { backgroundColor: 'rgba(255,255,255,0.18)' }]}>
+                  <Ionicons name="camera" size={24} color="#fff" />
                 </View>
                 <Text style={styles.cameraBtnText}>Fotografar redação</Text>
                 <Text style={styles.cameraBtnSub}>Recomendado — melhor para a IA</Text>
@@ -610,7 +641,7 @@ function SectionBlock({
 }
 
 const bStyles = StyleSheet.create({
-  block: { borderRadius: 16, overflow: 'hidden', shadowColor: '#1B2559', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3 },
+  block: { borderRadius: 16, overflow: 'hidden', shadowColor: '#101828', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 16, paddingBottom: 12 },
   numBadge: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   num: { fontSize: 12, fontWeight: '700', color: '#fff' },
@@ -724,10 +755,10 @@ const styles = StyleSheet.create({
 
   // Upload
   uploadZone: { gap: 12 },
-  cameraBtn: { borderRadius: 16, padding: 24, alignItems: 'center', gap: 8 },
-  cameraIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  cameraBtnText: { color: '#fff', fontSize: 16, fontWeight: '700', lineHeight: 22 },
-  cameraBtnSub: { color: 'rgba(255,255,255,0.75)', fontSize: 12, lineHeight: 16 },
+  cameraBtn: { borderRadius: 16, padding: 18, alignItems: 'center', gap: 6 },
+  cameraIcon: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
+  cameraBtnText: { color: '#fff', fontSize: 15, fontWeight: '700', lineHeight: 20 },
+  cameraBtnSub: { color: 'rgba(255,255,255,0.72)', fontSize: 12, lineHeight: 16 },
   secondaryUploads: { flexDirection: 'row', gap: 10 },
   secondaryBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderRadius: 12, paddingVertical: 14 },
   secIcon: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },

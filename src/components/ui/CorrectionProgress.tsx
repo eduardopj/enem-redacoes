@@ -1,3 +1,4 @@
+import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useKeepAwake } from 'expo-keep-awake';
@@ -98,9 +99,9 @@ export function CorrectionProgress({ currentStep, feedback }: CorrectionProgress
   return (
     <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={styles.topRow}>
-        <View style={[styles.iconWrap, { backgroundColor: colors.accent + '16' }]}>
+        <View style={[styles.iconWrap, { backgroundColor: colors.accentSoft }]}>
           <Animated.View style={{ transform: [{ scale: pulse }] }}>
-            <Ionicons name="sparkles-outline" size={22} color={colors.accent} />
+            <Ionicons name="sparkles-outline" size={20} color={colors.accent} />
           </Animated.View>
         </View>
         <View style={styles.titleGroup}>
@@ -147,11 +148,11 @@ export function CorrectionProgress({ currentStep, feedback }: CorrectionProgress
                   styles.stepIcon,
                   { borderColor: colors.border, backgroundColor: colors.input },
                   isDone && { borderColor: colors.success, backgroundColor: colors.successSoft },
-                  isActive && { borderColor: colors.accent, backgroundColor: colors.accent + '14' },
+                  isActive && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
                 ]}
               >
                 {isDone ? (
-                  <Ionicons name="checkmark" size={14} color={colors.success} />
+                  <Ionicons name="checkmark" size={13} color={colors.success} />
                 ) : isActive ? (
                   <Animated.View style={[styles.activeDot, { backgroundColor: colors.accent, transform: [{ scale: pulse }] }]} />
                 ) : (
@@ -164,7 +165,7 @@ export function CorrectionProgress({ currentStep, feedback }: CorrectionProgress
                     styles.stepLabel,
                     { color: colors.mutedText },
                     isDone && { color: colors.success },
-                    isActive && { color: colors.text, fontWeight: '800' },
+                    isActive && { color: colors.text, fontWeight: '700' },
                   ]}
                 >
                   {step.label}
@@ -172,7 +173,7 @@ export function CorrectionProgress({ currentStep, feedback }: CorrectionProgress
                 {isActive ? <Text style={[styles.stepSub, { color: colors.mutedText }]}>{step.sub}</Text> : null}
               </View>
               {isActive ? (
-                <View style={[styles.livePill, { backgroundColor: colors.accent + '14' }]}>
+                <View style={[styles.livePill, { backgroundColor: colors.accentSoft }]}>
                   <Text style={[styles.liveText, { color: colors.accent }]}>agora</Text>
                 </View>
               ) : null}
@@ -192,71 +193,67 @@ const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
     borderRadius: 18,
-    padding: 18,
-    gap: 16,
-    shadowColor: '#3157D5',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 22,
-    elevation: 4,
+    padding: 16,
+    gap: 14,
+    ...theme.shadows.card,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 11,
   },
   iconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
+    width: 42,
+    height: 42,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
   },
   titleGroup: { flex: 1, gap: 2 },
-  eyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 0.6 },
-  title: { fontSize: 18, fontWeight: '800', lineHeight: 23 },
-  timer: { fontSize: 12, fontWeight: '700' },
-  progressBlock: { gap: 8 },
-  track: { height: 9, borderRadius: 999, overflow: 'hidden' },
+  eyebrow: { fontSize: 9, fontWeight: '700', letterSpacing: 0.6 },
+  title: { fontSize: 16, fontWeight: '700', lineHeight: 21 },
+  timer: { fontSize: 11, fontWeight: '600' },
+  progressBlock: { gap: 6 },
+  track: { height: 7, borderRadius: 999, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 999, overflow: 'hidden' },
   shimmer: {
-    width: 70,
+    width: 60,
     height: '100%',
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.4)',
   },
   progressMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  progressText: { fontSize: 13, fontWeight: '900' },
-  progressHint: { fontSize: 12, fontWeight: '600' },
+  progressText: { fontSize: 12, fontWeight: '800' },
+  progressHint: { fontSize: 11, fontWeight: '600' },
   messageBox: {
     borderWidth: 1,
-    borderRadius: 13,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    minHeight: 46,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 42,
     justifyContent: 'center',
   },
   message: { fontSize: 13, lineHeight: 18 },
-  steps: { gap: 12 },
-  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 11 },
+  steps: { gap: 10 },
+  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   stepIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  activeDot: { width: 10, height: 10, borderRadius: 5 },
-  pendingDot: { width: 7, height: 7, borderRadius: 4 },
+  activeDot: { width: 9, height: 9, borderRadius: 5 },
+  pendingDot: { width: 6, height: 6, borderRadius: 3 },
   stepText: { flex: 1, gap: 1 },
-  stepLabel: { fontSize: 14, lineHeight: 18, fontWeight: '650' },
+  stepLabel: { fontSize: 13, lineHeight: 17, fontWeight: '600' },
   stepSub: { fontSize: 11, lineHeight: 15 },
-  livePill: { borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4 },
-  liveText: { fontSize: 10, fontWeight: '900' },
+  livePill: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
+  liveText: { fontSize: 10, fontWeight: '700' },
   footer: {
     borderTopWidth: 1,
-    paddingTop: 13,
+    paddingTop: 12,
     textAlign: 'center',
     fontSize: 11,
     lineHeight: 15,

@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
 
   qrSection: {
     borderRadius: 20, padding: 20, gap: 14,
-    shadowColor: '#1B2559', shadowOffset: { width: 0, height: 3 },
+    shadowColor: '#101828', shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.06, shadowRadius: 12, elevation: 2,
   },
   qrSectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },

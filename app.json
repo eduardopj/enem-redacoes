@@ -25,7 +25,8 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "androidNavigationBar": {
@@ -58,8 +59,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "b5b6eb55-360e-44ab-bcc6-6928c0a1bc58"
+        "projectId": "e989326e-613c-4fd5-86ec-7b49ddae7b09"
       }
-    }
+    },
+    "owner": "eduardopj"
   }
 }

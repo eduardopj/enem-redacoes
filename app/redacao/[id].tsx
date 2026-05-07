@@ -85,9 +85,11 @@ export default function RedacaoDetalheScreen() {
   const currentStep = parseStep(essay.feedback);
 
   const handleRetry = () => {
+    const detail = essay.errorMessage ? `\n\nÚltimo erro: ${essay.errorMessage}` : '';
+
     Alert.alert(
       'Corrigir com IA',
-      'A IA irá transcrever a redação, avaliar as 5 competências do ENEM e gerar um parecer pedagógico completo. Isso pode levar de 30 a 90 segundos.',
+      `A IA irá transcrever a redação, avaliar as 5 competências do ENEM e gerar um parecer pedagógico completo. Isso pode levar de 30 a 90 segundos.${detail}`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -98,16 +100,19 @@ export default function RedacaoDetalheScreen() {
               await evaluateEssayWithOpenAI(essay.id);
             } catch (error) {
               const message = error instanceof Error ? error.message : 'Falha ao conectar ao servidor.';
+              const lowerMessage = message.toLowerCase();
               const isNetwork =
-                message.includes('Network request failed') ||
-                message.includes('connect') ||
-                message.includes('backend') ||
-                message.includes('fetch');
+                lowerMessage.includes('network request failed') ||
+                lowerMessage.includes('connect') ||
+                lowerMessage.includes('conectar') ||
+                lowerMessage.includes('backend') ||
+                lowerMessage.includes('servidor') ||
+                lowerMessage.includes('fetch');
               Alert.alert(
                 'Erro na correção',
                 isNetwork
                   ? 'Não foi possível conectar ao servidor de correção. A redação foi adicionada à fila e será reprocessada automaticamente quando a conexão for restabelecida.'
-                  : 'Ocorreu um erro inesperado. Tente novamente mais tarde.'
+                  : message
               );
             } finally {
               setRetrying(false);
@@ -196,7 +201,8 @@ export default function RedacaoDetalheScreen() {
                 <Text style={[styles.errorTitle, { color: colors.danger }]}>Falha na correção</Text>
               </View>
               <Text style={[styles.errorText, { color: colors.mutedText }]}>
-                Não foi possível completar a correção. Verifique sua conexão e tente novamente. Se o problema persistir, a redação será reprocessada automaticamente quando a conexão for restabelecida.
+                {essay.errorMessage ||
+                  'Não foi possível completar a correção. Verifique sua conexão e tente novamente.'}
               </Text>
             </Card>
           </StaggerItem>
@@ -229,6 +235,7 @@ export default function RedacaoDetalheScreen() {
               </View>
               <Button
                 title="Corrigir com IA agora"
+                variant="dark"
                 leftIcon="sparkles-outline"
                 onPress={handleRetry}
                 loading={retrying}
@@ -274,6 +281,7 @@ export default function RedacaoDetalheScreen() {
             <StaggerItem index={4}>
               <Button
                 title="Ver resultado completo"
+                variant="dark"
                 leftIcon="analytics-outline"
                 onPress={() => router.push(`/resultado/${essay.id}`)}
               />
@@ -342,9 +350,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
-    shadowColor: '#1B2559',
+    shadowColor: '#101828',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.07,
+    shadowOpacity: 0.06,
     shadowRadius: 12,
     elevation: 3,
   },

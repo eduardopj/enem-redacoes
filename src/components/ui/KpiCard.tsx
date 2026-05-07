@@ -26,8 +26,8 @@ export function KpiCard({
   return (
     <Card>
       <View style={styles.inner}>
-        <View style={[styles.iconWrap, { backgroundColor: iconBg ?? colors.accent + '14' }]}>
-          <Ionicons name={icon} size={20} color={iconColor ?? colors.accent} />
+        <View style={[styles.iconWrap, { backgroundColor: iconBg ?? colors.accentSoft }]}>
+          <Ionicons name={icon} size={18} color={iconColor ?? colors.accent} />
         </View>
         <Text style={[styles.value, { color: colors.text }]}>{value}</Text>
         <Text style={[styles.label, { color: colors.mutedText }]}>{label}</Text>
@@ -43,29 +43,29 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
   },
   iconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 13,
+    width: 36,
+    height: 36,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   value: {
-    fontSize: 36,
+    fontSize: 28,
     fontWeight: '700',
-    lineHeight: 42,
-    letterSpacing: 0,
+    lineHeight: 34,
+    letterSpacing: -0.3,
     textAlign: 'center',
   },
   label: {
-    fontSize: 13,
-    fontWeight: '600',
-    lineHeight: 18,
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 16,
     textAlign: 'center',
   },
   helper: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 15,
     textAlign: 'center',
   },
 });

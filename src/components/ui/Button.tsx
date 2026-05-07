@@ -5,7 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { ReactNode, useRef } from 'react';
 import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline' | 'success' | 'dark' | 'soft';
 
 type ButtonProps = {
   title: string;
@@ -16,7 +16,8 @@ type ButtonProps = {
   style?: ViewStyle;
   leftIcon?: keyof typeof Ionicons.glyphMap;
   rightSlot?: ReactNode;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
+  fullWidth?: boolean;
 };
 
 export function Button({
@@ -29,6 +30,7 @@ export function Button({
   leftIcon,
   rightSlot,
   size = 'md',
+  fullWidth,
 }: ButtonProps) {
   const { colors } = useAppTheme();
   const scale = useRef(new Animated.Value(1)).current;
@@ -39,8 +41,8 @@ export function Button({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Animated.spring(scale, {
       toValue: 0.97,
-      damping: 18,
-      stiffness: 260,
+      damping: 20,
+      stiffness: 280,
       useNativeDriver: true,
     }).start();
   };
@@ -48,39 +50,65 @@ export function Button({
   const handlePressOut = () => {
     Animated.spring(scale, {
       toValue: 1,
-      damping: 18,
-      stiffness: 260,
+      damping: 20,
+      stiffness: 280,
       useNativeDriver: true,
     }).start();
   };
 
-  const bgColor = {
+  const bgColor: Record<ButtonVariant, string> = {
     primary: colors.accent,
-    secondary: colors.input,
+    secondary: colors.accentSoft,
     ghost: 'transparent',
     danger: colors.dangerSoft,
-  }[variant];
+    outline: 'transparent',
+    success: colors.success,
+    dark: colors.darkBlock,
+    soft: colors.accentSoft,
+  };
 
-  const textColor = {
+  const textColor: Record<ButtonVariant, string> = {
     primary: '#FFFFFF',
-    secondary: colors.text,
+    secondary: colors.accent,
     ghost: colors.accent,
     danger: colors.danger,
-  }[variant];
+    outline: colors.text,
+    success: '#FFFFFF',
+    dark: colors.darkBlockFg,
+    soft: colors.accent,
+  };
 
-  const iconColor = {
+  const iconColor: Record<ButtonVariant, string> = {
     primary: '#FFFFFF',
-    secondary: colors.softText,
+    secondary: colors.accent,
     ghost: colors.accent,
     danger: colors.danger,
-  }[variant];
+    outline: colors.text,
+    success: '#FFFFFF',
+    dark: colors.darkBlockFg,
+    soft: colors.accent,
+  };
 
-  const minH = size === 'sm' ? 40 : 52;
-  const px = size === 'sm' ? theme.spacing.md : theme.spacing.lg;
-  const fontSize = size === 'sm' ? 13 : 15;
+  const hasBorder = variant === 'outline';
+  const borderColor: Record<ButtonVariant, string> = {
+    primary: 'transparent',
+    secondary: 'transparent',
+    ghost: 'transparent',
+    danger: 'transparent',
+    outline: colors.borderStrong,
+    success: 'transparent',
+    dark: 'transparent',
+    soft: 'transparent',
+  };
+
+  const sizeConfig = {
+    sm: { minH: 38, px: theme.spacing.md, fontSize: 13, iconSize: 15 },
+    md: { minH: 50, px: theme.spacing.lg, fontSize: 14, iconSize: 17 },
+    lg: { minH: 56, px: theme.spacing.xl, fontSize: 15, iconSize: 18 },
+  }[size];
 
   return (
-    <Animated.View style={[{ transform: [{ scale }] }, style]}>
+    <Animated.View style={[{ transform: [{ scale }] }, fullWidth && { width: '100%' }, style]}>
       <Pressable
         onPress={onPress}
         disabled={isDisabled}
@@ -88,7 +116,13 @@ export function Button({
         onPressOut={handlePressOut}
         style={[
           styles.base,
-          { backgroundColor: bgColor, minHeight: minH, paddingHorizontal: px },
+          {
+            backgroundColor: bgColor[variant],
+            minHeight: sizeConfig.minH,
+            paddingHorizontal: sizeConfig.px,
+            borderColor: borderColor[variant],
+            borderWidth: hasBorder ? 1 : 0,
+          },
           isDisabled && styles.disabled,
         ]}
       >
@@ -96,14 +130,17 @@ export function Button({
           {loading ? (
             <ActivityIndicator
               size="small"
-              color={variant === 'primary' ? '#FFFFFF' : colors.accent}
+              color={variant === 'primary' || variant === 'success' ? '#FFFFFF' : variant === 'dark' ? colors.darkBlockFg : colors.accent}
             />
           ) : (
             <>
               {leftIcon ? (
-                <Ionicons name={leftIcon} size={size === 'sm' ? 16 : 18} color={iconColor} />
+                <Ionicons name={leftIcon} size={sizeConfig.iconSize} color={iconColor[variant]} />
               ) : null}
-              <Text style={[styles.label, { color: textColor, fontSize }]} numberOfLines={2}>
+              <Text
+                style={[styles.label, { color: textColor[variant], fontSize: sizeConfig.fontSize }]}
+                numberOfLines={2}
+              >
                 {title}
               </Text>
               {rightSlot}
@@ -120,17 +157,16 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     overflow: 'hidden',
     justifyContent: 'center',
-    ...theme.shadows.hard,
   },
   disabled: {
-    opacity: 0.5,
+    opacity: 0.44,
   },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: theme.spacing.xs,
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: 11,
     flexWrap: 'wrap',
   },
   label: {

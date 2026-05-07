@@ -8,7 +8,7 @@ export const env = {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
-  requestBodyLimit: process.env.REQUEST_BODY_LIMIT || '18mb',
+  requestBodyLimit: process.env.REQUEST_BODY_LIMIT || '32mb',
 };
 
 if (!env.openAiApiKey) {

@@ -82,6 +82,7 @@ export type Essay = {
   essayText?: string;
   imageName?: string;
   imageUri?: string;
+  imageMimeType?: string;
   documentName?: string;
   documentUri?: string;
   status: EssayStatus;
@@ -93,6 +94,7 @@ export type Essay = {
   totalScore?: number;
   teacherScore?: number;   // manual grade added by teacher (0–1000)
   teacherNote?: string;    // teacher's own written assessment
+  teacherReviewedAt?: string;
   transcription?: string;
   transcriptionNotes?: string;
   transcriptionConfidence?: 'alta' | 'media' | 'baixa';

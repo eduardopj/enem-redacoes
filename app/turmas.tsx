@@ -23,11 +23,10 @@ const PERIOD_COLOR: Record<string, string> = {
   integral: '#10B981',
 };
 
-function scoreColor(s: number) {
-  if (s >= 800) return '#16A34A';
-  if (s >= 600) return '#22C55E';
-  if (s >= 400) return '#EAB308';
-  return '#EF4444';
+function scoreColor(s: number, colors: any): string {
+  if (s >= 700) return colors.success;
+  if (s >= 500) return colors.warning;
+  return colors.danger;
 }
 
 export default function TurmasScreen() {
@@ -181,7 +180,7 @@ export default function TurmasScreen() {
                     <StatChip icon="document-text" value={String(essayCount)} label="Redações" color={colors.info} colors={colors} />
                     <StatChip icon="checkmark-circle" value={String(correctedCount)} label="Corrigidas" color={colors.success} colors={colors} />
                     {avg !== null ? (
-                      <StatChip icon="analytics" value={String(avg)} label="Média" color={scoreColor(avg)} colors={colors} />
+                      <StatChip icon="analytics" value={String(avg)} label="Média" color={scoreColor(avg, colors)} colors={colors} />
                     ) : (
                       <StatChip icon="analytics" value="—" label="Média" color={colors.mutedText} colors={colors} />
                     )}

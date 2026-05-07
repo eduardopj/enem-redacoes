@@ -27,20 +27,20 @@ const TABS: Tab[] = [
 function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab: boolean }) {
   const { colors } = useAppTheme();
   const scale = useRef(new Animated.Value(1)).current;
-  const dotOpacity = useRef(new Animated.Value(isActive ? 1 : 0)).current;
+  const pillOpacity = useRef(new Animated.Value(isActive ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.timing(dotOpacity, {
+    Animated.timing(pillOpacity, {
       toValue: isActive ? 1 : 0,
-      duration: 200,
+      duration: 180,
       useNativeDriver: true,
     }).start();
-  }, [dotOpacity, isActive]);
+  }, [isActive, pillOpacity]);
 
   function handlePress() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Animated.sequence([
-      Animated.spring(scale, { toValue: 0.86, useNativeDriver: true, speed: 40 }),
+      Animated.spring(scale, { toValue: 0.84, useNativeDriver: true, speed: 50 }),
       Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20 }),
     ]).start();
     router.push(tab.route as any);
@@ -48,9 +48,9 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
 
   if (isFab) {
     return (
-    <Pressable onPress={handlePress} style={styles.fabWrap} hitSlop={8}>
+      <Pressable onPress={handlePress} style={styles.fabWrap} hitSlop={8}>
         <Animated.View style={[styles.fabPill, { backgroundColor: colors.success, transform: [{ scale }] }]}>
-          <Ionicons name="add" size={19} color="#fff" />
+          <Ionicons name="add" size={18} color="#fff" />
           <Text style={styles.fabPillLabel}>Nova</Text>
         </Animated.View>
       </Pressable>
@@ -60,12 +60,17 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
   return (
     <Pressable onPress={handlePress} style={styles.tabItem} hitSlop={6}>
       <Animated.View style={[styles.tabIconWrap, { transform: [{ scale }] }]}>
+        <Animated.View
+          style={[
+            styles.activePill,
+            { backgroundColor: colors.accent + '16', opacity: pillOpacity },
+          ]}
+        />
         <Ionicons
           name={isActive ? tab.iconActive : tab.icon}
           size={21}
           color={isActive ? colors.accent : colors.mutedText}
         />
-        <Animated.View style={[styles.activeDot, { backgroundColor: colors.accent, opacity: dotOpacity }]} />
       </Animated.View>
       <Text
         style={[
@@ -113,35 +118,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderTopWidth: 1,
-    paddingTop: 5,
-    shadowColor: '#3157D5',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 8,
+    paddingTop: 4,
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 7,
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,
-    paddingTop: 2,
+    paddingTop: 1,
   },
   tabIconWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 32,
-    height: 27,
+    width: 44,
+    height: 28,
+    position: 'relative',
+  },
+  activePill: {
+    position: 'absolute',
+    width: 44,
+    height: 28,
+    borderRadius: 14,
   },
   tabLabel: { fontSize: 10, fontWeight: '600', letterSpacing: 0.1 },
   tabLabelActive: { fontWeight: '800' },
-  activeDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    position: 'absolute',
-    bottom: -2,
-  },
   fabWrap: {
     flex: 1.26,
     alignItems: 'center',
@@ -152,12 +157,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 13,
-    paddingVertical: 8,
-    borderRadius: 13,
-    shadowColor: '#22C55E',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 14,
+    shadowColor: '#101828',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.22,
+    shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 4,
   },

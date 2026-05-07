@@ -4,7 +4,7 @@ import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Essay } from '@/types/app';
-import { getScoreColor } from '@/utils/analytics';
+import { getCompColors, getScoreColor } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef } from 'react';
@@ -12,9 +12,6 @@ import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-nativ
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const COMP_COLORS: Record<string, string> = {
-  c1: '#3B82F6', c2: '#8B5CF6', c3: '#10B981', c4: '#F59E0B', c5: '#F43F5E',
-};
 const COMP_LABELS: Record<string, string> = {
   c1: 'Norma Culta', c2: 'Tema', c3: 'Argumentação', c4: 'Coesão', c5: 'Intervenção',
 };
@@ -82,9 +79,9 @@ function ScoreTimeline({ essays, colors }: { essays: Essay[]; colors: any }) {
                   <Ionicons
                     name={delta >= 0 ? 'caret-up' : 'caret-down'}
                     size={9}
-                    color={delta >= 0 ? '#22C55E' : '#EF4444'}
+                    color={delta >= 0 ? colors.success : colors.danger}
                   />
-                  <Text style={[timelineStyles.deltaText, { color: delta >= 0 ? '#22C55E' : '#EF4444' }]}>
+                  <Text style={[timelineStyles.deltaText, { color: delta >= 0 ? colors.success : colors.danger }]}>
                     {Math.abs(delta)}
                   </Text>
                 </View>
@@ -121,7 +118,7 @@ const timelineStyles = StyleSheet.create({
 function CompetencyCard({ compKey, avg, essays, colors }: {
   compKey: string; avg: number; essays: Essay[]; colors: any;
 }) {
-  const color = COMP_COLORS[compKey];
+  const color = getCompColors(colors)[compKey];
   const pct = (avg / 200) * 100;
   const history = essays.filter(e => e.competencies).map(e => e.competencies![compKey as keyof NonNullable<Essay['competencies']>]);
   const trend = history.length >= 2 ? history[history.length - 1] - history[history.length - 2] : null;
@@ -143,9 +140,9 @@ function CompetencyCard({ compKey, avg, essays, colors }: {
           <Text style={[compStyles.scoreMax, { color: color + '88' }]}>/200</Text>
         </View>
         {trend != null && (
-          <View style={[compStyles.trendPill, { backgroundColor: trend >= 0 ? '#22C55E14' : '#EF444414' }]}>
-            <Ionicons name={trend >= 0 ? 'trending-up' : 'trending-down'} size={11} color={trend >= 0 ? '#22C55E' : '#EF4444'} />
-            <Text style={[compStyles.trendText, { color: trend >= 0 ? '#22C55E' : '#EF4444' }]}>
+          <View style={[compStyles.trendPill, { backgroundColor: trend >= 0 ? colors.success + '14' : colors.danger + '14' }]}>
+            <Ionicons name={trend >= 0 ? 'trending-up' : 'trending-down'} size={11} color={trend >= 0 ? colors.success : colors.danger} />
+            <Text style={[compStyles.trendText, { color: trend >= 0 ? colors.success : colors.danger }]}>
               {trend >= 0 ? '+' : ''}{trend}
             </Text>
           </View>
@@ -294,10 +291,10 @@ export default function StudentEvolucaoScreen() {
                   <Ionicons
                     name={totalTrend >= 0 ? 'trending-up' : 'trending-down'}
                     size={14}
-                    color={totalTrend >= 0 ? '#22C55E' : '#EF4444'}
+                    color={totalTrend >= 0 ? colors.success : colors.danger}
                   />
                 )}
-                <Text style={[styles.kpiNum, { color: totalTrend == null ? colors.mutedText : totalTrend >= 0 ? '#22C55E' : '#EF4444' }]}>
+                <Text style={[styles.kpiNum, { color: totalTrend == null ? colors.mutedText : totalTrend >= 0 ? colors.success : colors.danger }]}>
                   {totalTrend == null ? '--' : `${totalTrend >= 0 ? '+' : ''}${totalTrend}`}
                 </Text>
               </View>
@@ -329,25 +326,25 @@ export default function StudentEvolucaoScreen() {
           <StaggerItem index={3}>
             <View style={styles.highlightRow}>
               {bestComp && (
-                <View style={[styles.highlightCard, { backgroundColor: '#22C55E0A', borderColor: '#22C55E22' }]}>
+                <View style={[styles.highlightCard, { backgroundColor: colors.success + '0A', borderColor: colors.success + '22' }]}>
                   <View style={styles.highlightHeader}>
-                    <Ionicons name="star" size={13} color="#22C55E" />
-                    <Text style={[styles.highlightTitle, { color: '#22C55E' }]}>Ponto forte</Text>
+                    <Ionicons name="star" size={13} color={colors.success} />
+                    <Text style={[styles.highlightTitle, { color: colors.success }]}>Ponto forte</Text>
                   </View>
-                  <Text style={[styles.highlightKey, { color: COMP_COLORS[bestComp.key] }]}>{bestComp.key.toUpperCase()}</Text>
+                  <Text style={[styles.highlightKey, { color: getCompColors(colors)[bestComp.key] }]}>{bestComp.key.toUpperCase()}</Text>
                   <Text style={[styles.highlightName, { color: colors.text }]}>{COMP_LABELS[bestComp.key]}</Text>
-                  <Text style={[styles.highlightScore, { color: COMP_COLORS[bestComp.key] }]}>{bestComp.avg}/200</Text>
+                  <Text style={[styles.highlightScore, { color: getCompColors(colors)[bestComp.key] }]}>{bestComp.avg}/200</Text>
                 </View>
               )}
               {weakComp && (
-                <View style={[styles.highlightCard, { backgroundColor: '#F97316' + '0A', borderColor: '#F97316' + '22' }]}>
+                <View style={[styles.highlightCard, { backgroundColor: colors.warning + '0A', borderColor: colors.warning + '22' }]}>
                   <View style={styles.highlightHeader}>
-                    <Ionicons name="flag" size={13} color="#F97316" />
-                    <Text style={[styles.highlightTitle, { color: '#F97316' }]}>Foco de melhoria</Text>
+                    <Ionicons name="flag" size={13} color={colors.warning} />
+                    <Text style={[styles.highlightTitle, { color: colors.warning }]}>Foco de melhoria</Text>
                   </View>
-                  <Text style={[styles.highlightKey, { color: COMP_COLORS[weakComp.key] }]}>{weakComp.key.toUpperCase()}</Text>
+                  <Text style={[styles.highlightKey, { color: getCompColors(colors)[weakComp.key] }]}>{weakComp.key.toUpperCase()}</Text>
                   <Text style={[styles.highlightName, { color: colors.text }]}>{COMP_LABELS[weakComp.key]}</Text>
-                  <Text style={[styles.highlightScore, { color: COMP_COLORS[weakComp.key] }]}>{weakComp.avg}/200</Text>
+                  <Text style={[styles.highlightScore, { color: getCompColors(colors)[weakComp.key] }]}>{weakComp.avg}/200</Text>
                 </View>
               )}
             </View>

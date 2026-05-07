@@ -31,13 +31,10 @@ export function EmptyState({
   const accent = accentColor ?? colors.accent;
 
   return (
-    <View style={[styles.box, { backgroundColor: colors.surface }]}>
-      {/* Icon with layered glow */}
+    <View style={[styles.box, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={styles.iconArea}>
-        <View style={[styles.iconOuter, { backgroundColor: accent + '0C' }]}>
-          <View style={[styles.iconInner, { backgroundColor: accent + '18' }]}>
-            <Ionicons name={icon} size={36} color={accent} />
-          </View>
+        <View style={[styles.iconWrap, { backgroundColor: accent + '14' }]}>
+          <Ionicons name={icon} size={28} color={accent} />
         </View>
       </View>
 
@@ -45,7 +42,7 @@ export function EmptyState({
       <Text style={[styles.description, { color: colors.mutedText }]}>{description}</Text>
 
       {tip ? (
-        <View style={[styles.tipRow, { backgroundColor: accent + '0E', borderColor: accent + '20' }]}>
+        <View style={[styles.tipRow, { backgroundColor: accent + '0C', borderColor: accent + '1A' }]}>
           <Ionicons name="bulb-outline" size={13} color={accent} />
           <Text style={[styles.tipText, { color: accent }]}>{tip}</Text>
         </View>
@@ -70,40 +67,33 @@ export function EmptyState({
 const styles = StyleSheet.create({
   box: {
     borderRadius: theme.radius.xl,
+    borderWidth: 1,
     padding: theme.spacing.xl,
     paddingTop: theme.spacing.xxl,
     paddingBottom: theme.spacing.xxl,
     alignItems: 'center',
     gap: theme.spacing.sm,
-    ...theme.shadows.card,
   },
   iconArea: {
     marginBottom: theme.spacing.xs,
   },
-  iconOuter: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconInner: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+  iconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
-    fontSize: 19,
+    fontSize: 17,
     fontWeight: '700',
     letterSpacing: 0,
     textAlign: 'center',
-    lineHeight: 26,
+    lineHeight: 23,
   },
   description: {
-    fontSize: 14,
-    lineHeight: 22,
+    fontSize: 13,
+    lineHeight: 20,
     textAlign: 'center',
     maxWidth: 280,
   },
@@ -126,7 +116,7 @@ const styles = StyleSheet.create({
   },
   actions: {
     width: '100%',
-    gap: theme.spacing.sm,
+    gap: theme.spacing.xs,
     marginTop: theme.spacing.xs,
   },
 });

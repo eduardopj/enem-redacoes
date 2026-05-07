@@ -3,12 +3,13 @@ import { Button, ScreenContainer } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Atividade, Essay } from '@/types/app';
+import { getCompColors } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
+// --- Helpers ---------------------------------------------------------------
 
 const NATIONAL_AVG = 624;
 const COMP_LABELS: Record<string, string> = {
@@ -18,20 +19,10 @@ const COMP_LABELS: Record<string, string> = {
   c4: 'C4 — Coesão',
   c5: 'C5 — Intervenção',
 };
-const COMP_COLORS: Record<string, string> = {
-  c1: '#3B82F6',
-  c2: '#8B5CF6',
-  c3: '#10B981',
-  c4: '#F59E0B',
-  c5: '#F43F5E',
-};
-
-function scoreColor(s: number) {
-  if (s >= 900) return '#16A34A';
-  if (s >= 700) return '#22C55E';
-  if (s >= 500) return '#EAB308';
-  if (s >= 300) return '#F97316';
-  return '#EF4444';
+function scoreColor(s: number, colors: any): string {
+  if (s >= 700) return colors.success;
+  if (s >= 500) return colors.warning;
+  return colors.danger;
 }
 
 function getInitials(name: string) {
@@ -48,7 +39,7 @@ function trendDelta(essays: Essay[]): number | null {
 
 type SortKey = 'avg' | 'best' | 'essays' | 'improvement';
 
-// ─── Screen ────────────────────────────────────────────────────────────────
+// --- Screen ----------------------------------------------------------------
 
 export default function TurmaDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -60,6 +51,7 @@ export default function TurmaDetailScreen() {
   const encerrarAtividade = useAppStore((s) => s.encerrarAtividade);
   const fetchStudentEssaysFromBackend = useAppStore((s) => s.fetchStudentEssaysFromBackend);
 
+  const compColors = getCompColors(colors);
   const [sortKey, setSortKey] = useState<SortKey>('avg');
   const [syncing, setSyncing] = useState(false);
 
@@ -171,7 +163,7 @@ export default function TurmaDetailScreen() {
     <ProtectedRoute>
       <ScreenContainer showBack>
 
-        {/* ── Sync indicator ── */}
+        {/* -- Sync indicator -- */}
         {syncing && (
           <View style={[styles.syncBanner, { backgroundColor: colors.accent + '14' }]}>
             <Ionicons name="cloud-download-outline" size={14} color={colors.accent} />
@@ -179,7 +171,7 @@ export default function TurmaDetailScreen() {
           </View>
         )}
 
-        {/* ── Class Hero ── */}
+        {/* -- Class Hero -- */}
         <View style={[styles.hero, { backgroundColor: colors.accent }]}>
           <View style={styles.heroContent}>
             <View style={styles.heroBadge}>
@@ -201,11 +193,12 @@ export default function TurmaDetailScreen() {
           </View>
         </View>
 
-        {/* ── Quick Actions ── */}
+        {/* -- Quick Actions -- */}
         <View style={styles.qRow}>
           <Button
             title="Nova redação"
             leftIcon="create-outline"
+            style={styles.primaryQuickBtn}
             onPress={() => router.push('/nova-redacao' as any)}
           />
           <Pressable
@@ -224,7 +217,7 @@ export default function TurmaDetailScreen() {
           </Pressable>
         </View>
 
-        {/* ── Atividades ── */}
+        {/* -- Atividades -- */}
         {turmaAtividades.length > 0 && (
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
             <View style={styles.cardHeader}>
@@ -247,7 +240,7 @@ export default function TurmaDetailScreen() {
           </View>
         )}
 
-        {/* ── KPI Grid ── */}
+        {/* -- KPI Grid -- */}
         <View style={styles.kpiGrid}>
           <KpiCard icon="checkmark-circle" label="Corrigidas" value={totalCorrected} color={colors.success} colors={colors} />
           <KpiCard icon="time-outline" label="Pendentes" value={pendingEssays} color={colors.warning} colors={colors} />
@@ -255,7 +248,7 @@ export default function TurmaDetailScreen() {
           <KpiCard icon="alert-circle-outline" label="Atenção" value={lowPerformers.length} color={colors.danger} colors={colors} />
         </View>
 
-        {/* ── Insights / Alertas ── */}
+        {/* -- Insights / Alertas -- */}
         {(noEssayStudents.length > 0 || pctAboveNational > 0) && (
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
             <View style={styles.cardHeader}>
@@ -291,14 +284,14 @@ export default function TurmaDetailScreen() {
               <InsightRow
                 icon="warning-outline"
                 color={colors.danger}
-                text={`${noEssayStudents.length} aluno${noEssayStudents.length > 1 ? 's' : ''} sem nenhuma redação: ${noEssayStudents.slice(0, 3).map((s) => s.student.name.split(' ')[0]).join(', ')}${noEssayStudents.length > 3 ? '…' : ''}`}
+                text={`${noEssayStudents.length} aluno${noEssayStudents.length > 1 ? 's' : ''} sem nenhuma redação: ${noEssayStudents.slice(0, 3).map((s) => s.student.name.split(' ')[0]).join(', ')}${noEssayStudents.length > 3 ? '...' : ''}`}
                 colors={colors}
               />
             )}
           </View>
         )}
 
-        {/* ── Score Distribution ── */}
+        {/* -- Score Distribution -- */}
         {totalCorrected > 0 && (
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
             <View style={styles.cardHeader}>
@@ -308,7 +301,7 @@ export default function TurmaDetailScreen() {
             <View style={styles.distChart}>
               {distribution.map((b) => {
                 const pct = b.count / maxBandCount;
-                const bColor = b.min >= 801 ? '#16A34A' : b.min >= 601 ? '#22C55E' : b.min >= 401 ? '#EAB308' : b.min >= 201 ? '#F97316' : '#EF4444';
+                const bColor = b.min >= 601 ? colors.success : b.min >= 401 ? colors.warning : colors.danger;
                 return (
                   <View key={b.label} style={styles.distBar}>
                     <Text style={[styles.distCount, { color: b.count > 0 ? bColor : colors.mutedText }]}>
@@ -325,7 +318,7 @@ export default function TurmaDetailScreen() {
           </View>
         )}
 
-        {/* ── Competency Averages ── */}
+        {/* -- Competency Averages -- */}
         {compAvg.some((c) => c.avg !== null) && (
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
             <View style={styles.cardHeader}>
@@ -336,7 +329,7 @@ export default function TurmaDetailScreen() {
             {compAvg.map(({ key, avg }) => {
               if (avg === null) return null;
               const pct = (avg / 200) * 100;
-              const c = COMP_COLORS[key] ?? colors.accent;
+              const c = compColors[key] ?? colors.accent;
               const level = avg >= 160 ? 'Bom' : avg >= 120 ? 'Regular' : avg >= 80 ? 'Insuficiente' : 'Fraco';
               return (
                 <View key={key} style={styles.compRow}>
@@ -357,7 +350,7 @@ export default function TurmaDetailScreen() {
           </View>
         )}
 
-        {/* ── Student Ranking ── */}
+        {/* -- Student Ranking -- */}
         {ranked.length > 0 && (
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
             <View style={styles.cardHeader}>
@@ -366,7 +359,12 @@ export default function TurmaDetailScreen() {
             </View>
 
             {/* Sort tabs */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ flexGrow: 0 }}
+              contentContainerStyle={styles.sortScrollContent}
+            >
               <View style={styles.sortRow}>
                 {([
                   { key: 'avg', label: 'Maior média' },
@@ -397,7 +395,7 @@ export default function TurmaDetailScreen() {
               const { student, avg, best, totalEssays: te, delta } = entry;
               const medals = ['1º', '2º', '3º'];
               const isTop3 = i < 3 && avg !== null;
-              const color = avg !== null ? scoreColor(avg) : colors.mutedText;
+              const color = avg !== null ? scoreColor(avg, colors) : colors.mutedText;
               return (
                 <Pressable
                   key={student.id}
@@ -489,7 +487,7 @@ export default function TurmaDetailScreen() {
   );
 }
 
-// ─── Sub-components ────────────────────────────────────────────────────────
+// --- Sub-components --------------------------------------------------------
 
 function HeroStat({ value, label }: { value: string; label: string }) {
   return (
@@ -589,11 +587,15 @@ const styles = StyleSheet.create({
   heroStatLabel: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.65)' },
 
   // Quick actions
-  qRow: { flexDirection: 'row', gap: 10 },
+  qRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  primaryQuickBtn: { flexGrow: 1, flexBasis: 180 },
   secondBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flexGrow: 1,
+    flexBasis: 132,
+    justifyContent: 'center',
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderRadius: 14,
@@ -609,7 +611,7 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'center',
     gap: 5,
-    shadowColor: '#1B2559',
+    shadowColor: '#101828',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -624,7 +626,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 18,
     gap: 14,
-    shadowColor: '#1B2559',
+    shadowColor: '#101828',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
@@ -678,6 +680,7 @@ const styles = StyleSheet.create({
   compFill: { height: '100%', borderRadius: 3 },
 
   // Sort tabs
+  sortScrollContent: { paddingRight: 20 },
   sortRow: { flexDirection: 'row', gap: 7 },
   sortTab: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1 },
   sortTabText: { fontSize: 12, fontWeight: '600' },

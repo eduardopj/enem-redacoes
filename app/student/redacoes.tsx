@@ -4,7 +4,7 @@ import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Essay } from '@/types/app';
-import { getScoreColor } from '@/utils/analytics';
+import { getCompColors, getScoreColor } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
@@ -13,18 +13,18 @@ import { Animated, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput,
 type Filter = 'todas' | 'corrigida' | 'processando' | 'pendente';
 type Sort = 'data' | 'nota_desc' | 'nota_asc';
 
-const COMP_COLORS = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#F43F5E'];
-
 function MiniCompBars({ competencies }: { competencies: NonNullable<Essay['competencies']> }) {
+  const { colors } = useAppTheme();
+  const cc = Object.values(getCompColors(colors));
   const vals = [competencies.c1, competencies.c2, competencies.c3, competencies.c4, competencies.c5];
   return (
     <View style={barStyles.wrap}>
       {vals.map((v, i) => (
         <View key={i} style={barStyles.col}>
-          <View style={barStyles.track}>
-            <View style={[barStyles.fill, { height: `${(v / 200) * 100}%`, backgroundColor: COMP_COLORS[i] }]} />
+          <View style={[barStyles.track, { backgroundColor: colors.input }]}>
+            <View style={[barStyles.fill, { height: `${(v / 200) * 100}%`, backgroundColor: cc[i] }]} />
           </View>
-          <Text style={[barStyles.label, { color: COMP_COLORS[i] }]}>C{i + 1}</Text>
+          <Text style={[barStyles.label, { color: cc[i] }]}>C{i + 1}</Text>
         </View>
       ))}
     </View>
@@ -34,7 +34,7 @@ function MiniCompBars({ competencies }: { competencies: NonNullable<Essay['compe
 const barStyles = StyleSheet.create({
   wrap: { flexDirection: 'row', gap: 6, alignItems: 'flex-end', height: 28 },
   col: { flex: 1, alignItems: 'center', gap: 2 },
-  track: { width: '100%', height: 20, backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 3, justifyContent: 'flex-end', overflow: 'hidden' },
+  track: { width: '100%', height: 20, borderRadius: 3, justifyContent: 'flex-end', overflow: 'hidden' },
   fill: { width: '100%', borderRadius: 3 },
   label: { fontSize: 8, fontWeight: '700' },
 });

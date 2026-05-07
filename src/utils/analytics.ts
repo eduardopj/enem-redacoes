@@ -37,6 +37,12 @@ export function getScoreColor(
 
 // ─── Competency helpers ────────────────────────────────────────────────────
 
+export function getCompColors(colors: {
+  accent: string; secondary: string; success: string; warning: string; danger: string;
+}): Record<string, string> {
+  return { c1: colors.accent, c2: colors.secondary, c3: colors.success, c4: colors.warning, c5: colors.danger };
+}
+
 export const COMPETENCY_LABELS: Record<string, string> = {
   c1: 'C1 • Norma Culta',
   c2: 'C2 • Compreensão do Tema',

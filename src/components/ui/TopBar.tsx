@@ -14,25 +14,25 @@ export function TopBar({ showHomeButton = true, showBack = false, title }: TopBa
   const { colors } = useAppTheme();
 
   return (
-    <View style={[styles.bar, { backgroundColor: colors.background }]}>
+    <View style={[styles.bar, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
       <View style={styles.left}>
         {showBack ? (
           <Pressable
             onPress={() => router.canGoBack() ? router.back() : router.replace('/dashboard')}
-            style={[styles.iconBtn, { backgroundColor: colors.surface }]}
+            style={[styles.iconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
             hitSlop={10}
           >
-            <Ionicons name="arrow-back" size={20} color={colors.text} />
+            <Ionicons name="arrow-back" size={18} color={colors.text} />
           </Pressable>
         ) : null}
 
         {showBack && showHomeButton ? (
           <Pressable
             onPress={() => router.replace('/dashboard')}
-            style={[styles.iconBtn, { backgroundColor: colors.surface }]}
+            style={[styles.iconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
             hitSlop={10}
           >
-            <Ionicons name="home-outline" size={20} color={colors.softText} />
+            <Ionicons name="home-outline" size={18} color={colors.softText} />
           </Pressable>
         ) : null}
 
@@ -43,7 +43,7 @@ export function TopBar({ showHomeButton = true, showBack = false, title }: TopBa
             hitSlop={8}
           >
             <View style={[styles.logoIcon, { backgroundColor: colors.accent }]}>
-              <Ionicons name="school" size={14} color="#FFFFFF" />
+              <Ionicons name="school" size={13} color="#FFFFFF" />
             </View>
             <Text style={[styles.logoText, { color: colors.text }]}>ENEM IA</Text>
           </Pressable>
@@ -65,35 +65,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 10,
-    minHeight: 56,
+    paddingTop: 10,
+    paddingBottom: 12,
+    minHeight: 64,
+    borderBottomWidth: 1,
   },
   left: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   iconBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#1B2559',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    borderWidth: 1,
   },
-  logoBtn: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  logoBtn: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   logoIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 9,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoText: {
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 1.0,
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 1.2,
   },
-  pageTitle: { fontSize: 17, fontWeight: '600', marginLeft: 4 },
+  pageTitle: { fontSize: 16, fontWeight: '700', marginLeft: 4, letterSpacing: -0.1 },
 });

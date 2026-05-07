@@ -18,7 +18,7 @@ type Tab = {
 
 const TABS: Tab[] = [
   { route: '/dashboard', icon: 'home-outline', iconActive: 'home', label: 'Início' },
-  { route: '/redacoes', icon: 'document-text-outline', iconActive: 'document-text', label: 'Redações' },
+  { route: '/correcoes', icon: 'sparkles-outline', iconActive: 'sparkles', label: 'Correções' },
   { route: '/nova-redacao', icon: 'add', iconActive: 'add', label: '' },
   { route: '/alunos', icon: 'people-outline', iconActive: 'people', label: 'Alunos' },
   { route: '/analytics', icon: 'bar-chart-outline', iconActive: 'bar-chart', label: 'Análises' },
@@ -40,7 +40,7 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
   function handlePress() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Animated.sequence([
-      Animated.spring(scale, { toValue: 0.86, useNativeDriver: true, speed: 50 }),
+      Animated.spring(scale, { toValue: 0.84, useNativeDriver: true, speed: 50 }),
       Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20 }),
     ]).start();
     router.push(tab.route as any);
@@ -48,9 +48,9 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
 
   if (isFab) {
     return (
-    <Pressable onPress={handlePress} style={styles.fabWrap} hitSlop={8}>
+      <Pressable onPress={handlePress} style={styles.fabWrap} hitSlop={8}>
         <Animated.View style={[styles.fabPill, { backgroundColor: colors.accent, transform: [{ scale }] }]}>
-          <Ionicons name="add" size={19} color="#fff" />
+          <Ionicons name="add" size={18} color="#fff" />
           <Text style={styles.fabPillLabel}>Nova</Text>
         </Animated.View>
       </Pressable>
@@ -63,7 +63,7 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
         <Animated.View
           style={[
             styles.activePill,
-            { backgroundColor: colors.accent + '18', opacity: pillOpacity },
+            { backgroundColor: colors.accent + '16', opacity: pillOpacity },
           ]}
         />
         <Ionicons
@@ -122,12 +122,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderTopWidth: 1,
-    paddingTop: 5,
-    shadowColor: '#3157D5',
-    shadowOffset: { width: 0, height: -5 },
-    shadowOpacity: 0.07,
-    shadowRadius: 14,
-    elevation: 10,
+    paddingTop: 4,
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 8,
   },
   tabItem: {
     flex: 1,
@@ -139,15 +139,15 @@ const styles = StyleSheet.create({
   tabIconWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 42,
+    width: 44,
     height: 28,
     position: 'relative',
   },
   activePill: {
     position: 'absolute',
-    width: 42,
-    height: 26,
-    borderRadius: 13,
+    width: 44,
+    height: 28,
+    borderRadius: 14,
   },
   tabLabel: {
     fontSize: 10,
@@ -167,12 +167,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 13,
-    paddingVertical: 8,
-    borderRadius: 13,
-    shadowColor: '#3157D5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.22,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 14,
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 4,
   },

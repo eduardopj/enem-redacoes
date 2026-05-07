@@ -19,57 +19,100 @@ const fonts = {
 };
 
 const lightColors = {
-  background: '#F7F4ED',
-  text: '#1F2A37',
-  accent: '#3157D5',
-  input: '#F1EEE7',
-  border: '#E6E0D6',
+  // Base surfaces
+  background: '#F8F7F4',
   surface: '#FFFFFF',
+  surfaceElevated: '#F1F3F7',
+  surfaceSoft: '#F1F3F7',
+  surfaceMuted: '#E8ECF3',
 
-  mutedText: '#8A8175',
-  softText: '#4D5562',
+  // Text hierarchy
+  text: '#101828',
+  softText: '#475467',
+  mutedText: '#667085',
 
-  black: '#1F2A37',
+  // Borders & inputs
+  border: '#E4E7EC',
+  borderStrong: '#D0D5DD',
+  input: '#F1F3F7',
+
+  // Primary (indigo)
+  accent: '#3454D1',
+  accentSoft: '#EEF2FF',
+  accentHover: '#1D2B6F',
+
+  // Secondary (keep for compat)
+  secondary: '#7C3AED',
+  secondarySoft: '#EDE9FE',
+
+  // Dark blocks (navy CTA areas)
+  darkBlock: '#101828',
+  darkBlockSoft: '#1D2939',
+
+  // Success
+  success: '#168A5B',
+  successSoft: '#E7F8EF',
+
+  // Warning
+  warning: '#B7791F',
+  warningSoft: '#FFF4D8',
+
+  // Info
+  info: '#2563A8',
+  infoSoft: '#EAF3FF',
+
+  // Danger
+  danger: '#C84646',
+  dangerSoft: '#FDECEC',
+
+  // Utilities
+  black: '#101828',
   white: '#FFFFFF',
-
-  success: '#22C55E',
-  successSoft: '#DCFCE7',
-
-  warning: '#F59E0B',
-  warningSoft: '#FEF3C7',
-
-  info: '#2563EB',
-  infoSoft: '#DBEAFE',
-
-  danger: '#EF4444',
-  dangerSoft: '#FEE2E2',
+  overlay: 'rgba(16,24,40,0.48)',
+  darkBlockFg: '#FFFFFF',
 };
 
 const darkColors = {
-  background: '#0D0F1C',
-  text: '#E8ECF8',
-  accent: '#6B8EFF',
-  input: '#1E2136',
-  border: '#2A2F4A',
-  surface: '#181A2E',
+  background: '#080C16',
+  surface: '#101828',
+  surfaceElevated: '#182230',
+  surfaceSoft: '#182230',
+  surfaceMuted: '#202B3C',
 
-  mutedText: '#5C6585',
-  softText: '#8895B8',
+  text: '#F9FAFB',
+  softText: '#D0D5DD',
+  mutedText: '#98A2B3',
 
-  black: '#0D0F1C',
+  border: '#293548',
+  borderStrong: '#3B475C',
+  input: '#182230',
+
+  accent: '#91A5FF',
+  accentSoft: '#1D275A',
+  accentHover: '#5668C7',
+
+  secondary: '#A78BFA',
+  secondarySoft: '#2D1B69',
+
+  darkBlock: '#F9FAFB',
+  darkBlockSoft: '#E5E7EB',
+
+  success: '#54D99A',
+  successSoft: '#123A2A',
+
+  warning: '#F2C768',
+  warningSoft: '#3B3018',
+
+  info: '#7DB7FF',
+  infoSoft: '#132D4A',
+
+  danger: '#FF7A7A',
+  dangerSoft: '#3A1E24',
+
+  black: '#080C16',
   white: '#FFFFFF',
-
-  success: '#4ADE80',
-  successSoft: '#14532D',
-
-  warning: '#FBBF24',
-  warningSoft: '#78350F',
-
-  info: '#60A5FA',
-  infoSoft: '#1E3A5F',
-
-  danger: '#F87171',
-  dangerSoft: '#7F1D1D',
+  overlay: 'rgba(0,0,0,0.64)',
+  darkBlockFg: '#101828',
 };
 
 export type AppColors = typeof lightColors;
@@ -82,7 +125,8 @@ export const theme = {
     sm: 10,
     md: 14,
     lg: 18,
-    xl: 24,
+    xl: 22,
+    xxl: 28,
     pill: 999,
   },
 
@@ -92,8 +136,8 @@ export const theme = {
     sm: 12,
     md: 16,
     lg: 20,
-    xl: 28,
-    xxl: 36,
+    xl: 24,
+    xxl: 32,
     xxxl: 48,
   },
 
@@ -102,38 +146,42 @@ export const theme = {
   shadows: {
     card: Platform.select({
       ios: {
-        shadowColor: '#1B2559',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.07,
-        shadowRadius: 16,
+        shadowColor: '#101828',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
       },
-      android: {
-        elevation: 3,
-      },
+      android: { elevation: 2 },
       default: {},
     }),
     hard: Platform.select({
       ios: {
-        shadowColor: '#1B2559',
+        shadowColor: '#101828',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
       },
-      android: {
-        elevation: 2,
-      },
+      android: { elevation: 2 },
       default: {},
     }),
     strong: Platform.select({
       ios: {
-        shadowColor: '#3157D5',
+        shadowColor: '#101828',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+      },
+      android: { elevation: 5 },
+      default: {},
+    }),
+    float: Platform.select({
+      ios: {
+        shadowColor: '#101828',
         shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.18,
+        shadowOpacity: 0.10,
         shadowRadius: 20,
       },
-      android: {
-        elevation: 6,
-      },
+      android: { elevation: 7 },
       default: {},
     }),
   },
@@ -141,55 +189,56 @@ export const theme = {
   typography: {
     hero: {
       fontFamily: fonts.display,
-      fontSize: 40,
-      lineHeight: 44,
-      fontWeight: '700' as const,
-      letterSpacing: 0,
+      fontSize: 36,
+      lineHeight: 42,
+      fontWeight: '800' as const,
+      letterSpacing: -0.5,
     },
     h1: {
       fontFamily: fonts.display,
-      fontSize: 32,
-      lineHeight: 38,
+      fontSize: 28,
+      lineHeight: 34,
       fontWeight: '700' as const,
-      letterSpacing: 0,
+      letterSpacing: -0.3,
     },
     h2: {
       fontFamily: fonts.display,
-      fontSize: 26,
-      lineHeight: 32,
+      fontSize: 22,
+      lineHeight: 28,
       fontWeight: '700' as const,
-      letterSpacing: 0,
+      letterSpacing: -0.2,
     },
     h3: {
       fontFamily: fonts.display,
-      fontSize: 20,
-      lineHeight: 26,
+      fontSize: 18,
+      lineHeight: 24,
       fontWeight: '600' as const,
       letterSpacing: 0,
     },
     metric: {
       fontFamily: fonts.display,
-      fontSize: 48,
-      lineHeight: 52,
-      fontWeight: '700' as const,
-      letterSpacing: 0,
+      fontSize: 42,
+      lineHeight: 48,
+      fontWeight: '800' as const,
+      letterSpacing: -1,
     },
     title: {
       fontFamily: fonts.body,
-      fontSize: 17,
-      lineHeight: 24,
+      fontSize: 16,
+      lineHeight: 22,
       fontWeight: '600' as const,
+      letterSpacing: 0,
     },
     body: {
       fontFamily: fonts.body,
-      fontSize: 15,
+      fontSize: 14,
       lineHeight: 22,
       fontWeight: '400' as const,
     },
     bodySmall: {
       fontFamily: fonts.body,
       fontSize: 13,
-      lineHeight: 18,
+      lineHeight: 19,
       fontWeight: '400' as const,
     },
     label: {
@@ -197,21 +246,21 @@ export const theme = {
       fontSize: 12,
       lineHeight: 16,
       fontWeight: '600' as const,
-      letterSpacing: 0.2,
+      letterSpacing: 0.3,
     },
     caption: {
       fontFamily: fonts.body,
       fontSize: 11,
-      lineHeight: 14,
+      lineHeight: 15,
       fontWeight: '500' as const,
     },
-    // Keep monoLabel for backward compat
     monoLabel: {
       fontFamily: fonts.body,
       fontSize: 11,
       lineHeight: 14,
       fontWeight: '600' as const,
-      letterSpacing: 0.4,
+      letterSpacing: 0.6,
+      textTransform: 'uppercase' as const,
     },
     monoButton: {
       fontFamily: fonts.body,

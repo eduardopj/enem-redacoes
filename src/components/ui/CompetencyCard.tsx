@@ -14,10 +14,9 @@ export function CompetencyCard({ title, score, description }: CompetencyCardProp
 
   const pct = (score / 200) * 100;
   const scoreColor =
-    score >= 160 ? '#22C55E' :
-    score >= 120 ? '#84CC16' :
-    score >= 80 ? '#EAB308' :
-    score >= 40 ? '#F97316' : '#EF4444';
+    score >= 160 ? colors.success :
+    score >= 100 ? colors.warning :
+    colors.danger;
 
   return (
     <Card>
@@ -27,18 +26,17 @@ export function CompetencyCard({ title, score, description }: CompetencyCardProp
           <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
         </View>
 
-        <View style={[styles.scoreWrap, { backgroundColor: scoreColor + '18' }]}>
+        <View style={[styles.scoreWrap, { backgroundColor: scoreColor + '14' }]}>
           <Text style={[styles.score, { color: scoreColor }]}>{score}</Text>
           <Text style={[styles.scoreMax, { color: scoreColor + '80' }]}>/200</Text>
         </View>
       </View>
 
-      {/* Progress bar */}
       <View style={[styles.track, { backgroundColor: colors.input }]}>
         <View style={[styles.fill, { width: `${pct}%`, backgroundColor: scoreColor }]} />
       </View>
 
-      <Text style={[styles.description, { color: colors.mutedText }]}>{description}</Text>
+      <Text style={[styles.description, { color: colors.softText }]}>{description}</Text>
     </Card>
   );
 }
@@ -53,7 +51,7 @@ const styles = StyleSheet.create({
   },
   titleBlock: {
     flex: 1,
-    gap: 3,
+    gap: 2,
   },
   kicker: {
     fontSize: 11,
@@ -61,35 +59,34 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   title: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    lineHeight: 22,
+    lineHeight: 21,
     letterSpacing: 0,
   },
   scoreWrap: {
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 2,
   },
   score: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
-    lineHeight: 24,
-    letterSpacing: 0,
+    lineHeight: 22,
   },
   scoreMax: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
-    lineHeight: 16,
+    lineHeight: 14,
     alignSelf: 'flex-end',
     marginBottom: 2,
   },
   track: {
-    height: 6,
+    height: 5,
     borderRadius: 3,
     overflow: 'hidden',
     marginBottom: theme.spacing.sm,

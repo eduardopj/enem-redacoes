@@ -60,5 +60,6 @@ export type OpenAICorrectionResult = {
 export type OpenAIServiceInput = {
   themeTitle: string;
   imageUri?: string;
+  imageMimeType?: string;
   essayText?: string;
 };
