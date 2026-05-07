@@ -150,28 +150,6 @@ export function normalizeCorrection(raw) {
     };
   }
 
-  const isClearlyAdequate =
-    !hardOffTopic &&
-    themeGate.verdict === 'adequado' &&
-    themeAdequacy.level === 'adequado' &&
-    themeGate.directRelation &&
-    themeGate.addressesCentralProblem;
-
-  if (isClearlyAdequate && transcriptionConfidence === 'alta') {
-    const highCount = Object.values(competencies).filter((score) => score >= 160).length;
-    const lowCount = Object.values(competencies).filter((score) => score <= 80).length;
-
-    if (highCount >= 3 && lowCount === 0) {
-      competencies = {
-        c1: competencies.c1 < 120 ? 120 : competencies.c1,
-        c2: competencies.c2 < 120 ? 120 : competencies.c2,
-        c3: competencies.c3 < 120 ? 120 : competencies.c3,
-        c4: competencies.c4 < 120 ? 120 : competencies.c4,
-        c5: competencies.c5 < 120 ? 120 : competencies.c5,
-      };
-    }
-  }
-
   const totalScore = sumCompetencies(competencies);
 
   const feedbackPrefix = hardOffTopic
