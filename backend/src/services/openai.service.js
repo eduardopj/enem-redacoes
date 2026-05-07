@@ -460,27 +460,42 @@ REGRAS DE CALIBRAÇÃO FINAL
 REGRA PRINCIPAL — AVALIE SEM CONSERVADORISMO:
 Dê a nota que os descritores indicam. Não deflacione para "parecer mais realista". Não existe teto imaginário — o realismo está nos descritores de cada competência, não em uma faixa pré-definida.
 
-Distribuição real do ENEM (use como referência, nunca como teto):
-• Texto fraco/fora do tema parcialmente: 0–360 pts
-• Texto fraco mas no tema: 360–520 pts
-• Texto mediano (média nacional ≈ 624 pts): 520–680 pts
-• Texto bom: 680–800 pts
-• Texto muito bom: 800–920 pts
-• Texto excelente: 920–1000 pts — raro (~10% passam de 900), mas real
-• Nota 1000: menos de 0,2% — texto sem nenhuma falha relevante em nenhuma competência
+Distribuição real do ENEM — faixas e exemplos de perfil (referência, não teto):
 
-Perfis de referência (exemplos reais):
-• Mediano: C1=120, C2=120, C3=120, C4=120, C5=120 = 600 pts
-• Bom: C1=160, C2=160, C3=120, C4=120, C5=120 = 680 pts
-• Muito bom: C1=160, C2=200, C3=200, C4=160, C5=160 = 880 pts
-• Excelente: C1=200, C2=200, C3=200, C4=160, C5=200 = 960 pts
-• Nota máxima: C1=200, C2=200, C3=200, C4=200, C5=200 = 1000 pts
+NOTAS MUITO BAIXAS (texto no tema, mas muito precário):
+• C1=40, C2=40, C3=40, C4=40, C5=40 = 200 pts — texto caótico, sem proposta, sem coesão
+• C1=40, C2=80, C3=40, C4=40, C5=40 = 240 pts — ainda muito fraco
+• C1=80, C2=80, C3=40, C4=40, C5=40 = 280 pts — fraquíssimo
+Redações com desvios graves em quase todas as competências DEVEM receber notas entre 200–360 pts.
+Não há piso artificial acima de 200 — se o texto merece 200 ou 240, dê exatamente isso.
+
+NOTAS BAIXAS (texto fraco):
+• C1=80, C2=80, C3=80, C4=80, C5=80 = 400 pts — fraco em tudo, mas com intenção em todas
+• C1=120, C2=80, C3=80, C4=80, C5=80 = 440 pts
+
+MEDIANO (próximo à média nacional de ~624 pts):
+• C1=120, C2=120, C3=120, C4=120, C5=120 = 600 pts
+• C1=160, C2=120, C3=120, C4=120, C5=80 = 600 pts
+
+BOM:
+• C1=160, C2=160, C3=120, C4=120, C5=120 = 680 pts
+• C1=160, C2=160, C3=160, C4=120, C5=120 = 720 pts
+
+MUITO BOM:
+• C1=160, C2=200, C3=200, C4=160, C5=160 = 880 pts
+• C1=200, C2=160, C3=200, C4=160, C5=200 = 920 pts
+
+EXCELENTE (raro — top ~10% dos candidatos):
+• C1=200, C2=200, C3=200, C4=160, C5=200 = 960 pts
+
+NOTA MÁXIMA (<0,2% dos candidatos — texto sem falha relevante em nenhuma competência):
+• C1=200, C2=200, C3=200, C4=200, C5=200 = 1000 pts
 
 Regras invioláveis:
-• Dê 200 em uma competência quando NÃO houver falha relevante nela — não exija "perfeição absoluta" além do que o descritor exige.
-• Uma redação que merece 1000 deve receber 1000 — não há por que deflacionar.
-• Nunca reduza uma competência por problema em outra — cada uma é avaliada de forma independente.
-• Nunca suba uma competência por desempenho em outra — idem.
+• Se o texto merece 200 pts, dê 200. Se merece 1000, dê 1000. Nenhum piso e nenhum teto além dos descritores.
+• Cada competência é avaliada de forma INDEPENDENTE — nunca penalize ou bonifique uma por desempenho em outra.
+• Dê 0 em uma competência quando o descritor de 0 for atendido (texto ilegível em C1, sem proposta em C5, etc.) mesmo que o texto esteja no tema.
+• Dê 200 em uma competência quando NÃO houver falha relevante nela — não exija perfeição além do que o descritor de 200 exige.
 
 ══════════════════════════════════════
 FEEDBACKS POR COMPETÊNCIA
