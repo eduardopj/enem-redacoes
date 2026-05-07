@@ -394,108 +394,144 @@ ETAPA 3 — AVALIAÇÃO DAS 5 COMPETÊNCIAS
 Use SOMENTE as notas: 0, 40, 80, 120, 160, 200 por competência.
 Avalie cada competência de forma INDEPENDENTE, com base nos descritores abaixo.
 
+ATENÇÃO — VIÉS DE GENEROSIDADE:
+Modelos de IA tendem a dar notas excessivamente altas. Lembre-se: a MAIORIA dos alunos do ensino médio escreve redações que merecem 80 em pelo menos 2-3 competências. Notas 120 exigem evidência clara de qualidade. Notas 160 e 200 são minoria.
+
 ─────────────────────────────────────
 C1 — DOMÍNIO DA NORMA PADRÃO DA LÍNGUA PORTUGUESA
 ─────────────────────────────────────
 Avalia: ortografia, acentuação, concordância (nominal/verbal), regência (nominal/verbal), pontuação, uso do hífen.
 
-200 → Excelente domínio. Desvios raros e não sistemáticos (até 1-2 falhas pontuais irrelevantes).
-160 → Bom domínio. Poucos desvios (3-5 erros), sem comprometer a fluência.
-120 → Domínio mediano. Desvios sistemáticos em 1-2 aspectos (ex.: concordância verbal recorrente ou pontuação inconsistente).
-80  → Domínio insuficiente. Desvios frequentes e sistemáticos em vários aspectos, dificultando a leitura.
-40  → Domínio precário. Muitos desvios graves em quase todos os aspectos gramaticais.
+200 → Sem desvios relevantes. Uso correto e elegante da norma culta. Erros mínimos e não sistemáticos (no máximo 1-2 pontuais que não comprometem). Raro.
+160 → Bom domínio. Poucos desvios (2-4 erros pontuais), sem comprometer a fluência. Erros isolados, não se repetem ao longo do texto.
+120 → Domínio mediano. Desvios sistemáticos mas restritos a 1 único aspecto (ex.: só concordância verbal, OU só acentuação, OU só pontuação). O texto é lido com algum esforço mas sem grandes obstáculos.
+80  → Domínio insuficiente. Desvios sistemáticos em 2 ou mais aspectos (ex.: concordância + ortografia + pontuação ao mesmo tempo). Erros aparecem em múltiplos parágrafos. O texto ainda pode ser lido, mas a leitura é claramente prejudicada.
+      ► DÊ 80 (não 120) se encontrar: erros recorrentes de concordância verbal E erros de ortografia E vírgulas mal empregadas — mesmo que cada erro individualmente pareça "pequeno", a combinação é 80.
+40  → Domínio precário. Muitos erros graves em quase todos os aspectos gramaticais. Difícil compreender partes do texto. Erros afetam mais de 50% das frases.
 0   → Ausência de domínio ou texto ilegível.
 
 ─────────────────────────────────────
 C2 — COMPREENSÃO DO TEMA E TIPO TEXTUAL / REPERTÓRIO
 ─────────────────────────────────────
-Avalia: se discute o PROBLEMA CENTRAL do tema (não apenas o assunto); se o tipo textual é dissertativo-argumentativo; se usa repertório sociocultural pertinente e produtivo (não apenas citar, mas articular ao argumento).
+Avalia: se discute o PROBLEMA CENTRAL do tema (não apenas o assunto); se o tipo textual é dissertativo-argumentativo; se usa repertório sociocultural pertinente e produtivo (dados, citações, leis, teorias, fatos históricos — articulados ao argumento, não apenas citados).
 
-200 → Excelente. Tema plenamente atendido, texto claramente dissertativo-argumentativo, repertório pertinente e articulado de forma produtiva (dados, citações, conceitos que sustentam o argumento).
-160 → Bom. Tema atendido, tipo textual correto, repertório pertinente mas com articulação parcial.
-120 → Mediano. Atende ao tema mas com tangenciamentos ou repertório superficial/genérico sem articulação clara.
-80  → Insuficiente. Atende ao tema de forma vaga, com pouco ou nenhum repertório, ou texto predominantemente narrativo/descritivo mas com traços argumentativos.
-40  → Precário. Trata o assunto superficialmente, sem atender ao problema central, sem tipo textual claro.
-0   → Fuga ao tema, ou texto que não configura produção escrita (cópia do tema, texto em branco, palavras isoladas).
+200 → Excelente. Tema plenamente atendido com profundidade, texto claramente dissertativo-argumentativo, repertório pertinente E articulado de forma produtiva (o dado/citação sustenta diretamente o argumento). Mais de 2 repertórios sólidos.
+160 → Bom. Tema atendido, tipo textual correto, repertório pertinente com articulação parcial. Pelo menos 1 referência concreta bem articulada.
+120 → Mediano. Atende ao tema, mas argumenta de forma genérica ("é sabido que...", "estudos mostram que..." sem citar fonte), ou usa 1 repertório superficialmente. Tipo textual dissertativo presente mas com passagens narrativas.
+80  → Insuficiente. Trata o assunto de forma vaga e repetitiva, sem abordar o problema central com profundidade. Sem repertório sociocultural concreto, ou repertório completamente desarticulado da argumentação. Texto predominantemente descritivo com poucos traços argumentativos.
+     ► DÊ 80 (não 120) se: o aluno não cita nenhum dado, lei, autor, estatística ou evento histórico concreto — mesmo que aborde o tema correto.
+40  → Precário. Trata o assunto superficialmente, sem atender ao problema central. Tipo textual confuso (mistura narração, descrição, carta).
+0   → Fuga ao tema, texto em branco, cópia do tema, palavras isoladas.
 
 ─────────────────────────────────────
 C3 — SELEÇÃO E ORGANIZAÇÃO DE ARGUMENTOS
 ─────────────────────────────────────
-Avalia: se há tese clara; se os argumentos são relevantes, desenvolvidos e sustentados por evidências; se há progressão (cada parágrafo avança sobre o anterior); se a estrutura introdução-desenvolvimento-conclusão é respeitada.
+Avalia: se há tese clara; se os argumentos são relevantes, desenvolvidos com causa-efeito ou exemplos concretos; se há progressão real entre parágrafos (cada um avança, não repete); se a estrutura introdução-desenvolvimento-conclusão é respeitada.
 
-200 → Excelente. Tese muito clara, argumentação consistente e articulada, progressão visível, nenhuma contradição, informações pertinentes.
-160 → Bom. Tese clara, argumentação bem desenvolvida em pelo menos 2 parágrafos, com alguma progressão. Pequenas inconsistências não prejudicam.
-120 → Mediano. Há tese e argumentos, mas o desenvolvimento é limitado (argumentos rasos ou repetidos, progressão fraca).
-80  → Insuficiente. Argumentação frágil, sem progressão clara, ideias justapostas sem desenvolvimento.
-40  → Precário. Sem tese identificável, apenas listagem de ideias sem argumento desenvolvido.
-0   → Ausente. Não há argumentação, apenas cópia ou texto incoerente.
+200 → Excelente. Tese muito clara, 2-3 argumentos consistentes com desenvolvimento real (causa-efeito, dados, contra-argumentação), progressão visível, conclusão que retoma a tese e proposta.
+160 → Bom. Tese clara, argumentação bem desenvolvida em pelo menos 2 parágrafos, progressão perceptível entre eles. Pode ter inconsistência menor.
+120 → Mediano. Há tese e 2+ argumentos identificáveis, mas o desenvolvimento é limitado: parágrafos curtos (3-4 frases), argumentos rasos (afirmação sem evidência), progressão fraca (parágrafos poderiam ser trocados de ordem sem perda). A estrutura existe mas não é convincente.
+80  → Insuficiente. Tese presente mas frágil, argumentos são apenas afirmações sem desenvolvimento. Parágrafos têm 2-3 frases. Ideias justapostas sem articulação entre si. Sem progressão real — os parágrafos repetem a mesma ideia com palavras diferentes.
+     ► DÊ 80 (não 120) se: os parágrafos de desenvolvimento têm menos de 4 frases E não apresentam causa-efeito ou exemplo concreto — isso é argumentação insuficiente, não mediana.
+40  → Precário. Sem tese identificável ou tese confusa. Apenas listagem de ideias soltas, sem argumento desenvolvido.
+0   → Ausente. Não há argumentação. Apenas cópia, texto incoerente ou off-topic.
 
 ─────────────────────────────────────
 C4 — COESÃO TEXTUAL
 ─────────────────────────────────────
-Avalia: uso de conectivos e articuladores (adversativos, causais, conclusivos, explicativos); retomadas pronominais e lexicais; progressão sem rupturas; uso variado e adequado de mecanismos coesivos.
+Avalia: uso de conectivos e articuladores (adversativos, causais, conclusivos, explicativos); retomadas pronominais e lexicais; progressão sem rupturas; variedade dos mecanismos coesivos.
 
-200 → Excelente. Diversidade e adequação perfeita dos mecanismos coesivos. Texto flui sem rupturas, retomadas precisas.
-160 → Bom. Bom uso de conectivos, retomadas adequadas, com poucos problemas (repetição ou conector inadequado pontual).
-120 → Mediano. Uso limitado de conectivos (poucos ou repetitivos como "portanto", "além disso" repetidos), retomadas ora adequadas ora falhas.
-80  → Insuficiente. Conectivos inadequados ou ausentes na maioria dos parágrafos, retomadas ambíguas ou sem referente.
-40  → Precário. Coesão quase ausente, texto fragmentado, sem articulação entre as partes.
+200 → Excelente. Diversidade e adequação dos mecanismos coesivos. Texto flui sem rupturas, retomadas precisas, conectivos variados e sempre adequados.
+160 → Bom. Bom uso de conectivos, retomadas adequadas, com raras falhas (1-2 conectivos inadequados ou retomada ambígua pontual).
+120 → Mediano. Uso limitado: poucos conectivos OU conectivos repetitivos (ex.: "além disso" no início de todos os parágrafos, "portanto" em todo final). As retomadas existem mas são mecânicas. O texto não quebra, mas é previsível e monótono na coesão.
+80  → Insuficiente. Conectivos inadequados em vários pontos (ex.: "mas" onde deveria ser "porque", "portanto" sem relação de conclusão real), OU ausência de conectivos em grande parte do texto, OU retomadas ambíguas que atrapalham a leitura.
+     ► DÊ 80 (não 120) se: os parágrafos começam sem conector ou com conector inadequado EM MAIS DE METADE dos casos.
+40  → Precário. Coesão quase ausente. Texto fragmentado, sem articulação entre partes.
 0   → Ausente. Texto sem qualquer mecanismo coesivo identificável.
 
 ─────────────────────────────────────
 C5 — PROPOSTA DE INTERVENÇÃO
 ─────────────────────────────────────
-Avalia: se há proposta concreta (não apenas "é preciso que..."); se apresenta os 5 elementos ENEM: AGENTE (quem executa), AÇÃO (o que fazer), MODO/MEIO (como fazer), FINALIDADE (para quê) e DETALHAMENTO (especificidade viável, não vaga). A proposta deve ser viável e respeitar os direitos humanos.
+Avalia: se há proposta concreta com os 5 elementos ENEM: AGENTE (quem executa), AÇÃO (o que fazer), MODO/MEIO (como executar), FINALIDADE (para quê) e DETALHAMENTO (especificidade e viabilidade). Deve respeitar os direitos humanos.
 
-200 → Excelente. Proposta completa com todos os 5 elementos claramente identificados, articulada ao argumento desenvolvido, viável e específica.
-160 → Bom. Proposta com 4 elementos presentes, bem articulada, viável e suficientemente específica.
-120 → Mediano. Proposta com 3 elementos identificáveis, mas com vagueza em pelo menos 2 aspectos.
-80  → Insuficiente. Proposta com 1-2 elementos presentes, muito vaga ("o governo deve investir em educação") sem detalhamento.
-40  → Precário. Há intenção de proposta, mas não se configura como tal (apenas desejo ou crítica sem ação concreta).
-0   → Ausente. Sem proposta ou proposta que viola direitos humanos.
+ATENÇÃO — C5 é onde mais ocorre superestimação. A maioria dos alunos escreve propostas vagas. "O governo deve investir em educação" tem apenas agente + ação genérica = 80. Isso é o padrão real, não a exceção.
+
+200 → Todos os 5 elementos presentes de forma clara e específica. A proposta é articulada ao problema central discutido no texto. Viável e detalhada. Ex.: "O Ministério da Educação deve implementar [AÇÃO] programas de tutoria par a par em escolas públicas [MODO] por meio de parceria com universidades federais, [FINALIDADE] a fim de reduzir o abandono escolar no ensino médio, [DETALHAMENTO] com acompanhamento semestral de desempenho e bolsas para estudantes-tutores."
+160 → 4 dos 5 elementos presentes e bem articulados. A especificidade é clara em 3+ elementos.
+120 → 3 elementos identificáveis, mas pelo menos 2 deles são vagos. Ex.: agente + ação + finalidade, mas sem MODO específico e sem detalhamento. Ex.: "O governo [AGENTE] deve criar políticas públicas [AÇÃO] de conscientização [vaga] para resolver o problema [FINALIDADE vaga]."
+80  → 1-2 elementos presentes, proposta muito vaga. Fórmulas típicas de 80: "o governo deve investir em X", "as escolas precisam trabalhar essa temática", "é necessário conscientizar a população". Há intenção de proposta, mas falta qualquer especificidade de COMO e para QUÊ de forma concreta.
+     ► DÊ 80 (não 120) se: a proposta não responde "COMO exatamente?" e "QUEM especificamente?". Se as únicas respostas são "governo" e "investimento/conscientização", é 80.
+40  → Há intenção de proposta, mas não se configura como tal: apenas um desejo, uma crítica ou uma pergunta retórica sem ação concreta.
+0   → Ausente, ou proposta que viola direitos humanos.
 
 ══════════════════════════════════════
 REGRAS DE CALIBRAÇÃO FINAL
 ══════════════════════════════════════
-REGRA PRINCIPAL — AVALIE SEM CONSERVADORISMO:
-Dê a nota que os descritores indicam. Não deflacione para "parecer mais realista". Não existe teto imaginário — o realismo está nos descritores de cada competência, não em uma faixa pré-definida.
 
-Distribuição real do ENEM — faixas e exemplos de perfil (referência, não teto):
+DISTRIBUIÇÃO REAL DO ENEM (referência obrigatória):
+• ~15% dos candidatos ficam abaixo de 400 pts
+• ~35% ficam entre 400-600 pts (a maior fatia — é aqui que mora o aluno típico)
+• ~30% ficam entre 600-700 pts
+• ~15% ficam entre 700-900 pts
+• ~5% ficam acima de 900 pts
+• <0,2% atingem 1000 pts
 
-NOTAS MUITO BAIXAS (texto no tema, mas muito precário):
-• C1=40, C2=40, C3=40, C4=40, C5=40 = 200 pts — texto caótico, sem proposta, sem coesão
-• C1=40, C2=80, C3=40, C4=40, C5=40 = 240 pts — ainda muito fraco
-• C1=80, C2=80, C3=40, C4=40, C5=40 = 280 pts — fraquíssimo
-Redações com desvios graves em quase todas as competências DEVEM receber notas entre 200–360 pts.
-Não há piso artificial acima de 200 — se o texto merece 200 ou 240, dê exatamente isso.
+Isso significa: uma redação típica de aluno do ensino médio (argumentação básica, proposta vaga, alguns erros gramaticais) vale em torno de 400-560 pts — NÃO 620-680. Reserve 620+ para textos com argumentação real, repertório concreto e proposta com elementos claros.
 
-NOTAS BAIXAS (texto fraco):
-• C1=80, C2=80, C3=80, C4=80, C5=80 = 400 pts — fraco em tudo, mas com intenção em todas
-• C1=120, C2=80, C3=80, C4=80, C5=80 = 440 pts
+PERFIS DE REFERÊNCIA POR FAIXA:
 
-MEDIANO (próximo à média nacional de ~624 pts):
-• C1=120, C2=120, C3=120, C4=120, C5=120 = 600 pts
-• C1=160, C2=120, C3=120, C4=120, C5=80 = 600 pts
+MUITO PRECÁRIO (200–360 pts):
+• C1=40, C2=40, C3=40, C4=40, C5=40 = 200 — texto caótico, erros em quase toda frase, sem estrutura, sem proposta
+• C1=40, C2=80, C3=40, C4=40, C5=40 = 240 — aborda o tema vagamente, mas execução péssima
+• C1=80, C2=80, C3=40, C4=40, C5=40 = 280 — atende ao tema e tem intenção argumentativa, mas sem estrutura
+• C1=80, C2=80, C3=80, C4=40, C5=40 = 320 — há tentativa de argumentar, mas texto desarticulado
+• C1=80, C2=80, C3=80, C4=40, C5=80 = 360 — argumentação presente mas muito fraca; proposta genérica
 
-BOM:
-• C1=160, C2=160, C3=120, C4=120, C5=120 = 680 pts
-• C1=160, C2=160, C3=160, C4=120, C5=120 = 720 pts
+FRACO (360–480 pts):
+• C1=80, C2=80, C3=80, C4=80, C5=80 = 400 — tudo insuficiente, mas com intenção em todas as áreas
+• C1=120, C2=80, C3=80, C4=80, C5=80 = 440 — melhor em norma culta, fraco no restante
+• C1=80, C2=80, C3=80, C4=80, C5=120 = 440 — proposta tem 3 elementos, resto fraco
+• C1=120, C2=80, C3=80, C4=80, C5=120 = 480 — norma e proposta medianas, argumento fraco
 
-MUITO BOM:
-• C1=160, C2=200, C3=200, C4=160, C5=160 = 880 pts
-• C1=200, C2=160, C3=200, C4=160, C5=200 = 920 pts
+MEDIANO (480–640 pts) — próximo à média nacional de ~624:
+• C1=120, C2=120, C3=80, C4=80, C5=80 = 480 — lê bem, aborda o tema, argumento e coesão fracos
+• C1=120, C2=120, C3=120, C4=80, C5=80 = 520 — argumentação mediana, coesão e proposta fracas
+• C1=120, C2=120, C3=120, C4=120, C5=80 = 560 — boa base, proposta ainda vaga
+• C1=120, C2=120, C3=120, C4=120, C5=120 = 600 — mediano em tudo; base sólida mas sem destaque
+• C1=160, C2=120, C3=120, C4=120, C5=80 = 600 — boa norma culta, argumento e proposta medianos
 
-EXCELENTE (raro — top ~10% dos candidatos):
-• C1=200, C2=200, C3=200, C4=160, C5=200 = 960 pts
+BOM (640–760 pts):
+• C1=160, C2=160, C3=120, C4=120, C5=80 = 640 — boa norma e tema, proposta ainda fraca
+• C1=160, C2=160, C3=120, C4=120, C5=120 = 680 — sólido, proposta tem elementos mas vaga
+• C1=160, C2=160, C3=160, C4=120, C5=120 = 720 — argumentação bem desenvolvida, proposta mediana
+• C1=160, C2=160, C3=160, C4=160, C5=120 = 760 — muito bom em quase tudo, proposta sem o 5º elemento
 
-NOTA MÁXIMA (<0,2% dos candidatos — texto sem falha relevante em nenhuma competência):
-• C1=200, C2=200, C3=200, C4=200, C5=200 = 1000 pts
+MUITO BOM (800–920 pts) — top 10-15%:
+• C1=160, C2=200, C3=160, C4=160, C5=120 = 800 — repertório excelente, proposta com 3 elementos
+• C1=160, C2=200, C3=200, C4=160, C5=160 = 880 — argumentação e tema excelentes
+• C1=200, C2=160, C3=200, C4=160, C5=200 = 920 — quase impecável
+
+EXCELENTE (960–1000 pts) — top 1-5%:
+• C1=200, C2=200, C3=200, C4=160, C5=200 = 960 — raro; apenas coesão com pequena falha
+• C1=200, C2=200, C3=200, C4=200, C5=200 = 1000 — nota máxima; menos de 0,2% dos candidatos
+
+══════════════════════════════════════
+VERIFICAÇÃO OBRIGATÓRIA ANTES DE FINALIZAR
+══════════════════════════════════════
+Antes de retornar a nota, responda internamente a cada uma destas perguntas:
+
+1. NORMA (C1): Encontrei erros sistemáticos em 2+ aspectos gramaticais diferentes? Se sim → máximo 80.
+2. TEMA (C2): O aluno citou algum dado, lei, estatística, autor ou evento histórico concreto articulado ao argumento? Se não → máximo 80 em C2. Se citou superficialmente sem articular → máximo 120.
+3. ARGUMENTAÇÃO (C3): Os parágrafos de desenvolvimento têm 4+ frases com causa-efeito ou exemplos? Há progressão real (cada parágrafo avança)? Se não → máximo 80.
+4. COESÃO (C4): Há conectivos variados e adequados na maior parte das transições? Se a maioria dos parágrafos começa sem conector ou com o mesmo conector → máximo 80.
+5. PROPOSTA (C5): A proposta responde QUEM + O QUÊ + COMO especificamente + PARA QUÊ? Se responde apenas "governo" + "investimento/conscientização" → máximo 80.
+6. CHEQUE FINAL: Se você está dando ≥120 em todas as 5 competências (total ≥600), verifique: este texto tem argumentação real, repertório concreto E proposta com pelo menos 3 elementos específicos? Se qualquer resposta for "não claramente" → rebaixe 1-2 competências para 80.
 
 Regras invioláveis:
-• Se o texto merece 200 pts, dê 200. Se merece 1000, dê 1000. Nenhum piso e nenhum teto além dos descritores.
-• Cada competência é avaliada de forma INDEPENDENTE — nunca penalize ou bonifique uma por desempenho em outra.
-• Dê 0 em uma competência quando o descritor de 0 for atendido (texto ilegível em C1, sem proposta em C5, etc.) mesmo que o texto esteja no tema.
-• Dê 200 em uma competência quando NÃO houver falha relevante nela — não exija perfeição além do que o descritor de 200 exige.
+• Cada competência é INDEPENDENTE — nunca penalize ou bonifique uma por desempenho em outra.
+• Se o texto merece 200 pts, dê 200. Se merece 1000, dê 1000.
+• Dê 0 em uma competência quando o descritor de 0 for atendido.
+• Dê 200 em uma competência SOMENTE quando não houver falha relevante nela.
 
 ══════════════════════════════════════
 FEEDBACKS POR COMPETÊNCIA
