@@ -147,7 +147,7 @@ export default function DashboardScreen() {
         <StaggerItem index={1}>
           <Pressable
             onPress={contextualAction.onPress}
-            style={[styles.actionCard, { backgroundColor: colors.text }]}
+            style={[styles.actionCard, { backgroundColor: colors.accentHover }]}
           >
             <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(255,255,255,0.13)' }]}>
               <Ionicons name={contextualAction.icon} size={24} color="#fff" />
@@ -157,7 +157,7 @@ export default function DashboardScreen() {
               <Text style={styles.actionSub}>{contextualAction.subtitle}</Text>
             </View>
             <View style={styles.actionBtn}>
-              <Ionicons name="arrow-forward" size={18} color={colors.text} />
+              <Ionicons name="arrow-forward" size={18} color={colors.accentHover} />
             </View>
           </Pressable>
         </StaggerItem>
@@ -169,8 +169,8 @@ export default function DashboardScreen() {
               label="Alunos"
               value={teacherStudents.length}
               icon="people"
-              iconBg={colors.infoSoft}
-              iconColor={colors.accent}
+              iconBg={colors.accentSoft}
+              iconColor={colors.accentHover}
               onPress={() => router.push('/alunos')}
               colors={colors}
             />
@@ -178,8 +178,8 @@ export default function DashboardScreen() {
               label="Temas"
               value={teacherThemes.length}
               icon="library"
-              iconBg={colors.successSoft}
-              iconColor={colors.success}
+              iconBg={colors.secondarySoft}
+              iconColor={colors.secondary}
               onPress={() => router.push('/temas')}
               colors={colors}
             />
@@ -197,8 +197,8 @@ export default function DashboardScreen() {
               label="Corrigidas"
               value={correctedEssays.length}
               icon="checkmark-circle"
-              iconBg={colors.infoSoft}
-              iconColor={colors.info}
+              iconBg={colors.successSoft}
+              iconColor={colors.success}
               onPress={() => router.push('/redacoes')}
               colors={colors}
             />

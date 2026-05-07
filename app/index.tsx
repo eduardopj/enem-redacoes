@@ -15,8 +15,8 @@ export default function IndexScreen() {
 
         {/* Hero */}
         <View style={styles.hero}>
-          <View style={[styles.logoWrap, { backgroundColor: colors.accent }]}>
-            <Ionicons name="school" size={30} color="#fff" />
+          <View style={[styles.logoWrap, { backgroundColor: colors.accentSoft, borderWidth: 1.5, borderColor: colors.primaryMuted }]}>
+            <Ionicons name="school" size={30} color={colors.accentHover} />
           </View>
 
           <Text style={[styles.eyebrow, { color: colors.mutedText }]}>ENEM IA</Text>
@@ -85,13 +85,13 @@ function AccessTile({
     Animated.spring(scale, { toValue: 1, damping: 20, stiffness: 260, useNativeDriver: true }).start();
   }
 
-  const bg = dark ? colors.text : colors.surface;
-  const iconBg = dark ? 'rgba(255,255,255,0.13)' : colors.accentSoft ?? (colors.accent + '12');
-  const iconColor = dark ? '#fff' : colors.accent;
+  const bg = dark ? colors.accentHover : colors.surface;
+  const iconBg = dark ? 'rgba(255,255,255,0.14)' : colors.accentSoft;
+  const iconColor = dark ? '#fff' : colors.accentHover;
   const titleColor = dark ? '#fff' : colors.text;
-  const descColor = dark ? 'rgba(255,255,255,0.58)' : colors.mutedText;
-  const arrowBg = dark ? 'rgba(255,255,255,0.10)' : colors.input;
-  const arrowColor = dark ? '#fff' : colors.accent;
+  const descColor = dark ? 'rgba(255,255,255,0.62)' : colors.mutedText;
+  const arrowBg = dark ? 'rgba(255,255,255,0.12)' : colors.accentSoft;
+  const arrowColor = dark ? '#fff' : colors.accentHover;
 
   return (
     <Animated.View style={{ transform: [{ scale }] }}>

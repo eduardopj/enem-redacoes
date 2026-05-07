@@ -17,10 +17,10 @@ const PERIOD_ICON: Record<string, any> = {
 };
 
 const PERIOD_COLOR: Record<string, string> = {
-  manhã: '#F59E0B',
-  tarde: '#3B82F6',
-  noite: '#8B5CF6',
-  integral: '#10B981',
+  manhã: '#B7791F',
+  tarde: '#3B5BA9',
+  noite: '#6D4C9E',
+  integral: '#15803D',
 };
 
 function scoreColor(s: number, colors: any): string {
