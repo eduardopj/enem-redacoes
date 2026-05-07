@@ -43,9 +43,9 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
   },
   iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 2,
@@ -58,14 +58,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   label: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
-    lineHeight: 16,
+    lineHeight: 17,
     textAlign: 'center',
   },
   helper: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 12,
+    lineHeight: 16,
     textAlign: 'center',
   },
 });

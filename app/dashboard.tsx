@@ -147,7 +147,7 @@ export default function DashboardScreen() {
         <StaggerItem index={1}>
           <Pressable
             onPress={contextualAction.onPress}
-            style={[styles.actionCard, { backgroundColor: colors.accentHover }]}
+            style={[styles.actionCard, { backgroundColor: colors.accent }]}
           >
             <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(255,255,255,0.13)' }]}>
               <Ionicons name={contextualAction.icon} size={24} color="#fff" />
@@ -157,7 +157,7 @@ export default function DashboardScreen() {
               <Text style={styles.actionSub}>{contextualAction.subtitle}</Text>
             </View>
             <View style={styles.actionBtn}>
-              <Ionicons name="arrow-forward" size={18} color={colors.accentHover} />
+              <Ionicons name="arrow-forward" size={18} color={colors.accent} />
             </View>
           </Pressable>
         </StaggerItem>
@@ -445,7 +445,7 @@ export default function DashboardScreen() {
                     </View>
                     {avg !== null ? (
                       <Text style={[styles.turmaAvg, {
-                        color: avg >= 700 ? colors.success : avg >= 500 ? colors.warning : colors.danger
+                        color: getScoreColor(avg, colors)
                       }]}>
                         {avg} pts
                       </Text>
@@ -597,8 +597,9 @@ function OnboardingStep({ number, title, desc, onPress, done, icon, isLast, colo
 }
 
 function scoreGradientColor(score: number, colors: any): string {
-  if (score >= 700) return colors.success;
-  if (score >= 500) return colors.warning;
+  if (score >= 900) return colors.success;
+  if (score >= 550) return colors.accent;
+  if (score >= 380) return colors.warning;
   return colors.danger;
 }
 

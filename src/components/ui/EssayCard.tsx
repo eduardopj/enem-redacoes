@@ -1,4 +1,4 @@
-import { formatRelativeDate } from '@/utils/analytics';
+import { COMP_COLORS, formatRelativeDate } from '@/utils/analytics';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { theme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,8 +25,8 @@ type EssayCardProps = {
 
 const COMP_LABELS = ['C1', 'C2', 'C3', 'C4', 'C5'];
 
-function MiniCompBars({ competencies, colors }: { competencies: Competencies; colors: any }) {
-  const compColors = [colors.accent, colors.secondary, colors.success, colors.warning, colors.danger];
+function MiniCompBars({ competencies }: { competencies: Competencies }) {
+  const compColors = [COMP_COLORS.c1, COMP_COLORS.c2, COMP_COLORS.c3, COMP_COLORS.c4, COMP_COLORS.c5];
   const vals = [competencies.c1, competencies.c2, competencies.c3, competencies.c4, competencies.c5];
   return (
     <View style={barStyles.wrap}>
@@ -48,8 +48,8 @@ const barStyles = StyleSheet.create({
   col: { flex: 1, alignItems: 'center', gap: 2 },
   track: { width: '100%', height: 24, borderRadius: 4, justifyContent: 'flex-end', overflow: 'hidden' },
   fill: { width: '100%', borderRadius: 4 },
-  label: { fontSize: 8, fontWeight: '700', letterSpacing: 0.2 },
-  scoreLabel: { fontSize: 9, fontWeight: '600', lineHeight: 11 },
+  label: { fontSize: 9, fontWeight: '700', letterSpacing: 0.2 },
+  scoreLabel: { fontSize: 10, fontWeight: '700', lineHeight: 12 },
 });
 
 export function EssayCard({
@@ -67,8 +67,9 @@ export function EssayCard({
 
   const scoreColor =
     typeof totalScore === 'number'
-      ? totalScore >= 700 ? colors.success
-        : totalScore >= 500 ? colors.warning
+      ? totalScore >= 900 ? colors.success
+        : totalScore >= 550 ? colors.accent
+        : totalScore >= 380 ? colors.warning
         : colors.danger
       : colors.mutedText;
 
@@ -122,7 +123,7 @@ export function EssayCard({
 
         {showCompBars ? (
           <View style={[styles.compSection, { borderTopColor: colors.border }]}>
-            <MiniCompBars competencies={competencies!} colors={colors} />
+            <MiniCompBars competencies={competencies!} />
           </View>
         ) : null}
 
