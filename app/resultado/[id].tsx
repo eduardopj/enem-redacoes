@@ -1,14 +1,19 @@
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import {
   Accordion,
+  AnimatedNumber,
   AppHeader,
   Button,
   Card,
   CompetencyProgress,
   ScoreCelebration,
   ScreenContainer,
+  SkeletonResultado,
+  StaggerItem,
   StatusBadge,
 } from '@/components/ui';
+import { EvolutionBanner } from '@/components/ui/EvolutionBanner';
+import { fetchEssayDetail } from '@/services/sync/sync-essays';
 import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
@@ -17,7 +22,7 @@ import { getCompColors, getScoreColor, getScoreLabel, isCorrectedEssay } from '@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 type ResultTab = 'resumo' | 'competencias' | 'plano' | 'texto';
@@ -87,8 +92,13 @@ export default function ResultadoScreen() {
   const students = useAppStore((state) => state.students);
   const currentTeacher = useAppStore((state) => state.currentTeacher);
   const updateEssayTeacherEval = useAppStore((state) => state.updateEssayTeacherEval);
+  const markEssayTeacherViewed = useAppStore((state) => state.markEssayTeacherViewed);
+  const updateEssayCorrection = useAppStore((state) => state.updateEssayCorrection);
+  const backendToken = useAppStore((state) => state.backendToken);
 
   const [showCelebration, setShowCelebration] = useState(true);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const hasFetchedDetail = useRef(false);
   const [activeTab, setActiveTab] = useState<ResultTab>('resumo');
   const [teacherOpen, setTeacherOpen] = useState(false);
   const [teacherScoreInput, setTeacherScoreInput] = useState('');
@@ -100,16 +110,66 @@ export default function ResultadoScreen() {
     [essay, students]
   );
 
-  if (!essay || !isCorrectedEssay(essay)) {
+  // Mark as reviewed when the teacher opens a student-submitted essay
+  useEffect(() => {
+    if (currentTeacher && essay?.submittedByStudent && !essay.teacherReviewedAt) {
+      markEssayTeacherViewed(essay.id);
+    }
+  }, [essay?.id]);
+
+  // Lazy-load correction details stripped from AsyncStorage (heavy fields)
+  useEffect(() => {
+    if (!essay || !isCorrectedEssay(essay) || hasFetchedDetail.current) return;
+    if (essay.competencyFeedbacks || (essay.strengths?.length && essay.feedback)) return;
+    hasFetchedDetail.current = true;
+    setLoadingDetail(true);
+    fetchEssayDetail(essay.id, backendToken ?? undefined)
+      .then((remote) => {
+        if (remote?.correctionJson) updateEssayCorrection(essay.id, remote.correctionJson);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingDetail(false));
+  }, [essay?.id]);
+
+  if (!essay) {
+    // Redação não encontrada de jeito nenhum
     return (
       <ProtectedRoute allowStudent>
-        <ScreenContainer showBack>
+        <ScreenContainer showBack topBarTitle="Resultado">
           <AppHeader title="Resultado" subtitle="Resultado não encontrado." />
           <Card>
             <Text style={[styles.emptyText, { color: colors.mutedText }]}>
-              Esta redação ainda não tem uma correção final.
+              Esta redação não foi encontrada.
             </Text>
           </Card>
+        </ScreenContainer>
+      </ProtectedRoute>
+    );
+  }
+
+  // Corrected essay with heavy fields being lazy-loaded from backend
+  if (isCorrectedEssay(essay) && loadingDetail && !essay.competencyFeedbacks) {
+    return (
+      <ProtectedRoute allowStudent>
+        <ScreenContainer showBack topBarTitle="Resultado">
+          <AppHeader eyebrow="Carregando" title="Buscando detalhes…" subtitle={essay.themeTitle} />
+          <SkeletonResultado />
+        </ScreenContainer>
+      </ProtectedRoute>
+    );
+  }
+
+  // Redação existe mas ainda está sendo processada → skeleton informativo
+  if (!isCorrectedEssay(essay)) {
+    return (
+      <ProtectedRoute allowStudent>
+        <ScreenContainer showBack topBarTitle="Resultado">
+          <AppHeader
+            eyebrow="Aguardando"
+            title="Corrigindo…"
+            subtitle={essay.themeTitle ?? 'A IA está analisando a redação'}
+          />
+          <SkeletonResultado />
         </ScreenContainer>
       </ProtectedRoute>
     );
@@ -157,15 +217,18 @@ export default function ResultadoScreen() {
         visible={showCelebration}
         onDismiss={() => setShowCelebration(false)}
       />
-      <ScreenContainer showBack>
+      <ScreenContainer showBack topBarTitle="Resultado">
         <AppHeader eyebrow="Resultado" title={studentName} subtitle={essay.themeTitle} />
+
+        {/* Banner de evolução — aparece se houver redação anterior */}
+        <EvolutionBanner currentEssay={essay} allEssays={essays} />
 
         <Card style={[styles.heroCard, { borderColor: scoreColor + '35' }]}>
           <View style={styles.heroTop}>
             <View>
               <Text style={[styles.heroKicker, { color: colors.mutedText }]}>Nota da IA</Text>
               <View style={styles.scoreRow}>
-                <Text style={[styles.score, { color: scoreColor }]}>{scoreText(essay.totalScore)}</Text>
+                <AnimatedNumber value={aiScore} style={[styles.score, { color: scoreColor }]} />
                 <Text style={[styles.scoreBase, { color: colors.mutedText }]}>/1000</Text>
               </View>
               <Text style={[styles.scoreLabel, { color: scoreColor }]}>{getScoreLabel(aiScore)}</Text>
@@ -216,7 +279,11 @@ export default function ResultadoScreen() {
                       : 'Destaque sua nota final e observações manuais.'}
                   </Text>
                 </View>
-                <Pressable onPress={teacherOpen ? () => setTeacherOpen(false) : openTeacherEval} style={[styles.iconButton, { backgroundColor: colors.input }]}>
+                <Pressable
+                onPress={teacherOpen ? () => setTeacherOpen(false) : openTeacherEval}
+                style={[styles.iconButton, { backgroundColor: colors.input }]}
+                accessibilityLabel={teacherOpen ? 'Fechar edição' : 'Editar avaliação do professor'}
+              >
                   <Ionicons name={teacherOpen ? 'chevron-up' : 'pencil-outline'} size={17} color={colors.accent} />
                 </Pressable>
               </View>
@@ -291,7 +358,7 @@ export default function ResultadoScreen() {
         {activeTab === 'resumo' ? <ResumoTab essay={essay} colors={colors} /> : null}
         {activeTab === 'competencias' ? <CompetenciasTab essay={essay} colors={colors} /> : null}
         {activeTab === 'plano' ? <PlanoTab essay={essay} colors={colors} /> : null}
-        {activeTab === 'texto' ? <TextoTab essay={essay} colors={colors} /> : null}
+        {activeTab === 'texto' ? <TextoTab essay={essay} colors={colors} token={backendToken} /> : null}
 
         <View style={styles.actions}>
           <Button
@@ -329,20 +396,26 @@ export default function ResultadoScreen() {
 function ResumoTab({ essay, colors }: { essay: Essay; colors: any }) {
   return (
     <>
-      <Card>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Leitura pedagógica</Text>
-        <View style={styles.insightGrid}>
-          <MiniInsight label="Tema" value={essay.themeAdequacy?.level ?? 'pendente'} icon="flag-outline" colors={colors} />
-          <MiniInsight label="Leitura" value={essay.transcriptionConfidence ?? 'media'} icon="eye-outline" colors={colors} />
-          <MiniInsight label="Modo" value={essay.writingMode ?? 'indefinido'} icon="create-outline" colors={colors} />
-        </View>
-        {essay.generalObservation ? (
-          <Text style={[styles.paragraph, { color: colors.softText }]}>{essay.generalObservation}</Text>
-        ) : null}
-      </Card>
+      <StaggerItem index={0}>
+        <Card>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Leitura pedagógica</Text>
+          <View style={styles.insightGrid}>
+            <MiniInsight label="Tema" value={essay.themeAdequacy?.level ?? 'pendente'} icon="flag-outline" colors={colors} />
+            <MiniInsight label="Leitura" value={essay.transcriptionConfidence ?? 'media'} icon="eye-outline" colors={colors} />
+            <MiniInsight label="Modo" value={essay.writingMode ?? 'indefinido'} icon="create-outline" colors={colors} />
+          </View>
+          {essay.generalObservation ? (
+            <Text style={[styles.paragraph, { color: colors.softText }]}>{essay.generalObservation}</Text>
+          ) : null}
+        </Card>
+      </StaggerItem>
 
-      <BulletsCard title="Pontos fortes" icon="checkmark-circle-outline" items={essay.strengths} color={colors.success} colors={colors} />
-      <BulletsCard title="Prioridades" icon="alert-circle-outline" items={essay.weaknesses} color={colors.warning} colors={colors} />
+      <StaggerItem index={1}>
+        <BulletsCard title="Pontos fortes" icon="checkmark-circle-outline" items={essay.strengths} color={colors.success} colors={colors} />
+      </StaggerItem>
+      <StaggerItem index={2}>
+        <BulletsCard title="Prioridades" icon="alert-circle-outline" items={essay.weaknesses} color={colors.warning} colors={colors} />
+      </StaggerItem>
     </>
   );
 }
@@ -421,13 +494,19 @@ function PlanoTab({ essay, colors }: { essay: Essay; colors: any }) {
   );
 }
 
-function TextoTab({ essay, colors }: { essay: Essay; colors: any }) {
+function TextoTab({ essay, colors, token }: { essay: Essay; colors: any; token?: string | null }) {
+  const imageSource = essay.imageUri
+    ? { uri: essay.imageUri }
+    : essay.imageRemoteUrl
+    ? { uri: essay.imageRemoteUrl, headers: token ? { Authorization: `Bearer ${token}` } : undefined }
+    : null;
+
   return (
     <>
-      {essay.imageUri ? (
+      {imageSource ? (
         <Card>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Imagem enviada</Text>
-          <Image source={{ uri: essay.imageUri }} style={[styles.preview, { borderColor: colors.border }]} contentFit="contain" />
+          <Image source={imageSource} style={[styles.preview, { borderColor: colors.border }]} contentFit="contain" />
         </Card>
       ) : null}
       <Accordion title="Transcrição" subtitle={essay.transcriptionConfidence ? `confiança ${essay.transcriptionConfidence}` : undefined} defaultOpen>
@@ -490,64 +569,64 @@ function FeedbackLine({ title, text, colors }: { title: string; text: string; co
 }
 
 const styles = StyleSheet.create({
-  emptyText: { fontSize: 14, lineHeight: 21 },
+  emptyText: { fontSize: 16, lineHeight: 26, fontFamily: 'Inter_400Regular' },
   heroCard: { borderWidth: 1, gap: theme.spacing.md },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', gap: theme.spacing.md },
-  heroKicker: { fontSize: 11, fontWeight: '800', letterSpacing: 0.4 },
+  heroKicker: { fontSize: 13, fontWeight: '800', letterSpacing: 0.4, fontFamily: 'Inter_700Bold' },
   scoreRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  score: { fontSize: 56, lineHeight: 62, fontWeight: '900', letterSpacing: 0 },
-  scoreBase: { fontSize: 17, fontWeight: '700' },
-  scoreLabel: { fontSize: 14, fontWeight: '800' },
+  score: { fontSize: 56, lineHeight: 62, fontWeight: '900', letterSpacing: 0, fontFamily: 'Nunito_900Black' },
+  scoreBase: { fontSize: 18, fontWeight: '700', fontFamily: 'Nunito_700Bold' },
+  scoreLabel: { fontSize: 15, fontWeight: '800', fontFamily: 'Nunito_800ExtraBold' },
   heroStatus: { alignItems: 'flex-end', gap: 8 },
   confidencePill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 999 },
-  confidenceText: { fontSize: 11, fontWeight: '800' },
+  confidenceText: { fontSize: 12, fontWeight: '800', fontFamily: 'Inter_700Bold' },
   aiPanel: { borderWidth: 1, borderRadius: 14, padding: 12, flexDirection: 'row', gap: 10, alignItems: 'center' },
   aiIcon: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  aiTitle: { fontSize: 14, fontWeight: '800', lineHeight: 18 },
-  aiText: { fontSize: 12, lineHeight: 17 },
+  aiTitle: { fontSize: 15, fontWeight: '800', lineHeight: 22, fontFamily: 'Inter_700Bold' },
+  aiText: { fontSize: 13, lineHeight: 20, fontFamily: 'Inter_400Regular' },
   teacherPanel: { borderTopWidth: 1, paddingTop: theme.spacing.md, gap: theme.spacing.md },
   teacherTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   teacherTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  teacherTitle: { fontSize: 15, fontWeight: '800' },
+  teacherTitle: { fontSize: 16, fontWeight: '800', fontFamily: 'Nunito_800ExtraBold' },
   teacherReviewedPill: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4 },
-  teacherReviewedText: { fontSize: 10, fontWeight: '900' },
-  teacherSub: { fontSize: 12, lineHeight: 17, marginTop: 2 },
+  teacherReviewedText: { fontSize: 12, fontWeight: '900', fontFamily: 'Inter_700Bold' },
+  teacherSub: { fontSize: 14, lineHeight: 22, marginTop: 2, fontFamily: 'Inter_400Regular' },
   iconButton: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   teacherPreviewRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
   teacherScoreBox: { width: 94, borderRadius: 14, padding: 10, alignItems: 'center' },
-  teacherScore: { fontSize: 28, fontWeight: '900', letterSpacing: 0 },
-  teacherScoreLabel: { fontSize: 10, fontWeight: '700' },
-  teacherNote: { fontSize: 13, lineHeight: 19 },
-  teacherGap: { fontSize: 12, fontWeight: '800', marginTop: 4 },
-  teacherReviewedDate: { fontSize: 11, fontWeight: '700', marginTop: 3 },
+  teacherScore: { fontSize: 28, fontWeight: '900', letterSpacing: 0, fontFamily: 'Nunito_900Black' },
+  teacherScoreLabel: { fontSize: 12, fontWeight: '700', fontFamily: 'Inter_700Bold' },
+  teacherNote: { fontSize: 15, lineHeight: 24, fontFamily: 'Inter_400Regular' },
+  teacherGap: { fontSize: 13, fontWeight: '800', marginTop: 4, fontFamily: 'Inter_700Bold' },
+  teacherReviewedDate: { fontSize: 12, fontWeight: '700', marginTop: 3, fontFamily: 'Inter_600SemiBold' },
   teacherForm: { gap: 10 },
-  teacherInput: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, minHeight: 48, fontSize: 16, fontWeight: '800' },
-  teacherTextarea: { borderWidth: 1, borderRadius: 12, padding: 14, minHeight: 96, textAlignVertical: 'top', fontSize: 14, lineHeight: 20 },
+  teacherInput: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, minHeight: 50, fontSize: 17, fontWeight: '800', fontFamily: 'Nunito_800ExtraBold' },
+  teacherTextarea: { borderWidth: 1, borderRadius: 12, padding: 14, minHeight: 96, textAlignVertical: 'top', fontSize: 16, lineHeight: 26, fontFamily: 'Inter_400Regular' },
   teacherActions: { flexDirection: 'row', gap: 10 },
   tabs: { flexDirection: 'row', borderRadius: 14, padding: 4, gap: 4 },
-  tab: { flex: 1, minHeight: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  tabText: { fontSize: 12, fontWeight: '800' },
-  sectionTitle: { fontSize: 16, fontWeight: '800', lineHeight: 21, marginBottom: 12 },
+  tab: { flex: 1, minHeight: 40, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  tabText: { fontSize: 13, fontWeight: '800', fontFamily: 'Inter_700Bold' },
+  sectionTitle: { fontSize: 17, fontWeight: '800', lineHeight: 26, marginBottom: 12, fontFamily: 'Nunito_800ExtraBold' },
   insightGrid: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   miniInsight: { flex: 1, borderRadius: 12, padding: 10, gap: 4 },
-  miniLabel: { fontSize: 10, fontWeight: '800' },
-  miniValue: { fontSize: 12, fontWeight: '800' },
-  paragraph: { fontSize: 14, lineHeight: 21 },
-  paragraphSmall: { fontSize: 12, lineHeight: 18, marginTop: 8 },
+  miniLabel: { fontSize: 12, fontWeight: '800', fontFamily: 'Inter_700Bold' },
+  miniValue: { fontSize: 13, fontWeight: '800', fontFamily: 'Inter_700Bold' },
+  paragraph: { fontSize: 16, lineHeight: 26, fontFamily: 'Inter_400Regular' },
+  paragraphSmall: { fontSize: 14, lineHeight: 22, marginTop: 8, fontFamily: 'Inter_400Regular' },
   cardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  bulletList: { gap: 9 },
+  bulletList: { gap: 10 },
   bulletRow: { flexDirection: 'row', gap: 9, alignItems: 'flex-start' },
-  bulletDot: { width: 7, height: 7, borderRadius: 4, marginTop: 7 },
-  bulletText: { flex: 1, fontSize: 13, lineHeight: 20 },
+  bulletDot: { width: 7, height: 7, borderRadius: 4, marginTop: 9 },
+  bulletText: { flex: 1, fontSize: 15, lineHeight: 24, fontFamily: 'Inter_400Regular' },
   competencyList: { gap: 10 },
-  feedbackBlock: { gap: 12, marginTop: 14 },
-  feedbackLine: { gap: 3 },
-  feedbackTitle: { fontSize: 12, fontWeight: '900' },
-  feedbackText: { fontSize: 13, lineHeight: 19 },
+  feedbackBlock: { gap: 14, marginTop: 14 },
+  feedbackLine: { gap: 4 },
+  feedbackTitle: { fontSize: 13, fontWeight: '900', fontFamily: 'Inter_700Bold' },
+  feedbackText: { fontSize: 15, lineHeight: 24, fontFamily: 'Inter_400Regular' },
   wordWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
   wordPill: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
-  wordText: { fontSize: 12, fontWeight: '700' },
+  wordText: { fontSize: 13, fontWeight: '700', fontFamily: 'Inter_700Bold' },
   preview: { width: '100%', height: 300, borderRadius: 14, borderWidth: 1 },
-  transcription: { fontSize: 13, lineHeight: 21 },
+  transcription: { fontSize: 15, lineHeight: 25, fontFamily: 'Inter_400Regular' },
   actions: { gap: 10, marginBottom: theme.spacing.sm },
 });

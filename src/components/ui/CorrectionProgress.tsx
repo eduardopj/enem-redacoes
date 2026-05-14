@@ -95,6 +95,12 @@ export function CorrectionProgress({ currentStep, feedback }: CorrectionProgress
   const barWidth = progress.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] });
   const shimmerX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-90, 300] });
   const elapsedLabel = elapsed < 60 ? `${elapsed}s` : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
+  const footerMessage =
+    elapsed > 110
+      ? 'Redações manuscritas podem levar até 2 min. Quase lá!'
+      : elapsed > 60
+      ? 'Aguardando a IA finalizar a análise…'
+      : 'Mantenha o app aberto. O resultado aparece automaticamente.';
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -183,7 +189,7 @@ export function CorrectionProgress({ currentStep, feedback }: CorrectionProgress
       </View>
 
       <Text style={[styles.footer, { color: colors.mutedText, borderTopColor: colors.border }]}>
-        Mantenha o app aberto. O resultado aparece automaticamente.
+        {footerMessage}
       </Text>
     </View>
   );

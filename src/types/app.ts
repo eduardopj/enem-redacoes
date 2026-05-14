@@ -1,3 +1,5 @@
+import type { EssayCorrection } from './correction';
+
 export type EssayStatus =
   | 'pendente'
   | 'processando'
@@ -41,6 +43,7 @@ export type Student = {
   className: string;    // kept for backward compat; mirrors turma.name when turmaId set
   accessCode?: string;
   state?: string;
+  birthDate?: string;   // ISO date string, e.g. "2007-03-15"
 };
 
 export type StudentSession = {
@@ -49,6 +52,7 @@ export type StudentSession = {
   turmaId?: string;
   studentName: string;
   className: string;
+  birthDate?: string;
 };
 
 export type ThemeItem = {
@@ -73,7 +77,8 @@ export type Atividade = {
   status: 'ativa' | 'encerrada';
 };
 
-export type Essay = {
+// Essay base fields (identity, media, status, meta)
+type EssayBase = {
   id: string;
   teacherId: string;
   studentId: string;
@@ -83,6 +88,7 @@ export type Essay = {
   imageName?: string;
   imageUri?: string;
   imageMimeType?: string;
+  imageRemoteUrl?: string;
   documentName?: string;
   documentUri?: string;
   status: EssayStatus;
@@ -91,59 +97,18 @@ export type Essay = {
   reviewRequired?: boolean;
   errorMessage?: string;
   correctionAttempts?: number;
+  submittedByStudent?: boolean;
   totalScore?: number;
-  teacherScore?: number;   // manual grade added by teacher (0–1000)
-  teacherNote?: string;    // teacher's own written assessment
+  teacherScore?: number;
+  teacherNote?: string;
   teacherReviewedAt?: string;
-  transcription?: string;
-  transcriptionNotes?: string;
-  transcriptionConfidence?: 'alta' | 'media' | 'baixa';
-  writingMode?: 'manuscrita' | 'digitada' | 'mista' | 'indefinida';
-  legibility?: {
-    applicable: boolean;
-    level: 'boa' | 'media' | 'baixa' | 'nao_se_aplica';
-    observation: string;
-    illegibleExcerpt: string;
-  };
-  themeAdequacy?: {
-    level: 'adequado' | 'tangencial' | 'inadequado';
-    observation: string;
-  };
-  scoreReliability?: {
-    level: 'alta' | 'media' | 'baixa';
-    observation: string;
-  };
-  competencies?: {
-    c1: number;
-    c2: number;
-    c3: number;
-    c4: number;
-    c5: number;
-  };
-  competencyFeedbacks?: {
-    c1: { diagnosis: string; positive: string; improvement: string };
-    c2: { diagnosis: string; positive: string; improvement: string };
-    c3: { diagnosis: string; positive: string; improvement: string };
-    c4: { diagnosis: string; positive: string; improvement: string };
-    c5: { diagnosis: string; positive: string; improvement: string };
-  };
-  strengths?: string[];
-  weaknesses?: string[];
-  improvements?: string[];
-  generalObservation?: string;
-  congratulations?: string;
-  feedback?: string;
-  studentDirectMessage?: string;
-  improvementPotential?: string;
-  vocabularyAnalysis?: {
-    frequentWords: string[];
-    synonymSuggestions: {
-      word: string;
-      alternatives: string[];
-      context: string;
-    }[];
-  };
   createdAt?: string;
   updatedAt?: string;
   correctedAt?: string;
 };
+
+// Essay = base fields + AI correction fields (no duplication with BackendCorrectionJson)
+export type Essay = EssayBase & EssayCorrection;
+
+// Re-export for convenience
+export type { EssayCorrection };
