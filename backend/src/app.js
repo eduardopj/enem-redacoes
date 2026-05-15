@@ -38,7 +38,7 @@ app.use(
       if (isOriginAllowed(origin)) return callback(null, true);
       return callback(new Error('Origem não permitida pelo CORS.'));
     },
-    methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
     exposedHeaders: ['X-Request-Id'],
   })

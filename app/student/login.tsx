@@ -32,7 +32,7 @@ function QRScanner({ onScan, onClose }: { onScan: (data: string) => void; onClos
   if (!permission?.granted) {
     return (
       <View style={[qrStyles.permWrap, { backgroundColor: '#000' }]}>
-        <Ionicons name="camera-off-outline" size={48} color="#fff" style={{ marginBottom: 16 }} />
+        <Ionicons name="camera-off" size={48} color="#fff" style={{ marginBottom: 16 }} />
         <Text style={qrStyles.permText}>Precisamos da câmera para escanear o QR Code</Text>
         <Pressable onPress={requestPermission} style={qrStyles.permBtn}>
           <Text style={qrStyles.permBtnText}>Permitir câmera</Text>

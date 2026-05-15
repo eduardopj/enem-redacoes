@@ -27,9 +27,11 @@ import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
 
 const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
+let sentryInitialized = false;
 
 function initSentryIfNeeded() {
-  if (!SENTRY_DSN) return;
+  if (!SENTRY_DSN || sentryInitialized) return;
+  sentryInitialized = true;
   Sentry.init({
     dsn: SENTRY_DSN,
     environment: __DEV__ ? 'development' : 'production',
@@ -137,6 +139,13 @@ function RootLayout() {
     </ErrorBoundary>
   );
 }
+
+// Init synchronously on module load if user already granted consent in a previous session.
+// This ensures Sentry.wrap below has a live instance to attach the native crash handler to.
+import { useAppStore as _store } from '@/store/app-store';
+try {
+  if (_store.getState().sentryConsent === true) initSentryIfNeeded();
+} catch (_) { /* store not ready yet — deferred init via useEffect will handle it */ }
 
 // Sentry.wrap adds the native crash handler; is a no-op when Sentry is not initialized
 export default Sentry.wrap(RootLayout);
