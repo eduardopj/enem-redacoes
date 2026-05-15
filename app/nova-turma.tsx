@@ -1,4 +1,4 @@
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+﻿import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Button, ScreenContainer } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
 import { useAppTheme } from '@/theme/ThemeContext';
@@ -153,7 +153,7 @@ export default function NovaTurmaScreen() {
   // ── Form ───────────────────────────────────────────────────────────────────
   return (
     <ProtectedRoute>
-      <ScreenContainer showBack>
+      <ScreenContainer showBack topBarTitle="Nova Turma">
         <View style={styles.header}>
           <View style={[styles.headerIcon, { backgroundColor: colors.accent + '18' }]}>
             <Ionicons name="people" size={28} color={colors.accent} />

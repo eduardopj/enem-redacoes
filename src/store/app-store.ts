@@ -18,8 +18,10 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { createAuthSlice, DEFAULT_TEACHER } from './slices/auth.slice';
+import { createCorrectionSlice } from './slices/correction.slice';
 import { createEssaysSlice } from './slices/essays.slice';
 import { createStudentsSlice } from './slices/students.slice';
+import { createSyncSlice } from './slices/sync.slice';
 import { createThemesSlice } from './slices/themes.slice';
 import { createTurmasSlice } from './slices/turmas.slice';
 import type { AppState } from './store.types';
@@ -35,6 +37,8 @@ export const useAppStore = create<AppState>()(
       ...createStudentsSlice(...args),
       ...createThemesSlice(...args),
       ...createEssaysSlice(...args),
+      ...createCorrectionSlice(...args),
+      ...createSyncSlice(...args),
     }),
     {
       name: 'enem-redacoes-v2',
@@ -78,6 +82,7 @@ export const useAppStore = create<AppState>()(
         }) => lightweight) as typeof state.essays,
         atividades: state.atividades,
         retryQueue: state.retryQueue,
+        sentryConsent: state.sentryConsent,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

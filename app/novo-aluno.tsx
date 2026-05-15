@@ -1,4 +1,4 @@
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+﻿import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { AppHeader, Button, Card, Input, ScreenContainer } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
@@ -52,7 +52,7 @@ export default function NovoAlunoScreen() {
 
   return (
     <ProtectedRoute>
-      <ScreenContainer showBack>
+      <ScreenContainer showBack topBarTitle="Novo Aluno">
         <AppHeader
           eyebrow="Novo aluno"
           title="Cadastrar aluno"

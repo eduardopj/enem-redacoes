@@ -5,93 +5,136 @@ import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function LoginScreen() {
   const { colors } = useAppTheme();
-  const currentTeacher = useAppStore((state) => state.currentTeacher);
-  const setTeacherProfile = useAppStore((state) => state.setTeacherProfile);
-  const [name, setName] = useState(currentTeacher?.name === 'Professor' ? '' : currentTeacher?.name ?? '');
-  const [email, setEmail] = useState(currentTeacher?.email?.includes('.local') ? '' : currentTeacher?.email ?? '');
-  const [loading, setLoading] = useState(false);
+  const login = useAppStore((state) => state.login);
 
-  async function enter() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleLogin() {
+    const trimEmail = email.trim();
+    if (!trimEmail || !password) {
+      setError('Preencha e-mail e senha.');
+      return;
+    }
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 180));
-    setTeacherProfile(name || 'Professor', email || undefined);
+    setError('');
+    const result = await login(trimEmail, password);
     setLoading(false);
-    router.replace('/dashboard');
+    if (!result.success) {
+      setError(result.error ?? 'Não foi possível entrar.');
+    } else {
+      router.replace('/dashboard');
+    }
   }
 
   return (
-    <ScreenContainer showBack showHomeButton={false} showFooter={false}>
+    <ScreenContainer showBack={false} showHomeButton={false} showFooter={false}>
       <View style={styles.page}>
 
         {/* Hero */}
         <View style={styles.hero}>
-          <View style={[styles.logoWrap, { backgroundColor: colors.text }]}>
-            <Ionicons name="briefcase-outline" size={26} color="#fff" />
+          <View style={[styles.logoWrap, { backgroundColor: colors.accent }]}>
+            <Ionicons name="school" size={28} color="#fff" />
           </View>
-
-          <View style={styles.heroText}>
-            <Text style={[styles.eyebrow, { color: colors.mutedText }]}>ÁREA DO PROFESSOR</Text>
-            <Text style={[styles.title, { color: colors.text }]}>Bem-vindo{'\n'}de volta</Text>
-            <Text style={[styles.subtitle, { color: colors.mutedText }]}>
-              Acesse o painel e continue suas correções com IA.
-            </Text>
-          </View>
+          <Text style={[styles.eyebrow, { color: colors.mutedText }]}>ÁREA DO PROFESSOR</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Bem-vindo{'\n'}de volta</Text>
+          <Text style={[styles.subtitle, { color: colors.mutedText }]}>
+            Acesse o painel e continue suas correções com IA.
+          </Text>
         </View>
 
         {/* Formulário */}
         <Card>
           <View style={styles.form}>
-            <View style={styles.formHeader}>
-              <Text style={[styles.formTitle, { color: colors.text }]}>Identificação</Text>
-              <Text style={[styles.formSub, { color: colors.mutedText }]}>
-                Seus dados ficam apenas neste dispositivo.
-              </Text>
-            </View>
+            {error ? (
+              <View style={[styles.errorBox, { backgroundColor: colors.dangerSoft, borderColor: colors.danger }]}>
+                <Ionicons name="alert-circle-outline" size={15} color={colors.danger} />
+                <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text>
+              </View>
+            ) : null}
 
             <Input
-              label="Seu nome"
-              placeholder="Ex: Prof. Ana"
-              leftIcon="person-outline"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
-              autoCorrect={false}
-            />
-            <Input
-              label="E-mail (opcional)"
-              placeholder="para futura sincronização"
+              label="E-mail"
+              placeholder="professor@escola.com"
               leftIcon="mail-outline"
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="email-address"
+              textContentType="emailAddress"
+              accessibilityLabel="Campo de e-mail"
+            />
+            <Input
+              label="Senha"
+              placeholder="Sua senha"
+              leftIcon="lock-closed-outline"
+              rightIcon={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              onRightIconPress={() => setShowPassword((v) => !v)}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              textContentType="password"
+              accessibilityLabel="Campo de senha"
             />
 
-            <View style={styles.btnWrap}>
-              <Button
-                title="Entrar no painel"
-                variant="dark"
-                leftIcon="arrow-forward-outline"
-                onPress={enter}
-                loading={loading}
-                fullWidth
-              />
-            </View>
+            <Button
+              title="Entrar"
+              variant="dark"
+              leftIcon="arrow-forward-outline"
+              onPress={handleLogin}
+              loading={loading}
+              fullWidth
+            />
+
+            <Pressable
+              onPress={() => router.push('/forgot-password' as any)}
+              style={styles.forgotBtn}
+              accessibilityLabel="Esqueci minha senha"
+              accessibilityRole="button"
+            >
+              <Text style={[styles.forgotText, { color: colors.accent }]}>
+                Esqueci minha senha
+              </Text>
+            </Pressable>
           </View>
         </Card>
 
-        {/* Nota de privacidade */}
-        <View style={[styles.privacyRow, { backgroundColor: colors.input, borderColor: colors.border }]}>
-          <Ionicons name="lock-closed-outline" size={13} color={colors.mutedText} />
-          <Text style={[styles.privacyText, { color: colors.mutedText }]}>
-            Sem criação de conta. Dados salvos localmente no dispositivo.
+        {/* Link para cadastro */}
+        <View style={styles.signupRow}>
+          <Text style={[styles.signupPrompt, { color: colors.mutedText }]}>
+            Primeira vez?
           </Text>
+          <Pressable
+            onPress={() => router.push('/signup' as any)}
+            hitSlop={8}
+            accessibilityLabel="Criar conta"
+            accessibilityRole="button"
+          >
+            <Text style={[styles.signupLink, { color: colors.accent }]}>Criar conta</Text>
+          </Pressable>
         </View>
+
+        {/* Privacy note */}
+        <Pressable
+          onPress={() => router.push('/privacy-policy' as any)}
+          style={[styles.privacyRow, { backgroundColor: colors.input, borderColor: colors.border }]}
+          accessibilityLabel="Abrir política de privacidade"
+          accessibilityRole="link"
+        >
+          <Ionicons name="shield-checkmark-outline" size={13} color={colors.mutedText} />
+          <Text style={[styles.privacyText, { color: colors.mutedText }]}>
+            Seus dados são protegidos e nunca compartilhados.{' '}
+            <Text style={{ color: colors.accent }}>Política de privacidade</Text>
+          </Text>
+        </Pressable>
 
       </View>
     </ScreenContainer>
@@ -99,43 +142,36 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { gap: theme.spacing.xl, paddingTop: theme.spacing.sm },
+  page: { gap: theme.spacing.lg, paddingTop: theme.spacing.sm },
 
-  // Hero
-  hero: { alignItems: 'center', gap: 14 },
+  hero: { alignItems: 'center', gap: 10 },
   logoWrap: {
-    width: 68,
-    height: 68,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#101828',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.14,
-    shadowRadius: 14,
-    elevation: 5,
+    width: 68, height: 68, borderRadius: 22,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#3454D1', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25, shadowRadius: 14, elevation: 6,
   },
-  heroText: { alignItems: 'center', gap: 6 },
   eyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 2, textTransform: 'uppercase' },
-  title: { fontSize: 32, fontWeight: '800', lineHeight: 38, textAlign: 'center', letterSpacing: -0.4 },
+  title: { fontSize: 30, fontWeight: '800', lineHeight: 38, textAlign: 'center', letterSpacing: -0.4 },
   subtitle: { fontSize: 14, lineHeight: 20, textAlign: 'center', maxWidth: 270 },
 
-  // Form
   form: { gap: theme.spacing.md },
-  formHeader: { gap: 4, marginBottom: 4 },
-  formTitle: { fontSize: 16, fontWeight: '700', lineHeight: 22 },
-  formSub: { fontSize: 12, lineHeight: 18 },
-  btnWrap: { marginTop: 4 },
+  errorBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10,
+  },
+  errorText: { flex: 1, fontSize: 13, lineHeight: 18, fontWeight: '500' },
 
-  // Privacy
+  forgotBtn: { alignItems: 'center', paddingVertical: 4 },
+  forgotText: { fontSize: 13, fontWeight: '600' },
+
+  signupRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 },
+  signupPrompt: { fontSize: 14 },
+  signupLink: { fontSize: 14, fontWeight: '700' },
+
   privacyRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 9,
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    flexDirection: 'row', alignItems: 'flex-start', gap: 9,
+    borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 12,
   },
   privacyText: { flex: 1, fontSize: 12, lineHeight: 18 },
 });

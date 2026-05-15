@@ -1,31 +1,38 @@
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { AppHeader, Button, Card, ScreenContainer, StaggerItem, StatusBadge } from '@/components/ui';
+import { ClassKpi, InsightMini, KpiCard, MiniBarChart, OnboardingStep } from '@/components/dashboard';
+import { AppHeader, Button, Card, ScreenContainer, SkeletonDashboard, StaggerItem, StatusBadge } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
 import { useAppTheme } from '@/theme/ThemeContext';
+import { useShallow } from 'zustand/react/shallow';
 import { Essay } from '@/types/app';
 import {
   getClassStats,
+  getCompetencyLabel,
+  getLowConfidenceCorrections,
   getScoreColor,
   getScoreLabel,
-  scorePct,
-  getCompetencyLabel,
-  isCorrectedEssay,
-  getLowConfidenceCorrections,
   getStudentsNeedingAttention,
   getTopImprovingStudents,
+  isCorrectedEssay,
+  scorePct,
 } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useMemo, type ComponentProps } from 'react';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function DashboardScreen() {
   const { colors } = useAppTheme();
-  const currentTeacher = useAppStore((state) => state.currentTeacher);
-  const turmas = useAppStore((state) => state.turmas);
-  const students = useAppStore((state) => state.students);
-  const themes = useAppStore((state) => state.themes);
-  const essays = useAppStore((state) => state.essays);
+  const { hasHydrated, currentTeacher, turmas, students, themes, essays } = useAppStore(
+    useShallow((state) => ({
+      hasHydrated: state.hasHydrated,
+      currentTeacher: state.currentTeacher,
+      turmas: state.turmas,
+      students: state.students,
+      themes: state.themes,
+      essays: state.essays,
+    }))
+  );
 
   const rawName = currentTeacher?.name ?? '';
   const teacherFirstName = rawName.startsWith('Professor ')
@@ -49,6 +56,18 @@ export default function DashboardScreen() {
 
   const pendingEssays = teacherEssays.filter((e) => e.status === 'pendente');
   const correctedEssays = teacherEssays.filter(isCorrectedEssay);
+
+  // Inbox: student-submitted essays corrected by AI, not yet reviewed by professor
+  const inboxEssays = useMemo(
+    () =>
+      teacherEssays.filter(
+        (e) =>
+          e.submittedByStudent &&
+          isCorrectedEssay(e) &&
+          !e.teacherReviewedAt
+      ),
+    [teacherEssays]
+  );
   const lastEssay = teacherEssays[0];
   const lowConfidenceEssays = useMemo(() => getLowConfidenceCorrections(teacherEssays), [teacherEssays]);
   const attentionStudents = useMemo(
@@ -134,8 +153,12 @@ export default function DashboardScreen() {
     <ProtectedRoute>
       <ScreenContainer showHomeButton={false} showNav>
 
-        {/* Header */}
-        <StaggerItem index={0}>
+        {/* Skeleton enquanto o AsyncStorage hidrata */}
+        {!hasHydrated ? (
+          <SkeletonDashboard />
+        ) : (
+          <>
+          <StaggerItem index={0}>
           <AppHeader
             eyebrow="Bem-vindo de volta"
             title={`Olá, ${teacherFirstName}`}
@@ -162,8 +185,70 @@ export default function DashboardScreen() {
           </Pressable>
         </StaggerItem>
 
+        {/* Inbox de revisão — redações de alunos aguardando professor */}
+        {inboxEssays.length > 0 ? (
+          <StaggerItem index={2}>
+            <Pressable
+              onPress={() => router.push('/correcoes')}
+              style={[styles.inboxCard, { backgroundColor: colors.surface, borderColor: colors.warning + '55' }]}
+            >
+              {/* Header */}
+              <View style={styles.inboxHeader}>
+                <View style={[styles.inboxIconWrap, { backgroundColor: colors.warning + '18' }]}>
+                  <Ionicons name="mail-unread-outline" size={18} color={colors.warning} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.inboxTitle, { color: colors.text }]}>Para revisar</Text>
+                  <Text style={[styles.inboxSub, { color: colors.mutedText }]}>Redações corrigidas pela IA</Text>
+                </View>
+                <View style={[styles.inboxBadge, { backgroundColor: colors.warning }]}>
+                  <Text style={styles.inboxBadgeText}>{inboxEssays.length}</Text>
+                </View>
+              </View>
+
+              {/* Essay rows */}
+              <View style={[styles.inboxDivider, { backgroundColor: colors.border }]} />
+              {inboxEssays.slice(0, 3).map((essay, i) => (
+                <Pressable
+                  key={essay.id}
+                  onPress={() => router.push(`/resultado/${essay.id}`)}
+                  style={[
+                    styles.inboxRow,
+                    i < Math.min(inboxEssays.length, 3) - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border },
+                  ]}
+                >
+                  <View style={[styles.inboxRowDot, { backgroundColor: colors.warning }]} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.inboxRowStudent, { color: colors.text }]} numberOfLines={1}>
+                      {getStudentName(essay.studentId)}
+                    </Text>
+                    <Text style={[styles.inboxRowTheme, { color: colors.mutedText }]} numberOfLines={1}>
+                      {essay.themeTitle}
+                    </Text>
+                  </View>
+                  {essay.totalScore != null ? (
+                    <Text style={[styles.inboxRowScore, { color: getScoreColor(essay.totalScore, colors) }]}>
+                      {essay.totalScore}
+                    </Text>
+                  ) : null}
+                  <Ionicons name="chevron-forward" size={14} color={colors.mutedText} />
+                </Pressable>
+              ))}
+
+              {inboxEssays.length > 3 ? (
+                <View style={styles.inboxMoreRow}>
+                  <Text style={[styles.inboxMoreText, { color: colors.accent }]}>
+                    +{inboxEssays.length - 3} mais — Ver todas
+                  </Text>
+                  <Ionicons name="arrow-forward" size={13} color={colors.accent} />
+                </View>
+              ) : null}
+            </Pressable>
+          </StaggerItem>
+        ) : null}
+
         {/* KPIs - grid 2x2 */}
-        <StaggerItem index={2}>
+        <StaggerItem index={3}>
           <View style={styles.kpiGrid}>
             <KpiCard
               label="Alunos"
@@ -172,7 +257,6 @@ export default function DashboardScreen() {
               iconBg={colors.accentSoft}
               iconColor={colors.accentHover}
               onPress={() => router.push('/alunos')}
-              colors={colors}
             />
             <KpiCard
               label="Temas"
@@ -181,7 +265,6 @@ export default function DashboardScreen() {
               iconBg={colors.secondarySoft}
               iconColor={colors.secondary}
               onPress={() => router.push('/temas')}
-              colors={colors}
             />
             <KpiCard
               label="Pendentes"
@@ -191,7 +274,6 @@ export default function DashboardScreen() {
               iconColor={pendingEssays.length > 0 ? colors.warning : colors.mutedText}
               alert={pendingEssays.length > 0}
               onPress={() => router.push('/redacoes')}
-              colors={colors}
             />
             <KpiCard
               label="Corrigidas"
@@ -200,7 +282,6 @@ export default function DashboardScreen() {
               iconBg={colors.successSoft}
               iconColor={colors.success}
               onPress={() => router.push('/redacoes')}
-              colors={colors}
             />
           </View>
         </StaggerItem>
@@ -241,7 +322,6 @@ export default function DashboardScreen() {
                     done={step.done}
                     icon={step.icon}
                     isLast={i === onboardingSteps.length - 1}
-                    colors={colors}
                   />
                 ))}
               </View>
@@ -266,7 +346,6 @@ export default function DashboardScreen() {
                   text={lowConfidenceEssays.length ? 'Revisar baixa confiança' : 'Alunos para acompanhar'}
                   icon="alert-circle-outline"
                   color={colors.warning}
-                  colors={colors}
                 />
                 <InsightMini
                   label="Evolução"
@@ -274,7 +353,6 @@ export default function DashboardScreen() {
                   text={improvingStudents[0]?.student.name ?? 'Sem tendência ainda'}
                   icon="trending-up-outline"
                   color={colors.success}
-                  colors={colors}
                 />
               </View>
               {attentionStudents[0] ? (
@@ -312,7 +390,6 @@ export default function DashboardScreen() {
                   value={classStats.classAverage ?? '--'}
                   sub={classStats.classAverage ? getScoreLabel(classStats.classAverage) : ''}
                   color={classStats.classAverage ? getScoreColor(classStats.classAverage, colors) : colors.mutedText}
-                  colors={colors}
                 />
                 <View style={[styles.kpiSep, { backgroundColor: colors.border }]} />
                 <ClassKpi
@@ -320,7 +397,6 @@ export default function DashboardScreen() {
                   value={classStats.classHighest ?? '--'}
                   sub={classStats.classHighest ? getScoreLabel(classStats.classHighest) : ''}
                   color={classStats.classHighest ? getScoreColor(classStats.classHighest, colors) : colors.mutedText}
-                  colors={colors}
                 />
                 <View style={[styles.kpiSep, { backgroundColor: colors.border }]} />
                 <ClassKpi
@@ -328,7 +404,6 @@ export default function DashboardScreen() {
                   value={classStats.classLowest ?? '--'}
                   sub={classStats.classLowest ? getScoreLabel(classStats.classLowest) : ''}
                   color={classStats.classLowest ? getScoreColor(classStats.classLowest, colors) : colors.mutedText}
-                  colors={colors}
                 />
               </View>
 
@@ -394,7 +469,7 @@ export default function DashboardScreen() {
           <StaggerItem index={6}>
             <Card>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Notas recentes</Text>
-              <MiniBarChart essays={correctedEssays.slice(0, 6)} getStudentName={getStudentName} colors={colors} />
+              <MiniBarChart essays={correctedEssays.slice(0, 6)} getStudentName={getStudentName} />
             </Card>
           </StaggerItem>
         ) : null}
@@ -491,146 +566,19 @@ export default function DashboardScreen() {
           </StaggerItem>
         ) : null}
 
+          </>
+        )}
+
       </ScreenContainer>
     </ProtectedRoute>
   );
 }
 
-// Sub-components
-
-function KpiCard({ label, value, icon, iconBg, iconColor, onPress, alert = false, colors }: {
-  label: string; value: number; icon: ComponentProps<typeof Ionicons>['name']; iconBg: string; iconColor: string; onPress?: () => void; alert?: boolean; colors: any;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[styles.kpiCard, { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }]}
-    >
-      <View style={[styles.kpiIconWrap, { backgroundColor: iconBg }]}>
-        <Ionicons name={icon} size={20} color={iconColor} />
-        {alert ? (
-          <View style={[styles.kpiAlert, { backgroundColor: colors.warning }]} />
-        ) : null}
-      </View>
-      {/* Number */}
-      <Text style={[styles.kpiValue, { color: alert ? colors.warning : colors.text }]}>{value}</Text>
-      <Text style={[styles.kpiLabel, { color: colors.mutedText }]}>{label}</Text>
-      {/* Chevron hint */}
-      <View style={styles.kpiChevron}>
-        <Ionicons name="chevron-forward" size={12} color={colors.border} />
-      </View>
-    </Pressable>
-  );
-}
-
-function ClassKpi({ label, value, sub, color, colors }: {
-  label: string; value: number | string; sub: string; color: string; colors: any;
-}) {
-  return (
-    <View style={styles.classKpiBlock}>
-      <Text style={[styles.classKpiLabel, { color: colors.mutedText }]}>{label}</Text>
-      <Text style={[styles.classKpiValue, { color }]}>{value}</Text>
-      {sub ? <Text style={[styles.classKpiSub, { color: colors.mutedText }]}>{sub}</Text> : null}
-    </View>
-  );
-}
-
-function InsightMini({ label, value, text, icon, color, colors }: {
-  label: string; value: number; text: string; icon: ComponentProps<typeof Ionicons>['name']; color: string; colors: any;
-}) {
-  return (
-    <View style={[styles.insightMini, { backgroundColor: color + '10', borderColor: color + '25' }]}>
-      <View style={[styles.insightMiniIcon, { backgroundColor: color + '18' }]}>
-        <Ionicons name={icon} size={17} color={color} />
-      </View>
-      <Text style={[styles.insightMiniLabel, { color: colors.mutedText }]}>{label}</Text>
-      <Text style={[styles.insightMiniValue, { color }]}>{value}</Text>
-      <Text style={[styles.insightMiniText, { color: colors.softText }]} numberOfLines={1}>{text}</Text>
-    </View>
-  );
-}
-
-function OnboardingStep({ number, title, desc, onPress, done, icon, isLast, colors }: {
-  number: string; title: string; desc: string; onPress: () => void; done: boolean; icon: ComponentProps<typeof Ionicons>['name']; isLast: boolean; colors: any;
-}) {
-  return (
-    <Pressable
-      onPress={done ? undefined : onPress}
-      style={[styles.step, !isLast && { borderBottomWidth: 1, borderBottomColor: colors.border }]}
-    >
-      {/* Step indicator */}
-      <View style={[
-        styles.stepNum,
-        done
-          ? { backgroundColor: colors.success }
-          : { backgroundColor: colors.accent },
-      ]}>
-        {done ? (
-          <Ionicons name="checkmark" size={14} color="#fff" />
-        ) : (
-          <Text style={[styles.stepNumText, { color: '#fff' }]}>{number}</Text>
-        )}
-      </View>
-
-      <View style={styles.stepText}>
-        <Text style={[
-          styles.stepTitle,
-          { color: done ? colors.mutedText : colors.text },
-          done && { textDecorationLine: 'line-through' },
-        ]}>
-          {title}
-        </Text>
-        {!done ? (
-          <Text style={[styles.stepDesc, { color: colors.mutedText }]}>{desc}</Text>
-        ) : null}
-      </View>
-
-      {done ? (
-        <View style={[styles.doneTag, { backgroundColor: colors.successSoft }]}>
-          <Text style={[styles.doneTagText, { color: colors.success }]}>Feito</Text>
-        </View>
-      ) : (
-        <Ionicons name="chevron-forward" size={16} color={colors.mutedText} />
-      )}
-    </Pressable>
-  );
-}
-
-function scoreGradientColor(score: number, colors: any): string {
-  if (score >= 900) return colors.success;
-  if (score >= 550) return colors.accent;
-  if (score >= 380) return colors.warning;
-  return colors.danger;
-}
-
-function MiniBarChart({ essays, getStudentName, colors }: {
-  essays: Essay[]; getStudentName: (id: string) => string; colors: any;
-}) {
-  return (
-    <View style={styles.chartWrap}>
-      {essays.map((essay) => {
-        const score = essay.totalScore ?? 0;
-        const pct = (score / 1000) * 100;
-        const name = getStudentName(essay.studentId).split(' ')[0];
-        const barColor = scoreGradientColor(score, colors);
-        return (
-          <Pressable key={essay.id} onPress={() => router.push(`/resultado/${essay.id}` as any)} style={styles.barItem}>
-            <Text style={[styles.barScore, { color: colors.text }]}>{score}</Text>
-            <View style={[styles.barTrack, { backgroundColor: colors.input }]}>
-              <View style={[styles.barFill, { height: `${pct}%`, backgroundColor: barColor }]} />
-            </View>
-            <Text style={[styles.barLabel, { color: colors.mutedText }]}>{name}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
 
 const styles = StyleSheet.create({
   // Section headers
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
     letterSpacing: 0,
     marginBottom: 4,
@@ -642,7 +590,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   linkText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
   },
 
@@ -668,8 +616,8 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   actionText: { flex: 1, gap: 2 },
-  actionTitle: { color: '#fff', fontSize: 14, fontWeight: '700', lineHeight: 19 },
-  actionSub: { color: 'rgba(255,255,255,0.70)', fontSize: 12, lineHeight: 16 },
+  actionTitle: { color: '#fff', fontSize: 15, fontWeight: '700', lineHeight: 21 },
+  actionSub: { color: 'rgba(255,255,255,0.70)', fontSize: 13, lineHeight: 19 },
   actionBtn: {
     width: 34,
     height: 34,
@@ -720,9 +668,9 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
   kpiLabel: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '500',
-    lineHeight: 15,
+    lineHeight: 17,
   },
   kpiChevron: {
     position: 'absolute',
@@ -741,7 +689,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   classKpiLabel: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
     letterSpacing: 0.1,
   },
@@ -752,8 +700,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   classKpiSub: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 16,
   },
   kpiSep: {
     width: 1,
@@ -767,8 +715,8 @@ const styles = StyleSheet.create({
   },
   weakText: {
     flex: 1,
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 20,
   },
   insightGrid: {
     flexDirection: 'row',
@@ -790,9 +738,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 4,
   },
-  insightMiniLabel: { fontSize: 10, fontWeight: '700' },
+  insightMiniLabel: { fontSize: 12, fontWeight: '700' },
   insightMiniValue: { fontSize: 22, fontWeight: '800', lineHeight: 26 },
-  insightMiniText: { fontSize: 11, lineHeight: 15 },
+  insightMiniText: { fontSize: 13, lineHeight: 18 },
   nextStudentRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -807,16 +755,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  nextStudentTitle: { fontSize: 13, fontWeight: '800', lineHeight: 17 },
-  nextStudentText: { fontSize: 12, lineHeight: 16 },
+  nextStudentTitle: { fontSize: 14, fontWeight: '800', lineHeight: 20 },
+  nextStudentText: { fontSize: 13, lineHeight: 18 },
 
   // Top students
   topList: { gap: 0 },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
   rankBadge: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  rankText: { fontSize: 12, fontWeight: '700' },
+  rankText: { fontSize: 13, fontWeight: '700' },
   topStudentInfo: { flex: 1, gap: 6 },
-  topStudentName: { fontSize: 14, fontWeight: '600', lineHeight: 18 },
+  topStudentName: { fontSize: 15, fontWeight: '600', lineHeight: 20 },
   progressTrack: { height: 6, borderRadius: 3, overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 3 },
   topStudentScore: { fontSize: 16, fontWeight: '700', minWidth: 38, textAlign: 'right' },
@@ -825,30 +773,30 @@ const styles = StyleSheet.create({
   lastRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
   lastAvatar: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
   lastInfo: { flex: 1, gap: 3 },
-  lastStudent: { fontSize: 15, fontWeight: '600', lineHeight: 20 },
-  lastTheme: { fontSize: 13, lineHeight: 17 },
+  lastStudent: { fontSize: 16, fontWeight: '600', lineHeight: 22 },
+  lastTheme: { fontSize: 14, lineHeight: 20 },
   lastBtn: {},
 
   // Onboarding
   onboardingHeader: { gap: 10, marginBottom: 4 },
   onboardingTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  onboardingCount: { fontSize: 13, fontWeight: '700' },
+  onboardingCount: { fontSize: 14, fontWeight: '700' },
   progressTrackFull: { height: 5, borderRadius: 999, overflow: 'hidden' },
   progressFillFull: { height: '100%', borderRadius: 999 },
   onboardingSteps: { gap: 0, marginTop: 4 },
   step: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14 },
   stepNum: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  stepNumText: { fontSize: 13, fontWeight: '800' },
+  stepNumText: { fontSize: 14, fontWeight: '800' },
   stepText: { flex: 1, gap: 2 },
-  stepTitle: { fontSize: 15, fontWeight: '600', lineHeight: 20 },
-  stepDesc: { fontSize: 13, lineHeight: 18 },
+  stepTitle: { fontSize: 16, fontWeight: '600', lineHeight: 22 },
+  stepDesc: { fontSize: 14, lineHeight: 20 },
   doneTag: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 },
-  doneTagText: { fontSize: 11, fontWeight: '700' },
+  doneTagText: { fontSize: 12, fontWeight: '700' },
 
   // Turmas section
   sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   seeAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  seeAllText: { fontSize: 13, fontWeight: '600' },
+  seeAllText: { fontSize: 14, fontWeight: '600' },
   turmaList: { gap: 0, marginTop: 8 },
   turmaRow: {
     flexDirection: 'row',
@@ -859,9 +807,9 @@ const styles = StyleSheet.create({
   },
   turmaIconWrap: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   turmaInfo: { flex: 1, gap: 2 },
-  turmaName: { fontSize: 14, fontWeight: '600', lineHeight: 18 },
-  turmaMeta: { fontSize: 12, lineHeight: 16 },
-  turmaAvg: { fontSize: 13, fontWeight: '700', minWidth: 52, textAlign: 'right' },
+  turmaName: { fontSize: 15, fontWeight: '600', lineHeight: 20 },
+  turmaMeta: { fontSize: 13, lineHeight: 18 },
+  turmaAvg: { fontSize: 14, fontWeight: '700', minWidth: 52, textAlign: 'right' },
   emptyTurmaRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -874,14 +822,74 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   emptyTurmaIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  emptyTurmaText: { flex: 1, fontSize: 13, lineHeight: 18 },
+  emptyTurmaText: { flex: 1, fontSize: 14, lineHeight: 20 },
   emptyTurmaBtn: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+
+  // Inbox card
+  inboxCard: {
+    borderRadius: 18,
+    borderWidth: 1.5,
+    overflow: 'hidden',
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  inboxHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  inboxIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  inboxTitle: { fontSize: 15, fontWeight: '700', lineHeight: 20 },
+  inboxSub: { fontSize: 12, lineHeight: 17 },
+  inboxBadge: {
+    minWidth: 26,
+    height: 26,
+    borderRadius: 13,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  inboxBadgeText: { fontSize: 13, fontWeight: '800', color: '#fff' },
+  inboxDivider: { height: 1, marginHorizontal: 0 },
+  inboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  inboxRowDot: { width: 7, height: 7, borderRadius: 4, flexShrink: 0 },
+  inboxRowStudent: { fontSize: 14, fontWeight: '600', lineHeight: 19 },
+  inboxRowTheme: { fontSize: 12, lineHeight: 17 },
+  inboxRowScore: { fontSize: 15, fontWeight: '800', minWidth: 36, textAlign: 'right' },
+  inboxMoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 11,
+    paddingHorizontal: 16,
+  },
+  inboxMoreText: { fontSize: 13, fontWeight: '600' },
 
   // Mini bar chart
   chartWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, height: 110, marginTop: 12 },
   barItem: { flex: 1, alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' },
-  barScore: { fontSize: 10, fontWeight: '700' },
+  barScore: { fontSize: 12, fontWeight: '700' },
   barTrack: { width: '80%', flex: 1, borderRadius: 6, overflow: 'hidden', justifyContent: 'flex-end' },
   barFill: { width: '100%', borderRadius: 6 },
-  barLabel: { fontSize: 10, textAlign: 'center' },
+  barLabel: { fontSize: 12, textAlign: 'center' },
 });

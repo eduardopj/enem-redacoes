@@ -17,6 +17,8 @@ type ScreenContainerProps = PropsWithChildren<{
   showFooter?: boolean;
   showNav?: boolean;
   showStudentNav?: boolean;
+  /** Título exibido centralizado na TopBar em vez da logo */
+  topBarTitle?: string;
 }>;
 
 export function ScreenContainer({
@@ -27,6 +29,7 @@ export function ScreenContainer({
   showFooter = true,
   showNav = false,
   showStudentNav = false,
+  topBarTitle,
 }: ScreenContainerProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
@@ -65,7 +68,7 @@ export function ScreenContainer({
   if (noScroll) {
     return (
       <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: colors.background }]}>
-        <TopBar showBack={showBack} showHomeButton={showHomeButton} />
+        <TopBar showBack={showBack} showHomeButton={showHomeButton} title={topBarTitle} />
         <Animated.View
           style={[
             styles.staticContent,
@@ -85,7 +88,7 @@ export function ScreenContainer({
 
   return (
     <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: colors.background }]}>
-      <TopBar showBack={showBack} showHomeButton={showHomeButton} />
+      <TopBar showBack={showBack} showHomeButton={showHomeButton} title={topBarTitle} />
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior="padding"

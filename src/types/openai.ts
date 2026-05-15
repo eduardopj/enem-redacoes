@@ -62,4 +62,5 @@ export type OpenAIServiceInput = {
   imageUri?: string;
   imageMimeType?: string;
   essayText?: string;
+  token?: string;
 };

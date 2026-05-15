@@ -1,3 +1,4 @@
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -6,35 +7,56 @@ import { useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+const FEATURES = [
+  { icon: 'sparkles-outline' as const, text: 'IA Avançada' },
+  { icon: 'ribbon-outline' as const, text: '5 Competências' },
+  { icon: 'trending-up-outline' as const, text: 'Evolução Real' },
+];
+
 export default function IndexScreen() {
   const { colors } = useAppTheme();
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
+      <View style={styles.topRight}>
+        <ThemeToggle />
+      </View>
+
       <View style={styles.container}>
 
         {/* Hero */}
         <View style={styles.hero}>
-          <View style={[styles.logoWrap, { backgroundColor: colors.accentSoft, borderWidth: 1.5, borderColor: colors.primaryMuted }]}>
-            <Ionicons name="school" size={30} color={colors.accentHover} />
+          {/* Logo mark */}
+          <View style={[styles.logoWrap, { backgroundColor: colors.accent }]}>
+            <Ionicons name="school" size={32} color="#fff" />
           </View>
 
           <Text style={[styles.eyebrow, { color: colors.mutedText }]}>ENEM IA</Text>
 
           <Text style={[styles.headline, { color: colors.text }]}>
-            Correção{'\n'}inteligente
+            Redações corrigidas{'\n'}com precisão de IA
           </Text>
 
           <Text style={[styles.sub, { color: colors.mutedText }]}>
-            IA que analisa redações com{'\n'}profundidade e precisão do ENEM.
+            Feedback completo baseado nos{'\n'}critérios oficiais do ENEM.
           </Text>
+
+          {/* Feature pills */}
+          <View style={styles.features}>
+            {FEATURES.map((f) => (
+              <View key={f.text} style={[styles.featurePill, { backgroundColor: colors.accentSoft, borderColor: colors.primaryMuted + '55' }]}>
+                <Ionicons name={f.icon} size={13} color={colors.accent} />
+                <Text style={[styles.featureText, { color: colors.accent }]}>{f.text}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
-        {/* Cards de acesso */}
+        {/* Access tiles */}
         <View style={styles.cards}>
           <AccessTile
             title="Sou professor"
-            description="Corrigir redações e acompanhar turmas"
+            description="Corrija redações e acompanhe a evolução da turma"
             icon="briefcase-outline"
             dark
             onPress={() => router.push('/login')}
@@ -42,14 +64,13 @@ export default function IndexScreen() {
           />
           <AccessTile
             title="Sou aluno"
-            description="Ver notas, evolução e devolutivas"
+            description="Veja suas notas, feedback e evolução"
             icon="person-outline"
             onPress={() => router.push('/student/login' as any)}
             colors={colors}
           />
         </View>
 
-        {/* Rodapé */}
         <Text style={[styles.footer, { color: colors.mutedText }]}>
           Ferramenta educacional com IA · ENEM
         </Text>
@@ -85,13 +106,13 @@ function AccessTile({
     Animated.spring(scale, { toValue: 1, damping: 20, stiffness: 260, useNativeDriver: true }).start();
   }
 
-  const bg = dark ? colors.accentHover : colors.surface;
-  const iconBg = dark ? 'rgba(255,255,255,0.14)' : colors.accentSoft;
-  const iconColor = dark ? '#fff' : colors.accentHover;
+  const bg = dark ? colors.accent : colors.surface;
+  const iconBg = dark ? 'rgba(255,255,255,0.15)' : colors.accentSoft;
+  const iconColor = dark ? '#fff' : colors.accent;
   const titleColor = dark ? '#fff' : colors.text;
-  const descColor = dark ? 'rgba(255,255,255,0.62)' : colors.mutedText;
-  const arrowBg = dark ? 'rgba(255,255,255,0.12)' : colors.accentSoft;
-  const arrowColor = dark ? '#fff' : colors.accentHover;
+  const descColor = dark ? 'rgba(255,255,255,0.65)' : colors.mutedText;
+  const arrowBg = dark ? 'rgba(255,255,255,0.13)' : colors.accentSoft;
+  const arrowColor = dark ? '#fff' : colors.accent;
 
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
@@ -103,6 +124,13 @@ function AccessTile({
           styles.tile,
           { backgroundColor: bg },
           !dark && { borderWidth: 1, borderColor: colors.border },
+          dark && {
+            shadowColor: colors.accent,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.3,
+            shadowRadius: 14,
+            elevation: 8,
+          },
         ]}
       >
         <View style={[styles.tileIcon, { backgroundColor: iconBg }]}>
@@ -125,45 +153,51 @@ function AccessTile({
 const styles = StyleSheet.create({
   safe: { flex: 1 },
 
+  topRight: {
+    position: 'absolute',
+    top: 16,
+    right: 20,
+    zIndex: 10,
+  },
+
   container: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingTop: 20,
     paddingBottom: 28,
     justifyContent: 'space-between',
   },
 
-  // Hero
   hero: {
     alignItems: 'center',
     gap: 10,
-    paddingTop: 32,
+    paddingTop: 28,
     paddingBottom: 8,
   },
   logoWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 22,
+    width: 76,
+    height: 76,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
-    shadowColor: '#101828',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.14,
-    shadowRadius: 18,
-    elevation: 6,
+    marginBottom: 6,
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
   },
   eyebrow: {
     fontSize: 11,
     fontWeight: '800',
-    letterSpacing: 2.4,
+    letterSpacing: 2.8,
   },
   headline: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '800',
     lineHeight: 40,
     textAlign: 'center',
-    letterSpacing: -0.4,
+    letterSpacing: -0.5,
   },
   sub: {
     fontSize: 14,
@@ -171,15 +205,34 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: 280,
   },
+  features: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  featurePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  featureText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
 
-  // Tiles
   cards: { gap: 12 },
 
   tile: {
-    minHeight: 76,
-    borderRadius: 18,
+    minHeight: 80,
+    borderRadius: 20,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
@@ -190,8 +243,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   tileIcon: {
-    width: 50,
-    height: 50,
+    width: 52,
+    height: 52,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -209,7 +262,6 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
 
-  // Footer
   footer: {
     fontSize: 11,
     fontWeight: '500',

@@ -36,11 +36,18 @@ export function AppHeader({ eyebrow, title, subtitle, showLogout }: AppHeaderPro
   return (
     <View style={styles.container}>
       <View style={styles.row}>
-        <View style={[styles.avatarRing, { borderColor: colors.border }]}>
-          <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
-            <Text style={styles.avatarText}>{initials}</Text>
+        <Pressable
+          onPress={() => router.push('/profile' as any)}
+          hitSlop={8}
+          accessibilityLabel="Abrir perfil da conta"
+          accessibilityRole="button"
+        >
+          <View style={[styles.avatarRing, { borderColor: colors.border }]}>
+            <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
+              <Text style={styles.avatarText}>{initials}</Text>
+            </View>
           </View>
-        </View>
+        </Pressable>
 
         <View style={styles.textGroup}>
           {eyebrow ? (
@@ -57,6 +64,8 @@ export function AppHeader({ eyebrow, title, subtitle, showLogout }: AppHeaderPro
             onPress={handleLogout}
             style={[styles.actionBtn, { backgroundColor: colors.input, borderColor: colors.border }]}
             hitSlop={8}
+            accessibilityLabel="Sair da conta"
+            accessibilityRole="button"
           >
             <Ionicons name="log-out-outline" size={18} color={colors.mutedText} />
           </Pressable>
@@ -94,28 +103,32 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
     letterSpacing: 0.3,
+    fontFamily: 'Inter_700Bold',
   },
   textGroup: {
     flex: 1,
     gap: 2,
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '500',
     letterSpacing: 0.2,
+    fontFamily: 'Inter_500Medium',
   },
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
     letterSpacing: -0.2,
-    lineHeight: 26,
+    lineHeight: 30,
+    fontFamily: 'Nunito_800ExtraBold',
   },
   subtitle: {
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 14,
+    lineHeight: 22,
+    fontFamily: 'Inter_400Regular',
   },
   actionBtn: {
     width: 38,

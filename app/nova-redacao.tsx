@@ -1,7 +1,8 @@
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { AppHeader, Button, ScreenContainer } from '@/components/ui';
+import { AppHeader, Button, ScreenContainer, SelectedChip, StepIndicator } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
-import { AppColors, theme } from '@/theme';
+import { useShallow } from 'zustand/react/shallow';
+import { theme, type AppColors } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -17,88 +18,7 @@ const MAX_IMAGE_SIZE_MB = 10;
 const CAMERA_IMAGE_QUALITY = 0.68;
 const LIBRARY_IMAGE_QUALITY = 0.72;
 
-// ─── Indicador de progresso ──────────────────────────────────────────────────
-
 const STEP_LABELS = ['Aluno', 'Tema', 'Foto', 'Revisar'];
-
-function StepIndicator({ steps }: { steps: boolean[] }) {
-  const { colors } = useAppTheme();
-  const done = steps.filter(Boolean).length;
-
-  return (
-    <View style={pStyles.wrap}>
-      {steps.map((complete, i) => {
-        const isActive = !complete && done >= i;
-        return (
-          <React.Fragment key={i}>
-            <View style={pStyles.stepCol}>
-              <View
-                style={[
-                  pStyles.dot,
-                  complete
-                    ? { backgroundColor: colors.success }
-                    : isActive
-                    ? { backgroundColor: colors.accent }
-                    : { backgroundColor: colors.input, borderWidth: 1, borderColor: colors.border },
-                ]}
-              >
-                {complete ? (
-                  <Ionicons name="checkmark" size={10} color="#fff" />
-                ) : (
-                  <Text style={[pStyles.dotNum, { color: isActive ? '#fff' : colors.mutedText }]}>
-                    {i + 1}
-                  </Text>
-                )}
-              </View>
-              <Text
-                style={[
-                  pStyles.stepLabel,
-                  {
-                    color: complete ? colors.success : isActive ? colors.accent : colors.mutedText,
-                    fontWeight: complete || isActive ? '700' : '400',
-                  },
-                ]}
-              >
-                {STEP_LABELS[i]}
-              </Text>
-            </View>
-            {i < steps.length - 1 ? (
-              <View style={[pStyles.line, { backgroundColor: complete ? colors.success : colors.border }]} />
-            ) : null}
-          </React.Fragment>
-        );
-      })}
-    </View>
-  );
-}
-
-const pStyles = StyleSheet.create({
-  wrap: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', paddingVertical: 6 },
-  stepCol: { alignItems: 'center', gap: 4, minWidth: 52 },
-  dot: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  dotNum: { fontSize: 10, fontWeight: '700' },
-  stepLabel: { fontSize: 10, letterSpacing: 0.1, lineHeight: 13 },
-  line: { flex: 1, height: 1.5, borderRadius: 1, marginTop: 11 },
-});
-
-// ─── Chip de seleção ─────────────────────────────────────────────────────────
-
-function SelectedChip({ label, onClear, colors }: { label: string; onClear: () => void; colors: AppColors }) {
-  return (
-    <View style={[cStyles.chip, { backgroundColor: colors.accent + '14', borderWidth: 1, borderColor: colors.accent + '30' }]}>
-      <Ionicons name="checkmark-circle" size={16} color={colors.accent} />
-      <Text style={[cStyles.chipText, { color: colors.accent }]} numberOfLines={1}>{label}</Text>
-      <Pressable onPress={onClear} hitSlop={10}>
-        <Ionicons name="close-circle" size={16} color={colors.accent + '80'} />
-      </Pressable>
-    </View>
-  );
-}
-
-const cStyles = StyleSheet.create({
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 14 },
-  chipText: { flex: 1, fontSize: 14, fontWeight: '600' },
-});
 
 // ─── Tela principal ──────────────────────────────────────────────────────────
 
@@ -112,12 +32,17 @@ export default function NovaRedacaoScreen() {
     themeId?: string;
   }>();
 
-  const currentTeacher = useAppStore((state) => state.currentTeacher);
-  const students = useAppStore((state) => state.students);
-  const themes = useAppStore((state) => state.themes);
-  const turmas = useAppStore((state) => state.turmas);
-  const addEssay = useAppStore((state) => state.addEssay);
-  const evaluateEssayWithOpenAI = useAppStore((state) => state.evaluateEssayWithOpenAI);
+  const { currentTeacher, students, themes, turmas, addEssay, evaluateEssayWithOpenAI } =
+    useAppStore(
+      useShallow((state) => ({
+        currentTeacher: state.currentTeacher,
+        students: state.students,
+        themes: state.themes,
+        turmas: state.turmas,
+        addEssay: state.addEssay,
+        evaluateEssayWithOpenAI: state.evaluateEssayWithOpenAI,
+      }))
+    );
 
   const teacherStudents = useMemo(() => {
     if (!currentTeacher) return [];
@@ -164,7 +89,7 @@ export default function NovaRedacaoScreen() {
 
   async function checkImageQuality(uri: string): Promise<boolean> {
     try {
-      const info = await FileSystem.getInfoAsync(uri, { size: true });
+      const info = await FileSystem.getInfoAsync(uri);
       if (info.exists && 'size' in info && typeof info.size === 'number') {
         const sizeMb = info.size / 1024 / 1024;
         if (sizeMb > MAX_IMAGE_SIZE_MB) {
@@ -265,7 +190,7 @@ export default function NovaRedacaoScreen() {
 
   return (
     <ProtectedRoute>
-      <ScreenContainer showBack>
+      <ScreenContainer showBack topBarTitle="Nova Redação">
         <AppHeader
           eyebrow="Nova redação"
           title="Enviar redação"
@@ -273,7 +198,7 @@ export default function NovaRedacaoScreen() {
         />
 
         {/* Progresso */}
-        <StepIndicator steps={stepsDone} />
+        <StepIndicator steps={stepsDone} labels={STEP_LABELS} colors={colors} />
 
         {/* ── ETAPA 1: ALUNO ─────────────────────────────────────────────── */}
         <SectionBlock number="1" label="Aluno" done={stepsDone[0]} colors={colors}>

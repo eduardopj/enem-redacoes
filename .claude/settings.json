@@ -2,7 +2,17 @@
   "permissions": {
     "allow": [
       "Bash(find src/components/ui -name \"*.tsx\" -exec basename {} \\\\;)",
-      "Bash(sed 's/\\\\.tsx$//')"
+      "Bash(sed 's/\\\\.tsx$//')",
+      "Bash(grep -E \"\\\\.\\(tsx|ts|js|json\\)$\")",
+      "Bash(npx expo *)",
+      "Bash(findstr /r /s \"146\\\\.190\" *.js *.ts *.json *.sh *.yml)",
+      "Bash(findstr /v node_modules)",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "Bash(ls \"/c/Users/eduar/.ssh/\" 2>&1)",
+      "Read(//c/Users/eduar/.ssh//**)",
+      "Bash(ssh-keygen -t ed25519 -C \"github-actions-enem-deploy\" -f \"/c/Users/eduar/.ssh/github-actions-deploy\" -N \"\")",
+      "Bash(ssh root@134.209.38.46 'mkdir -p ~/.ssh && echo '\\\\''__TRACKED_VAR__'\\\\'' >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && echo '\\\\''Chave adicionada com sucesso'\\\\''')"
     ]
   }
 }

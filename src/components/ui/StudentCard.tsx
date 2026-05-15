@@ -3,6 +3,7 @@ import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card } from './Card';
+import { SwipeableRow } from './SwipeableRow';
 
 type StudentCardProps = {
   name: string;
@@ -51,67 +52,63 @@ export function StudentCard({
     trend === 'down' ? colors.danger :
     colors.mutedText;
 
-  return (
+  const content = (
     <Card>
-      <View style={styles.row}>
-        <Pressable onPress={onPress} style={styles.mainArea}>
-          <View style={[styles.avatar, { backgroundColor: hasStats ? sColor + '16' : colors.accentSoft }]}>
-            <Text style={[styles.avatarText, { color: hasStats ? sColor : colors.accent }]}>{initials}</Text>
-          </View>
+      <Pressable onPress={onPress} style={styles.row}>
+        <View style={[styles.avatar, { backgroundColor: hasStats ? sColor + '16' : colors.accentSoft }]}>
+          <Text style={[styles.avatarText, { color: hasStats ? sColor : colors.accent }]}>{initials}</Text>
+        </View>
 
-          <View style={styles.content}>
-            <Text style={[styles.name, { color: colors.text }]}>{name}</Text>
-            <View style={styles.metaRow}>
-              <View style={[styles.classPill, { backgroundColor: colors.input }]}>
-                <Ionicons name="school-outline" size={10} color={colors.mutedText} />
-                <Text style={[styles.classText, { color: colors.mutedText }]} numberOfLines={1}>{className}</Text>
-              </View>
-              {essayCount !== undefined && (
-                <View style={[styles.classPill, { backgroundColor: colors.input }]}>
-                  <Ionicons name="document-text-outline" size={10} color={colors.mutedText} />
-                  <Text style={[styles.classText, { color: colors.mutedText }]}>
-                    {essayCount} {essayCount === 1 ? 'redação' : 'redações'}
-                  </Text>
-                </View>
-              )}
+        <View style={styles.content}>
+          <Text style={[styles.name, { color: colors.text }]}>{name}</Text>
+          <View style={styles.metaRow}>
+            <View style={[styles.classPill, { backgroundColor: colors.input }]}>
+              <Ionicons name="school-outline" size={10} color={colors.mutedText} />
+              <Text style={[styles.classText, { color: colors.mutedText }]} numberOfLines={1}>{className}</Text>
             </View>
-          </View>
-
-          <View style={styles.scoreWrap}>
-            {hasStats ? (
-              <>
-                <Text style={[styles.scoreNum, { color: sColor }]}>{avgScore}</Text>
-                <Text style={[styles.scoreSub, { color: colors.mutedText }]}>pts</Text>
-                {trendIcon ? (
-                  <Ionicons name={trendIcon} size={13} color={trendColor} />
-                ) : null}
-              </>
-            ) : essayCount === 0 ? (
-              <Text style={[styles.noScore, { color: colors.mutedText }]}>sem notas</Text>
-            ) : (
-              <View style={[styles.arrowWrap, { backgroundColor: colors.input }]}>
-                <Ionicons name="chevron-forward" size={15} color={colors.softText} />
+            {essayCount !== undefined && (
+              <View style={[styles.classPill, { backgroundColor: colors.input }]}>
+                <Ionicons name="document-text-outline" size={10} color={colors.mutedText} />
+                <Text style={[styles.classText, { color: colors.mutedText }]}>
+                  {essayCount} {essayCount === 1 ? 'redação' : 'redações'}
+                </Text>
               </View>
             )}
           </View>
-        </Pressable>
+        </View>
 
-        {onDelete ? (
-          <Pressable
-            onPress={onDelete}
-            style={[styles.deleteButton, { backgroundColor: colors.dangerSoft }]}
-          >
-            <Ionicons name="trash-outline" size={15} color={colors.danger} />
-          </Pressable>
-        ) : null}
-      </View>
+        <View style={styles.scoreWrap}>
+          {hasStats ? (
+            <>
+              <Text style={[styles.scoreNum, { color: sColor }]}>{avgScore}</Text>
+              <Text style={[styles.scoreSub, { color: colors.mutedText }]}>pts</Text>
+              {trendIcon ? (
+                <Ionicons name={trendIcon} size={13} color={trendColor} />
+              ) : null}
+            </>
+          ) : essayCount === 0 ? (
+            <Text style={[styles.noScore, { color: colors.mutedText }]}>sem notas</Text>
+          ) : (
+            <View style={[styles.arrowWrap, { backgroundColor: colors.input }]}>
+              <Ionicons name="chevron-forward" size={15} color={colors.softText} />
+            </View>
+          )}
+        </View>
+      </Pressable>
     </Card>
+  );
+
+  if (!onDelete) return content;
+
+  return (
+    <SwipeableRow onDelete={onDelete} label="Excluir">
+      {content}
+    </SwipeableRow>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { gap: theme.spacing.xs },
-  mainArea: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
@@ -124,9 +121,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  avatarText: { fontSize: 13, fontWeight: '700' },
+  avatarText: { fontSize: 14, fontWeight: '700', fontFamily: 'Inter_700Bold' },
   content: { flex: 1, gap: 4 },
-  name: { fontSize: 14, fontWeight: '700', lineHeight: 19, letterSpacing: 0 },
+  name: { fontSize: 15, fontWeight: '700', lineHeight: 21, fontFamily: 'Inter_700Bold' },
   metaRow: { flexDirection: 'row', gap: 5, flexWrap: 'wrap' },
   classPill: {
     flexDirection: 'row',
@@ -136,23 +133,15 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 999,
   },
-  classText: { fontSize: 10, fontWeight: '500' },
+  classText: { fontSize: 12, fontWeight: '500', fontFamily: 'Inter_500Medium' },
   scoreWrap: { alignItems: 'flex-end', gap: 2 },
-  scoreNum: { fontSize: 20, fontWeight: '800', letterSpacing: -0.3, lineHeight: 22 },
-  scoreSub: { fontSize: 10, fontWeight: '600' },
-  noScore: { fontSize: 11, fontWeight: '500' },
+  scoreNum: { fontSize: 20, fontWeight: '800', letterSpacing: -0.3, lineHeight: 22, fontFamily: 'Nunito_800ExtraBold' },
+  scoreSub: { fontSize: 12, fontWeight: '600', fontFamily: 'Inter_600SemiBold' },
+  noScore: { fontSize: 13, fontWeight: '500', fontFamily: 'Inter_500Medium' },
   arrowWrap: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deleteButton: {
-    alignSelf: 'flex-end',
-    width: 30,
-    height: 30,
-    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
   },

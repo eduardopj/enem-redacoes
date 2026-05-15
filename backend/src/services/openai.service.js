@@ -1,9 +1,11 @@
 import OpenAI from 'openai';
 import { env } from '../config/env.js';
 import { normalizeCorrection } from '../utils/normalize-correction.js';
+import { writeLog } from '../utils/logger.js';
 
 const client = new OpenAI({
   apiKey: env.openAiApiKey,
+  timeout: 130_000,
 });
 
 const FREE_THEME_SENTINEL = 'Tema Livre';
@@ -589,7 +591,20 @@ feedback: 2-3 frases de orientação principal para reescrita/próxima redação
           : buildImageModeContent(themeTitle, dataUrl),
       },
     ],
-  }, { timeout: 130_000 });
+  });
+
+  const usage = response.usage;
+  if (usage) {
+    // gpt-4.1-mini pricing: $0.40/1M input, $1.60/1M output
+    const inputCost  = (usage.prompt_tokens     / 1_000_000) * 0.40;
+    const outputCost = (usage.completion_tokens / 1_000_000) * 1.60;
+    writeLog('info', 'openai_usage', {
+      model: env.openAiModel,
+      inputTokens:      usage.prompt_tokens,
+      outputTokens:     usage.completion_tokens,
+      estimatedCostUsd: +(inputCost + outputCost).toFixed(6),
+    });
+  }
 
   const outputText = response.choices?.[0]?.message?.content;
 

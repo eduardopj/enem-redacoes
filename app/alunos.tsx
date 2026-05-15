@@ -5,24 +5,33 @@ import {
   Card,
   EmptyState,
   ScreenContainer,
+  SkeletonAlunos,
   StaggerItem,
   StudentCard,
 } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
+import { useShallow } from 'zustand/react/shallow';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useToast } from '@/components/ui/Toast';
 
 export default function AlunosScreen() {
-  const currentTeacher = useAppStore((state) => state.currentTeacher);
-  const students = useAppStore((state) => state.students);
-  const essays = useAppStore((state) => state.essays);
-  const turmas = useAppStore((state) => state.turmas);
-  const deleteStudent = useAppStore((state) => state.deleteStudent);
+  const { currentTeacher, hasHydrated, students, essays, turmas, deleteStudent } = useAppStore(
+    useShallow((state) => ({
+      currentTeacher: state.currentTeacher,
+      hasHydrated: state.hasHydrated,
+      students: state.students,
+      essays: state.essays,
+      turmas: state.turmas,
+      deleteStudent: state.deleteStudent,
+    }))
+  );
   const { colors } = useAppTheme();
+  const { showToast } = useToast();
 
   const [search, setSearch] = useState('');
   const [selectedTurmaId, setSelectedTurmaId] = useState<string>('');
@@ -72,14 +81,8 @@ export default function AlunosScreen() {
   }, [teacherStudents, search, selectedTurmaId]);
 
   const handleDelete = (studentId: string, studentName: string) => {
-    Alert.alert(
-      'Excluir aluno',
-      `Deseja realmente excluir ${studentName}? As redações vinculadas também serão removidas.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Excluir', style: 'destructive', onPress: () => deleteStudent(studentId) },
-      ]
-    );
+    deleteStudent(studentId);
+    showToast({ message: `${studentName} removido`, type: 'success' });
   };
 
   const hasStudents = teacherStudents.length > 0;
@@ -104,15 +107,9 @@ export default function AlunosScreen() {
           subtitle={hasStudents ? `${teacherStudents.length} aluno${teacherStudents.length !== 1 ? 's' : ''} cadastrado${teacherStudents.length !== 1 ? 's' : ''}` : 'Cadastre e acompanhe seus alunos.'}
         />
 
-        {hasStudents && (
-          <Button
-            title="Novo aluno"
-            leftIcon="add-outline"
-            onPress={() => router.push('/novo-aluno')}
-          />
-        )}
-
-        {!hasStudents ? (
+        {!hasHydrated ? (
+          <SkeletonAlunos />
+        ) : !hasStudents ? (
           <EmptyState
             icon="people-outline"
             title="Nenhum aluno cadastrado"
@@ -122,6 +119,13 @@ export default function AlunosScreen() {
           />
         ) : (
           <>
+            {hasStudents && (
+              <Button
+                title="Novo aluno"
+                leftIcon="add-outline"
+                onPress={() => router.push('/novo-aluno')}
+              />
+            )}
             <View style={styles.summaryGrid}>
               <SummaryCard label="Com redação" value={studentsWithEssays} icon="document-text-outline" tone={colors.success} />
               <SummaryCard label="Atenção" value={attentionStudents} icon="alert-circle-outline" tone={attentionStudents > 0 ? colors.warning : colors.mutedText} />

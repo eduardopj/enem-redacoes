@@ -11,19 +11,24 @@ export type TurmaJoinInfo = {
   turmaName: string;
 };
 
-export async function pushTurmaToBackend(data: TurmaJoinInfo): Promise<void> {
-  await fetch(`${base()}/sync/turmas`, {
+export async function pushTurmaToBackend(data: TurmaJoinInfo, token?: string): Promise<void> {
+  await fetch(`${base()}/v1/sync/turmas`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify(data),
   });
 }
 
 export async function lookupTurmaByCode(code: string): Promise<TurmaJoinInfo | null> {
   try {
-    const res = await fetch(`${base()}/sync/turmas/by-code/${encodeURIComponent(code.trim().toUpperCase())}`);
+    // Uses v1 route (backend also serves old /sync/... for backward compat)
+    const res = await fetch(`${base()}/v1/sync/turmas/by-code/${encodeURIComponent(code.trim().toUpperCase())}`);
     if (!res.ok) return null;
-    return await res.json();
+    const body = await res.json();
+    return body?.data ?? body ?? null;
   } catch {
     return null;
   }

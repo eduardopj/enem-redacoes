@@ -1,14 +1,25 @@
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { AppHeader, Button, Card, EmptyState, ScreenContainer, StatusBadge } from '@/components/ui';
+import {
+  AppHeader,
+  Button,
+  Card,
+  EmptyState,
+  ScreenContainer,
+  SkeletonCorrecoes,
+  StatusBadge,
+  SwipeableRow,
+} from '@/components/ui';
+import { useToast } from '@/components/ui/Toast';
 import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
+import { useShallow } from 'zustand/react/shallow';
 import { Essay } from '@/types/app';
 import { getLowConfidenceCorrections, isCorrectedEssay } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type QueueTab = 'agora' | 'revisar' | 'corrigidas';
 
@@ -20,11 +31,24 @@ function byRecent(a: Essay, b: Essay) {
 
 export default function CorrecoesScreen() {
   const { colors } = useAppTheme();
-  const currentTeacher = useAppStore((state) => state.currentTeacher);
-  const students = useAppStore((state) => state.students);
-  const essays = useAppStore((state) => state.essays);
-  const retryQueue = useAppStore((state) => state.retryQueue);
+  const { showToast } = useToast();
+  const {
+    hasHydrated, currentTeacher, students, essays, retryQueue,
+    deleteEssay, backendSyncHasMore, fetchMoreEssaysFromBackend,
+  } = useAppStore(
+    useShallow((state) => ({
+      hasHydrated: state.hasHydrated,
+      currentTeacher: state.currentTeacher,
+      students: state.students,
+      essays: state.essays,
+      retryQueue: state.retryQueue,
+      deleteEssay: state.deleteEssay,
+      backendSyncHasMore: state.backendSyncHasMore,
+      fetchMoreEssaysFromBackend: state.fetchMoreEssaysFromBackend,
+    }))
+  );
   const [tab, setTab] = useState<QueueTab>('agora');
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const teacherStudents = useMemo(
     () => students.filter((student) => student.teacherId === currentTeacher?.id),
@@ -65,7 +89,9 @@ export default function CorrecoesScreen() {
           subtitle="Fila, revisão humana e devolutivas em um só lugar."
         />
 
-        {teacherEssays.length === 0 ? (
+        {!hasHydrated ? (
+          <SkeletonCorrecoes />
+        ) : teacherEssays.length === 0 ? (
           <EmptyState
             icon="sparkles-outline"
             title="Nenhuma correção ainda"
@@ -141,8 +167,30 @@ export default function CorrecoesScreen() {
             ) : (
               <View style={styles.queueList}>
                 {visibleEssays.map((essay) => (
-                  <CorrectionRow key={essay.id} essay={essay} studentName={getStudentName(essay.studentId)} />
+                  <CorrectionRow
+                    key={essay.id}
+                    essay={essay}
+                    studentName={getStudentName(essay.studentId)}
+                    onDelete={() => {
+                      deleteEssay(essay.id);
+                      showToast({ message: 'Redação removida', type: 'success' });
+                    }}
+                  />
                 ))}
+                {tab === 'corrigidas' && backendSyncHasMore && (
+                  <Pressable
+                    style={[styles.loadMoreBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                    onPress={async () => {
+                      setLoadingMore(true);
+                      try { await fetchMoreEssaysFromBackend(); } finally { setLoadingMore(false); }
+                    }}
+                    disabled={loadingMore}
+                  >
+                    {loadingMore
+                      ? <ActivityIndicator size="small" color={colors.accent} />
+                      : <Text style={[styles.loadMoreText, { color: colors.accent }]}>Carregar mais</Text>}
+                  </Pressable>
+                )}
               </View>
             )}
           </>
@@ -186,12 +234,12 @@ function MiniKpi({ label, value, icon, color }: { label: string; value: number; 
   );
 }
 
-function CorrectionRow({ essay, studentName }: { essay: Essay; studentName: string }) {
+function CorrectionRow({ essay, studentName, onDelete }: { essay: Essay; studentName: string; onDelete?: () => void }) {
   const { colors } = useAppTheme();
   const reviewed = Boolean(essay.teacherReviewedAt);
   const target = isCorrectedEssay(essay) ? `/resultado/${essay.id}` : `/redacao/${essay.id}`;
 
-  return (
+  const content = (
     <Pressable onPress={() => router.push(target as any)} style={[styles.row, { backgroundColor: colors.surface }]}>
       <View style={[styles.rowIcon, { backgroundColor: reviewed ? colors.successSoft : colors.accent + '14' }]}>
         <Ionicons name={reviewed ? 'shield-checkmark-outline' : 'document-text-outline'} size={18} color={reviewed ? colors.success : colors.accent} />
@@ -215,37 +263,47 @@ function CorrectionRow({ essay, studentName }: { essay: Essay; studentName: stri
       <Ionicons name="chevron-forward" size={16} color={colors.border} />
     </Pressable>
   );
+
+  if (!onDelete) return content;
+
+  return (
+    <SwipeableRow onDelete={onDelete} label="Excluir">
+      {content}
+    </SwipeableRow>
+  );
 }
 
 const styles = StyleSheet.create({
   hero: { gap: theme.spacing.md },
   heroTop: { flexDirection: 'row', gap: theme.spacing.md, alignItems: 'center' },
-  heroEyebrow: { color: 'rgba(255,255,255,0.72)', fontSize: 11, fontWeight: '800', letterSpacing: 0.4 },
-  heroTitle: { color: '#fff', fontSize: 22, lineHeight: 28, fontWeight: '900', marginTop: 4 },
-  heroText: { color: 'rgba(255,255,255,0.78)', fontSize: 13, lineHeight: 19, marginTop: 4 },
+  heroEyebrow: { color: 'rgba(255,255,255,0.72)', fontSize: 13, fontWeight: '800', letterSpacing: 0.4 },
+  heroTitle: { color: '#fff', fontSize: 22, lineHeight: 30, fontWeight: '900', marginTop: 4 },
+  heroText: { color: 'rgba(255,255,255,0.78)', fontSize: 14, lineHeight: 21, marginTop: 4 },
   heroIcon: { width: 52, height: 52, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.16)' },
   kpiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
   kpiCard: { width: '48%', padding: theme.spacing.md, gap: 5 },
   kpiIcon: { width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   kpiValue: { fontSize: 25, fontWeight: '900', letterSpacing: 0 },
-  kpiLabel: { fontSize: 11, fontWeight: '800' },
+  kpiLabel: { fontSize: 13, fontWeight: '800' },
   alertCard: { borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  alertText: { flex: 1, fontSize: 13, lineHeight: 19 },
+  alertText: { flex: 1, fontSize: 14, lineHeight: 21 },
   tabs: { gap: theme.spacing.sm, paddingRight: 20 },
   tabChip: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
-  tabText: { fontSize: 12, fontWeight: '800' },
-  tabCount: { minWidth: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
-  tabCountText: { fontSize: 11, fontWeight: '900' },
+  tabText: { fontSize: 14, fontWeight: '800' },
+  tabCount: { minWidth: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
+  tabCountText: { fontSize: 13, fontWeight: '900' },
   queueList: { gap: theme.spacing.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 18, padding: 14, ...theme.shadows.card },
   rowIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   rowBody: { flex: 1, gap: 4 },
-  rowTitle: { fontSize: 15, fontWeight: '900', lineHeight: 20 },
-  rowSub: { fontSize: 12, lineHeight: 17 },
+  rowTitle: { fontSize: 16, fontWeight: '900', lineHeight: 22 },
+  rowSub: { fontSize: 13, lineHeight: 19 },
   rowMeta: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 2 },
   reviewedBadge: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4 },
-  reviewedText: { fontSize: 11, fontWeight: '800' },
+  reviewedText: { fontSize: 12, fontWeight: '800' },
   rowScore: { alignItems: 'flex-end', minWidth: 42 },
   scoreValue: { fontSize: 18, fontWeight: '900' },
-  scoreLabel: { fontSize: 10, fontWeight: '700' },
+  scoreLabel: { fontSize: 12, fontWeight: '700' },
+  loadMoreBtn: { alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderRadius: 16, paddingVertical: 14, minHeight: 48 },
+  loadMoreText: { fontSize: 15, fontWeight: '700' },
 });

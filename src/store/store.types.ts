@@ -60,13 +60,17 @@ export type AuthSlice = {
   currentTeacher: Teacher | null;
   currentStudent: StudentSession | null;
   backendToken: string | null;
+  /** null = not yet asked; true/false = user decided */
+  sentryConsent: boolean | null;
 
   setHasHydrated: (value: boolean) => void;
   ensureTeacherSession: () => void;
   setTeacherProfile: (name?: string, email?: string) => void;
+  setSentryConsent: (value: boolean) => void;
   signup: (name: string, email: string, password: string) => AsyncAuthResult;
   login: (email: string, password: string) => AsyncAuthResult;
   logout: () => void;
+  deleteAccount: () => Promise<void>;
   loginAsStudent: (teacherEmail: string, accessCode: string) => AuthResult;
   joinTurmaByQR: (payload: QRJoinPayload, studentName: string, birthDate?: string) => AuthResult;
   joinTurmaByCode: (code: string, studentName: string, birthDate?: string) => Promise<AuthResult>;
@@ -96,28 +100,36 @@ export type ThemesSlice = {
 export type EssaysSlice = {
   essays: Essay[];
   atividades: Atividade[];
-  retryQueue: string[];
-  /** Cursor opaco para a próxima página de redações do backend (null = sem mais páginas) */
-  backendSyncCursor: string | null;
-  backendSyncHasMore: boolean;
 
   addEssay: (input: CreateEssayInput) => string | null;
   deleteEssay: (essayId: string) => void;
   updateEssayStatus: (essayId: string, status: EssayStatus, totalScore?: number) => void;
   updateEssayTeacherEval: (essayId: string, teacherScore: number | undefined, teacherNote: string) => void;
   updateEssayCorrection: (essayId: string, data: BackendCorrectionJson) => void;
-  evaluateEssayWithOpenAI: (essayId: string) => Promise<void>;
-  addToRetryQueue: (essayId: string) => void;
-  removeFromRetryQueue: (essayId: string) => void;
-  processRetryQueue: () => Promise<void>;
-  /** Busca a primeira página de redações do backend e reinicia o cursor */
-  fetchStudentEssaysFromBackend: () => Promise<void>;
-  /** Busca a próxima página usando o cursor armazenado */
-  fetchMoreEssaysFromBackend: () => Promise<void>;
   markEssayTeacherViewed: (essayId: string) => void;
   addAtividade: (input: CreateAtividadeInput) => string | null;
   encerrarAtividade: (id: string) => void;
 };
 
+export type CorrectionSlice = {
+  retryQueue: string[];
+
+  evaluateEssayWithOpenAI: (essayId: string) => Promise<void>;
+  addToRetryQueue: (essayId: string) => void;
+  removeFromRetryQueue: (essayId: string) => void;
+  processRetryQueue: () => Promise<void>;
+};
+
+export type SyncSlice = {
+  /** Cursor opaco para a próxima página de redações do backend (null = sem mais páginas) */
+  backendSyncCursor: string | null;
+  backendSyncHasMore: boolean;
+
+  /** Busca a primeira página de redações do backend e reinicia o cursor */
+  fetchStudentEssaysFromBackend: () => Promise<void>;
+  /** Busca a próxima página usando o cursor armazenado */
+  fetchMoreEssaysFromBackend: () => Promise<void>;
+};
+
 /** Full merged store type — used by all slices via get() */
-export type AppState = AuthSlice & TurmasSlice & StudentsSlice & ThemesSlice & EssaysSlice;
+export type AppState = AuthSlice & TurmasSlice & StudentsSlice & ThemesSlice & EssaysSlice & CorrectionSlice & SyncSlice;

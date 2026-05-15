@@ -24,7 +24,7 @@ export async function correctEssayWithOpenAI(
   if (input.essayText) {
     requestBody = { themeTitle: input.themeTitle, essayText: input.essayText };
   } else if (input.imageUri) {
-    const info = await FileSystem.getInfoAsync(input.imageUri, { size: true });
+    const info = await FileSystem.getInfoAsync(input.imageUri);
     if (info.exists && 'size' in info && typeof info.size === 'number' && info.size > MAX_LOCAL_IMAGE_BYTES) {
       throw new Error(
         'A foto está muito pesada para correção. Tire uma nova foto mais próxima da folha, com boa luz, ou escolha uma imagem menor.'
@@ -32,7 +32,7 @@ export async function correctEssayWithOpenAI(
     }
 
     const imageBase64 = await FileSystem.readAsStringAsync(input.imageUri, {
-      encoding: FileSystem.EncodingType.Base64,
+      encoding: 'base64',
     });
     requestBody = {
       themeTitle: input.themeTitle,
@@ -43,9 +43,10 @@ export async function correctEssayWithOpenAI(
     throw new Error('Forneça uma imagem ou texto para correção.');
   }
 
-  return apiRequest<OpenAICorrectionResult>('/openai/correct-essay', {
+  return apiRequest<OpenAICorrectionResult>('/v1/openai/correct-essay', {
     method: 'POST',
     body: requestBody,
     timeoutMs: OPENAI_CONFIG.timeoutMs,
+    token: input.token,
   });
 }

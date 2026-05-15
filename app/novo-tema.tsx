@@ -1,4 +1,4 @@
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+﻿import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import {
   AppHeader,
   Button,
@@ -96,7 +96,7 @@ export default function NovoTemaScreen() {
 
   return (
     <ProtectedRoute>
-      <ScreenContainer showBack>
+      <ScreenContainer showBack topBarTitle="Novo Tema">
         <AppHeader
           eyebrow="Novo tema"
           title="Cadastrar tema"

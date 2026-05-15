@@ -1,8 +1,14 @@
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text } from 'react-native';
 
+/**
+ * Botão de alternância de tema com:
+ *   - ícone animado (rotação sol/lua)
+ *   - label contextual "Claro" / "Escuro"
+ *   - fundo em pílula com bordas e sombra sutis
+ */
 export function ThemeToggle() {
   const { isDark, toggleTheme, colors } = useAppTheme();
   const rotate = useRef(new Animated.Value(isDark ? 180 : 0)).current;
@@ -11,7 +17,7 @@ export function ThemeToggle() {
   useEffect(() => {
     Animated.timing(rotate, {
       toValue: isDark ? 180 : 0,
-      duration: 400,
+      duration: 380,
       useNativeDriver: true,
     }).start();
   }, [isDark, rotate]);
@@ -32,31 +38,49 @@ export function ThemeToggle() {
   return (
     <Pressable
       onPress={handlePress}
-      style={[styles.btn, { backgroundColor: colors.surface }]}
-      hitSlop={10}
+      style={[
+        styles.pill,
+        {
+          backgroundColor: colors.input,
+          borderColor: colors.border,
+        },
+      ]}
+      hitSlop={8}
+      accessibilityLabel={isDark ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+      accessibilityRole="button"
     >
       <Animated.View style={{ transform: [{ rotate: rotation }, { scale }] }}>
         <Ionicons
-          name={isDark ? 'moon-outline' : 'sunny-outline'}
-          size={18}
-          color={colors.softText}
+          name={isDark ? 'moon' : 'sunny'}
+          size={14}
+          color={isDark ? '#a78bfa' : '#f59e0b'}
         />
       </Animated.View>
+      <Text style={[styles.label, { color: colors.softText }]}>
+        {isDark ? 'Escuro' : 'Claro'}
+      </Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  btn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  pill: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 5,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1,
     shadowColor: '#101828',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
 });

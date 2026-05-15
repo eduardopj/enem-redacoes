@@ -102,9 +102,9 @@ export function Button({
   };
 
   const sizeConfig = {
-    sm: { minH: 40, px: theme.spacing.md, fontSize: 14, iconSize: 16 },
-    md: { minH: 50, px: theme.spacing.lg, fontSize: 15, iconSize: 18 },
-    lg: { minH: 56, px: theme.spacing.xl, fontSize: 16, iconSize: 19 },
+    sm: { minH: 42, px: theme.spacing.md, fontSize: 15, iconSize: 17 },
+    md: { minH: 52, px: theme.spacing.lg, fontSize: 16, iconSize: 19 },
+    lg: { minH: 58, px: theme.spacing.xl, fontSize: 17, iconSize: 20 },
   }[size];
 
   return (

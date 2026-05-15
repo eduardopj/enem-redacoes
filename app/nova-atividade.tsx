@@ -1,4 +1,4 @@
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+﻿import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { AppHeader, Button, Card, Input, ScreenContainer } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
@@ -60,7 +60,7 @@ export default function NovaAtividadeScreen() {
 
   return (
     <ProtectedRoute>
-      <ScreenContainer showBack>
+      <ScreenContainer showBack topBarTitle="Nova Atividade">
         <AppHeader
           eyebrow="Nova atividade"
           title="Criar atividade"

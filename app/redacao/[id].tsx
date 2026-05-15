@@ -80,7 +80,7 @@ export default function RedacaoDetalheScreen() {
 
   const isProcessing = essay.status === 'processando';
   const isCorrected = isCorrectedEssay(essay);
-  const hasError = essay.status === 'pendente' && essay.feedback?.startsWith('Erro na correção:');
+  const hasError = essay.status === 'pendente' && Boolean(essay.errorMessage);
   const isInRetryQueue = retryQueue.includes(essay.id);
   const currentStep = parseStep(essay.feedback);
 

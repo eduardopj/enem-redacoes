@@ -100,7 +100,14 @@ export function AppFooter() {
         },
       ]}
     >
-      <Text style={[styles.text, { color: colors.mutedText }]}>enem ia · v{version}</Text>
+      <View style={styles.footerRow}>
+        <View style={[styles.footerLogo, { backgroundColor: colors.accent }]}>
+          <Ionicons name="school" size={10} color="#fff" />
+        </View>
+        <Text style={[styles.text, { color: colors.mutedText }]}>
+          ENEM IA · v{version}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -116,10 +123,21 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 6,
   },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  footerLogo: {
+    width: 18,
+    height: 18,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   text: {
     fontSize: 11,
-    letterSpacing: 0.6,
-    textAlign: 'center',
+    letterSpacing: 0.8,
     fontWeight: '600',
   },
   navContainer: {

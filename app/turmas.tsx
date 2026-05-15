@@ -2,6 +2,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Button, ScreenContainer } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
 import { useAppTheme } from '@/theme/ThemeContext';
+import { useShallow } from 'zustand/react/shallow';
 import { QRJoinPayload, Turma } from '@/types/app';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -31,12 +32,17 @@ function scoreColor(s: number, colors: any): string {
 
 export default function TurmasScreen() {
   const { colors } = useAppTheme();
-  const currentTeacher = useAppStore((s) => s.currentTeacher);
-  const turmas = useAppStore((s) => s.turmas);
-  const students = useAppStore((s) => s.students);
-  const essays = useAppStore((s) => s.essays);
-  const deleteTurma = useAppStore((s) => s.deleteTurma);
-  const generateTurmaJoinCode = useAppStore((s) => s.generateTurmaJoinCode);
+  const { currentTeacher, turmas, students, essays, deleteTurma, generateTurmaJoinCode } =
+    useAppStore(
+      useShallow((s) => ({
+        currentTeacher: s.currentTeacher,
+        turmas: s.turmas,
+        students: s.students,
+        essays: s.essays,
+        deleteTurma: s.deleteTurma,
+        generateTurmaJoinCode: s.generateTurmaJoinCode,
+      }))
+    );
 
   const [qrTurmaId, setQrTurmaId] = useState<string | null>(null);
   const qrTurma = turmas.find((t) => t.id === qrTurmaId) ?? null;

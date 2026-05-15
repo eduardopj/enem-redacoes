@@ -147,40 +147,51 @@ export default function StudentHomeScreen() {
           <View style={styles.greetRow}>
             <View style={{ flex: 1 }}>
               <Text style={[styles.greetSub, { color: colors.mutedText }]}>{getGreeting()},</Text>
-              <Text style={[styles.greetName, { color: colors.text }]}>{name}</Text>
+              <Text style={[styles.greetName, { color: colors.text }]}>{name} 👋</Text>
             </View>
-            {levelInfo && (
-              <View style={[styles.levelBadge, { backgroundColor: levelInfo.color + '18', borderColor: levelInfo.color + '30' }]}>
-                <Ionicons name={levelInfo.icon} size={14} color={levelInfo.color} />
-                <Text style={[styles.levelText, { color: levelInfo.color }]}>{levelInfo.level}</Text>
-              </View>
-            )}
+            <Pressable
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push('/student/nova' as any); }}
+              style={[styles.newEssayChip, { backgroundColor: colors.accent }]}
+            >
+              <Ionicons name="add" size={16} color="#fff" />
+              <Text style={styles.newEssayChipText}>Nova</Text>
+            </Pressable>
           </View>
         </StaggerItem>
 
         {/* ── Hero Score Card ── */}
         <StaggerItem index={1}>
           {correctedEssays.length > 0 ? (
-            <View style={[styles.heroCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={styles.heroScoreRow}>
+            <View style={[styles.heroCard, { overflow: 'hidden' }]}>
+              {/* Colored score section */}
+              <View style={[styles.heroCardTop, { backgroundColor: scoreColor }]}>
                 <View style={styles.heroScoreMain}>
-                  <AnimatedNumber value={avg ?? 0} style={[styles.heroScoreNum, { color: scoreColor }]} />
-                  <Text style={[styles.heroScoreLabel, { color: colors.mutedText }]}>média atual</Text>
+                  <AnimatedNumber value={avg ?? 0} style={styles.heroScoreNumLight} />
+                  <Text style={styles.heroScoreLabelLight}>média atual</Text>
                   {trend != null && (
-                    <View style={[styles.trendPill, { backgroundColor: trend >= 0 ? colors.success + '18' : colors.danger + '18' }]}>
+                    <View style={[styles.trendPill, { backgroundColor: 'rgba(255,255,255,0.22)' }]}>
                       <Ionicons
                         name={trend >= 0 ? 'trending-up' : 'trending-down'}
                         size={12}
-                        color={trend >= 0 ? colors.success : colors.danger}
+                        color="#fff"
                       />
-                      <Text style={[styles.trendText, { color: trend >= 0 ? colors.success : colors.danger }]}>
+                      <Text style={[styles.trendText, { color: '#fff' }]}>
                         {trend >= 0 ? '+' : ''}{trend} pts
                       </Text>
                     </View>
                   )}
                 </View>
-                <View style={styles.heroStatsDivider} />
-                <View style={styles.heroStatsCol}>
+                {/* Level badge inside hero */}
+                {levelInfo && (
+                  <View style={styles.heroLevelWrap}>
+                    <Ionicons name={levelInfo.icon} size={14} color="rgba(255,255,255,0.85)" />
+                    <Text style={styles.heroLevelText}>{levelInfo.level}</Text>
+                  </View>
+                )}
+              </View>
+              {/* White stats + progress section */}
+              <View style={[styles.heroCardBottom, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={styles.heroStatsRow}>
                   <View style={styles.heroStatItem}>
                     <Text style={[styles.heroStatNum, { color: colors.text }]}>{myEssays.length}</Text>
                     <Text style={[styles.heroStatLabel, { color: colors.mutedText }]}>redações</Text>
@@ -196,13 +207,12 @@ export default function StudentHomeScreen() {
                     <Text style={[styles.heroStatLabel, { color: colors.mutedText }]}>corrigidas</Text>
                   </View>
                 </View>
-              </View>
-              {/* Progress bar — avg vs 1000 */}
-              <ProgressBar value={((avg ?? 0) / 1000) * 100} color={scoreColor} height={6} delay={300} />
-              <View style={styles.heroProgressLabels}>
-                <Text style={[styles.heroProgressMin, { color: colors.mutedText }]}>0</Text>
-                <Text style={[styles.heroProgressMid, { color: colors.mutedText }]}>Média nacional: ~624</Text>
-                <Text style={[styles.heroProgressMax, { color: colors.mutedText }]}>1000</Text>
+                <ProgressBar value={((avg ?? 0) / 1000) * 100} color={scoreColor} height={6} delay={300} />
+                <View style={styles.heroProgressLabels}>
+                  <Text style={[styles.heroProgressMin, { color: colors.mutedText }]}>0</Text>
+                  <Text style={[styles.heroProgressMid, { color: colors.mutedText }]}>Nacional: ~624</Text>
+                  <Text style={[styles.heroProgressMax, { color: colors.mutedText }]}>1000</Text>
+                </View>
               </View>
             </View>
           ) : (
@@ -416,33 +426,55 @@ export default function StudentHomeScreen() {
 const styles = StyleSheet.create({
   greetRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 4 },
   greetSub: { fontSize: 13, fontWeight: '500' },
-  greetName: { fontSize: 26, fontWeight: '700', letterSpacing: 0, lineHeight: 32 },
-  levelBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 999, borderWidth: 1,
+  greetName: { fontSize: 26, fontWeight: '800', letterSpacing: -0.3, lineHeight: 32 },
+  newEssayChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
   },
-  levelText: { fontSize: 12, fontWeight: '700' },
+  newEssayChipText: { fontSize: 13, fontWeight: '700', color: '#fff' },
 
-  // Hero card
+  // Hero card — split design
   heroCard: {
-    borderRadius: 18, borderWidth: 1,
-    padding: theme.spacing.lg, gap: 12,
-    shadowColor: '#101828', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.07, shadowRadius: 12, elevation: 3,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#101828', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12, shadowRadius: 16, elevation: 6,
   },
-  heroScoreRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  heroScoreMain: { alignItems: 'center', gap: 4, minWidth: 80 },
-  heroScoreNum: { fontSize: 52, fontWeight: '800', letterSpacing: 0, lineHeight: 58 },
-  heroScoreLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.1 },
+  heroCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 22,
+    gap: 12,
+  },
+  heroCardBottom: {
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 14,
+    gap: 10,
+  },
+  heroScoreMain: { alignItems: 'flex-start', gap: 2 },
+  heroScoreNumLight: { fontSize: 58, fontWeight: '800', letterSpacing: -1, lineHeight: 64, color: '#fff' },
+  heroScoreLabelLight: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.75)', letterSpacing: 0.2 },
+  heroLevelWrap: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12,
+  },
+  heroLevelText: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.9)' },
   trendPill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, marginTop: 2 },
   trendText: { fontSize: 11, fontWeight: '700' },
-  heroStatsDivider: { width: 1, height: 60, backgroundColor: 'rgba(0,0,0,0.08)' },
-  heroStatsCol: { flex: 1, gap: 6 },
-  heroStatItem: { alignItems: 'center' },
-  heroStatNum: { fontSize: 18, fontWeight: '700', letterSpacing: 0 },
+  heroStatsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' },
+  heroStatItem: { alignItems: 'center', flex: 1 },
+  heroStatNum: { fontSize: 18, fontWeight: '800', letterSpacing: -0.2 },
   heroStatLabel: { fontSize: 9, fontWeight: '600', letterSpacing: 0.1 },
-  heroStatDivider: { height: 1, width: '80%' },
+  heroStatDivider: { width: 1, height: 36 },
   heroProgressTrack: { height: 6, borderRadius: 3, overflow: 'hidden' },
   heroProgressFill: { height: '100%', borderRadius: 3 },
   heroProgressLabels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

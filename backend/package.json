@@ -11,14 +11,24 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "build": "npm rebuild better-sqlite3",
+    "backup": "node src/utils/backup-db.js",
     "test": "node --test src/**/*.test.js"
   },
   "dependencies": {
+    "@sentry/node": "^10.53.1",
     "better-sqlite3": "^12.9.0",
+    "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "express-rate-limit": "^8.4.1",
-    "openai": "^4.104.0"
+    "file-type": "^22.0.1",
+    "helmet": "^8.1.0",
+    "nodemailer": "^8.0.7",
+    "openai": "^4.104.0",
+    "p-queue": "^9.2.0",
+    "p-retry": "^8.0.0",
+    "sharp": "^0.34.5",
+    "zod": "^3.25.76"
   }
 }
