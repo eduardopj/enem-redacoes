@@ -1,5 +1,5 @@
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { AppHeader, Button, Card, CorrectionProgress, ScreenContainer, StaggerItem, StatusBadge } from '@/components/ui';
+import { AnimatedNumber, AppHeader, Button, Card, CorrectionProgress, ScreenContainer, StaggerItem, StatusBadge } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
@@ -251,12 +251,13 @@ export default function RedacaoDetalheScreen() {
               <Card>
                 <Text style={[styles.blockTitle, { color: colors.softText }]}>Resumo</Text>
                 <View style={styles.summaryGrid}>
-                  <SummaryChip
-                    label="Nota"
-                    value={String(essay.totalScore ?? '--')}
-                    color={colors.accent}
-                    colors={colors}
-                  />
+                  <View style={[styles.chip, { backgroundColor: colors.accent + '14', borderColor: colors.accent + '30' }]}>
+                    <Text style={[styles.chipLabel, { color: colors.softText }]}>Nota</Text>
+                    {essay.totalScore != null
+                      ? <AnimatedNumber value={essay.totalScore} style={[styles.chipValue, { color: colors.accent }]} delay={300} duration={2000} />
+                      : <Text style={[styles.chipValue, { color: colors.accent }]}>--</Text>
+                    }
+                  </View>
                   <SummaryChip
                     label="Tema"
                     value={essay.themeAdequacy?.level ?? '--'}

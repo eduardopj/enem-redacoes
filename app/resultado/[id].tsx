@@ -228,7 +228,7 @@ export default function ResultadoScreen() {
             <View>
               <Text style={[styles.heroKicker, { color: colors.mutedText }]}>Nota da IA</Text>
               <View style={styles.scoreRow}>
-                <AnimatedNumber value={aiScore} style={[styles.score, { color: scoreColor }]} />
+                <AnimatedNumber value={aiScore} style={[styles.score, { color: scoreColor }]} delay={500} duration={2200} />
                 <Text style={[styles.scoreBase, { color: colors.mutedText }]}>/1000</Text>
               </View>
               <Text style={[styles.scoreLabel, { color: scoreColor }]}>{getScoreLabel(aiScore)}</Text>
