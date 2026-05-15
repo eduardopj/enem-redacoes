@@ -4,10 +4,14 @@ import { correctEssayWithOpenAI } from '@/services/openai/correct-essay';
 import { saveEssayForResearch } from '@/services/research/save-essay';
 import { pushEssayToBackend } from '@/services/sync/sync-essays';
 import { StateCreator } from 'zustand';
-import { isNetworkError } from '../utils/essay-helpers';
+import { isNetworkError, isRetriableError } from '../utils/essay-helpers';
 import type { AppState, CorrectionSlice } from '../store.types';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Tentativa 1 falhou → aguarda 8s; tentativa 2 → 20s; depois desiste
+const RETRY_DELAYS = [8_000, 20_000];
+const MAX_ATTEMPTS = RETRY_DELAYS.length + 1;
 
 export const createCorrectionSlice: StateCreator<AppState, [['zustand/persist', unknown]], [], CorrectionSlice> =
   (set, get) => ({
@@ -224,29 +228,41 @@ export const createCorrectionSlice: StateCreator<AppState, [['zustand/persist', 
           message.toLowerCase().includes('rate') ||
           message.toLowerCase().includes('limite');
 
+        // Attempt count was incremented at the top of this call
+        const currentAttempts = get().essays.find((e) => e.id === essayId)?.correctionAttempts ?? 1;
+        const canRetry = !isRateLimited && isRetriableError(error) && currentAttempts < MAX_ATTEMPTS;
+        const retryDelay = RETRY_DELAYS[currentAttempts - 1] ?? RETRY_DELAYS[RETRY_DELAYS.length - 1];
+        const retryInSec = Math.round(retryDelay / 1000);
+
         const userMessage = isRateLimited
           ? 'Limite de correções atingido. Aguarde alguns minutos e tente novamente.'
-          : message;
+          : canRetry
+            ? `Tentativa ${currentAttempts}/${MAX_ATTEMPTS} falhou. Tentando novamente em ${retryInSec}s...`
+            : message;
 
         set((state) => ({
           essays: state.essays.map((item) =>
             item.id === essayId
               ? {
                   ...item,
-                  status: 'pendente',
-                  errorMessage: userMessage,
+                  status: canRetry ? 'processando' : 'pendente',
+                  errorMessage: canRetry ? undefined : userMessage,
                   updatedAt: new Date().toISOString(),
-                  feedback: `Erro: ${userMessage}`,
+                  feedback: userMessage,
                 }
               : item
           ),
         }));
 
-        if (isNetworkError(message)) {
-          get().addToRetryQueue(essayId);
+        if (canRetry) {
+          // Backoff automático — retry sem intervenção do usuário
+          setTimeout(() => {
+            get().evaluateEssayWithOpenAI(essayId).catch(() => {});
+          }, retryDelay);
+        } else {
+          if (isNetworkError(message)) get().addToRetryQueue(essayId);
+          throw error;
         }
-
-        throw error;
       }
     },
   });

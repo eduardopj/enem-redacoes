@@ -93,8 +93,12 @@ async function _apiRequest<T>(path: string, options: ApiRequestOptions): Promise
         body: options.body === undefined ? undefined : JSON.stringify(options.body),
         signal: controller.signal,
       });
-    } catch (error) {
-      throw new Error(getFriendlyNetworkMessage(error));
+    } catch (fetchError) {
+      const isTimeout = fetchError instanceof Error && fetchError.name === 'AbortError';
+      const msg = getFriendlyNetworkMessage(fetchError);
+      throw Object.assign(new Error(msg), {
+        code: isTimeout ? 'TIMEOUT' : 'NETWORK_ERROR',
+      });
     }
 
     let payload: ApiResponse<T> | T | undefined;

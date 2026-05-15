@@ -15,6 +15,21 @@ export function isNetworkError(message: string): boolean {
   );
 }
 
+/**
+ * Returns true for errors that are worth retrying automatically:
+ * timeouts, transient network failures, and 5xx server errors.
+ * Does NOT retry 4xx (bad request, auth, rate-limit, invalid image).
+ */
+export function isRetriableError(error: unknown): boolean {
+  if (error == null) return false;
+  const code = (error as Record<string, unknown>).code;
+  if (code === 'TIMEOUT' || code === 'NETWORK_ERROR') return true;
+  const status = (error as Record<string, unknown>).status;
+  if (typeof status === 'number' && status >= 500) return true;
+  if (error instanceof Error) return isNetworkError(error.message);
+  return false;
+}
+
 export function mapCorrectionJsonToEssayFields(c: BackendCorrectionJson): Partial<Essay> {
   return {
     transcription: c.transcription,
