@@ -13,7 +13,7 @@
  */
 
 import Database from 'better-sqlite3';
-import { copyFileSync, mkdirSync, readdirSync, rmSync, statSync } from 'fs';
+import { mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -40,8 +40,36 @@ function pruneOldBackups() {
   }
 }
 
+// ── S3 offsite upload ─────────────────────────────────────────────────────────
+// Set BACKUP_S3_BUCKET (and optionally BACKUP_S3_REGION / BACKUP_S3_PREFIX)
+// to have each backup automatically copied to S3 after the local write.
+// Offsite failure is non-fatal: local backup is kept and a warning is logged.
+
+async function uploadBackupToS3(localPath, ts) {
+  const bucket = process.env.BACKUP_S3_BUCKET;
+  const region = process.env.BACKUP_S3_REGION || 'us-east-1';
+  const prefix = process.env.BACKUP_S3_PREFIX || 'db-backups/';
+  const key = `${prefix}essays-${ts}.db`;
+
+  const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
+  const body = readFileSync(localPath);
+  const client = new S3Client({ region });
+
+  await client.send(new PutObjectCommand({
+    Bucket: bucket,
+    Key: key,
+    Body: body,
+    ContentType: 'application/x-sqlite3',
+    ServerSideEncryption: 'AES256',
+  }));
+
+  log('info', 'backup_s3_uploaded', { key, bucket, region, sizeBytes: body.length });
+  return { key, bucket };
+}
+
 /**
  * Executa um backup online do SQLite (seguro mesmo com writes simultâneos em WAL mode).
+ * Se BACKUP_S3_BUCKET estiver definido, copia o arquivo para S3 após o backup local.
  * Retorna o caminho do arquivo de backup criado.
  */
 export async function runBackup() {
@@ -56,6 +84,15 @@ export async function runBackup() {
     const sizeBytes = statSync(destPath).size;
     log('info', 'backup_success', { destPath, sizeBytes });
     pruneOldBackups();
+
+    if (process.env.BACKUP_S3_BUCKET) {
+      try {
+        await uploadBackupToS3(destPath, ts);
+      } catch (err) {
+        log('warn', 'backup_s3_failed', { error: err.message });
+      }
+    }
+
     return destPath;
   } finally {
     db.close();

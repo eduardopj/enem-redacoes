@@ -32,6 +32,11 @@ export const env = {
 
   // PostgreSQL connection — when set, use PostgreSQL instead of SQLite (requires migration)
   databaseUrl: process.env.DATABASE_URL || '',
+
+  // Offsite DB backup via S3 — set BACKUP_S3_BUCKET to enable
+  backupS3Bucket: process.env.BACKUP_S3_BUCKET || '',
+  backupS3Region: process.env.BACKUP_S3_REGION || 'us-east-1',
+  backupS3Prefix: process.env.BACKUP_S3_PREFIX || 'db-backups/',
 };
 
 if (!env.openAiApiKey) {
