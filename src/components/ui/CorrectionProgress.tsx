@@ -29,7 +29,7 @@ const MESSAGES = [
 const PROGRESS_TARGETS: Record<number, number> = { 1: 22, 2: 48, 3: 76, 4: 94 };
 
 export function CorrectionProgress({ currentStep, feedback }: CorrectionProgressProps) {
-  const { colors } = useAppTheme();
+  const { colors, isDark } = useAppTheme();
   useKeepAwake();
 
   const progress = useRef(new Animated.Value(8)).current;
@@ -94,6 +94,7 @@ export function CorrectionProgress({ currentStep, feedback }: CorrectionProgress
 
   const barWidth = progress.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] });
   const shimmerX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-90, 300] });
+  const progressShimmerBg = isDark ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.45)';
   const elapsedLabel = elapsed < 60 ? `${elapsed}s` : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
   const footerMessage =
     elapsed > 110
@@ -120,7 +121,7 @@ export function CorrectionProgress({ currentStep, feedback }: CorrectionProgress
       <View style={styles.progressBlock}>
         <View style={[styles.track, { backgroundColor: colors.input }]}>
           <Animated.View style={[styles.fill, { width: barWidth, backgroundColor: colors.accent }]}>
-            <Animated.View style={[styles.shimmer, { transform: [{ translateX: shimmerX }] }]} />
+            <Animated.View style={[styles.shimmer, { transform: [{ translateX: shimmerX }], backgroundColor: progressShimmerBg }]} />
           </Animated.View>
         </View>
         <View style={styles.progressMeta}>
@@ -226,7 +227,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: '100%',
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.4)',
   },
   progressMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   progressText: { fontSize: 12, fontWeight: '800' },

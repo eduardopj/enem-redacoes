@@ -37,6 +37,7 @@ function initSentryIfNeeded() {
     environment: __DEV__ ? 'development' : 'production',
     release: Constants.expoConfig?.version,
     tracesSampleRate: __DEV__ ? 0 : 0.15,
+    profilesSampleRate: __DEV__ ? 0 : 0.1,
     sendDefaultPii: false,
   });
 }
@@ -69,6 +70,7 @@ function RootLayout() {
   const currentTeacher = useAppStore((state) => state.currentTeacher);
   const sentryConsent = useAppStore((state) => state.sentryConsent);
   const setSentryConsent = useAppStore((state) => state.setSentryConsent);
+  const recoverStuckEssays = useAppStore((state) => state.recoverStuckEssays);
   const [fontsLoaded] = useFonts({
     Nunito_400Regular,
     Nunito_600SemiBold,
@@ -90,6 +92,11 @@ function RootLayout() {
       router.replace('/');
     });
   }, [logout]);
+
+  // Recover essays stuck in 'processando' from a previous session that was killed.
+  useEffect(() => {
+    if (hasHydrated) recoverStuckEssays();
+  }, [hasHydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Init Sentry as soon as the user grants consent
   useEffect(() => {

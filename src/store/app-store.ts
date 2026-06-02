@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { EssayStatus } from '@/types/enums';
 import { createAuthSlice, DEFAULT_TEACHER } from './slices/auth.slice';
 import { createCorrectionSlice } from './slices/correction.slice';
 import { createEssaysSlice } from './slices/essays.slice';
@@ -88,8 +89,8 @@ export const useAppStore = create<AppState>()(
         if (state) {
           // Reset any essays stuck in "processando" state (app was killed mid-correction)
           state.essays = state.essays.map((essay) =>
-            essay.status === 'processando'
-              ? { ...essay, status: 'pendente', feedback: undefined }
+            essay.status === EssayStatus.Processando
+              ? { ...essay, status: EssayStatus.Pendente, feedback: undefined }
               : essay
           );
           // Guarantee a default teacher session for offline-first mode

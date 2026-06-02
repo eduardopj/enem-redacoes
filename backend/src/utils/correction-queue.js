@@ -1,6 +1,7 @@
 import PQueue from 'p-queue';
 import pRetry from 'p-retry';
 import { writeLog } from './logger.js';
+import { trackCorrectionDuration, trackRetry } from './sentry.js';
 
 const CONCURRENCY = Number(process.env.OPENAI_QUEUE_CONCURRENCY ?? 3);
 const MAX_RETRIES = Number(process.env.OPENAI_MAX_RETRIES ?? 3);
@@ -21,6 +22,8 @@ export async function enqueueCorrection(requestId, fn) {
     );
   }
 
+  const startedAt = Date.now();
+
   return correctionQueue.add(() =>
     pRetry(fn, {
       retries: MAX_RETRIES,
@@ -30,10 +33,10 @@ export async function enqueueCorrection(requestId, fn) {
       randomize: true,
       shouldRetry({ error }) {
         const status = error.status ?? error.httpStatus;
-        // Only retry rate-limit (429) and server errors (5xx); abort on client errors
         return !status || status === 429 || status >= 500;
       },
       onFailedAttempt({ error, attemptNumber, retriesLeft }) {
+        trackRetry(requestId);
         writeLog('warn', 'correction_retry', {
           requestId,
           attempt: attemptNumber,
@@ -42,6 +45,9 @@ export async function enqueueCorrection(requestId, fn) {
           error: error.message,
         });
       },
+    }).then((result) => {
+      trackCorrectionDuration(Date.now() - startedAt);
+      return result;
     })
   );
 }

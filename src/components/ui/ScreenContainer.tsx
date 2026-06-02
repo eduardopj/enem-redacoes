@@ -34,7 +34,6 @@ export function ScreenContainer({
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
   const entryOpacity = useRef(new Animated.Value(0)).current;
-  const entryY = useRef(new Animated.Value(10)).current;
   const safeBottom = Math.max(insets.bottom, Platform.OS === 'android' ? ANDROID_BOTTOM_GUARD : 8);
 
   const navHeight = showNav
@@ -50,20 +49,12 @@ export function ScreenContainer({
   const NavBar = showNav ? <BottomNav /> : showStudentNav ? <StudentBottomNav /> : null;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(entryOpacity, {
-        toValue: 1,
-        duration: 260,
-        useNativeDriver: true,
-      }),
-      Animated.spring(entryY, {
-        toValue: 0,
-        damping: 18,
-        stiffness: 170,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [entryOpacity, entryY]);
+    Animated.timing(entryOpacity, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [entryOpacity]);
 
   if (noScroll) {
     return (
@@ -75,7 +66,6 @@ export function ScreenContainer({
             {
               paddingBottom: Math.max(theme.spacing.md, safeBottom),
               opacity: entryOpacity,
-              transform: [{ translateY: entryY }],
             },
           ]}
         >
@@ -102,13 +92,7 @@ export function ScreenContainer({
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           bounces
-          style={[
-            styles.scroll,
-            {
-              opacity: entryOpacity,
-              transform: [{ translateY: entryY }],
-            },
-          ]}
+          style={[styles.scroll, { opacity: entryOpacity }]}
         >
           {children}
         </Animated.ScrollView>
@@ -129,13 +113,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingHorizontal: 20,
+    paddingHorizontal: theme.spacing.xl,
     paddingTop: theme.spacing.lg,
     gap: theme.spacing.md,
   },
   staticContent: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: theme.spacing.xl,
     paddingTop: theme.spacing.lg,
   },
 });

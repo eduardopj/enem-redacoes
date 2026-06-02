@@ -17,129 +17,129 @@ const fonts = {
 };
 
 const lightColors = {
-  // Base surfaces
-  background: '#F7F8FC',
+  // Base surfaces — branco puro (estilo Duolingo, sem tint)
+  background: '#FFFFFF',
   surface: '#FFFFFF',
-  surfaceElevated: '#F1F4FA',
-  surfaceSoft: '#F1F4FA',
-  surfaceMuted: '#E8ECFA',
+  surfaceElevated: '#F9F9F9',
+  surfaceSoft: '#F5F5F5',
+  surfaceMuted: '#EBEBEB',
 
   // Text hierarchy
-  text: '#111827',
-  softText: '#4B5563',
-  mutedText: '#6B7280',
+  text: '#1C1C1C',
+  softText: '#4B4B4B',
+  mutedText: '#777777',
 
   // Borders & inputs
-  border: '#E5E7EB',
-  borderStrong: '#D1D5DB',
-  input: '#F1F4FA',
+  border: '#E5E5E5',
+  borderStrong: '#CECECE',   // usado no border-bottom depth de cards/botões
+  input: '#F7F7F7',
 
-  // Primary = índigo (marca principal — substitui o teal)
-  accent: '#4F46E5',
-  accentSoft: '#EEF2FF',
-  accentHover: '#3730A3',
+  // Accent = violeta vibrante (primary brand)
+  accent: '#7C3AED',
+  accentSoft: '#F3E8FF',
+  accentHover: '#6D28D9',    // border-bottom de botões primários
 
-  // Secondary = violeta
-  secondary: '#7C3AED',
-  secondarySoft: '#F3E8FF',
+  // Secondary = gold / XP
+  secondary: '#FFB800',
+  secondarySoft: '#FFF8E7',
 
-  // Dark blocks (índigo escuro)
-  darkBlock: '#1E1B4B',
-  darkBlockSoft: '#312E81',
+  // Dark blocks
+  darkBlock: '#1C1C1C',
+  darkBlockSoft: '#2D2D2D',
 
-  // Success — verde usado APENAS para sucesso real
-  success: '#16A34A',
-  successSoft: '#F0FDF4',
+  // Success — verde vivo estilo Duolingo
+  success: '#58CC02',
+  successSoft: '#F0FFF0',
 
-  // Warning — laranja
-  warning: '#EA580C',
-  warningSoft: '#FFF7ED',
+  // Warning — âmbar
+  warning: '#FF9600',
+  warningSoft: '#FFF3E0',
 
-  // Info — azul céu
-  info: '#0EA5E9',
-  infoSoft: '#F0F9FF',
+  // Info — azul céu (Duolingo streak blue)
+  info: '#1CB0F6',
+  infoSoft: '#E8F7FF',
 
-  // Danger
-  danger: '#DC2626',
-  dangerSoft: '#FEF2F2',
+  // Danger — coral (Duolingo red)
+  danger: '#FF4B4B',
+  dangerSoft: '#FFF0F0',
 
   // Utilities
-  black: '#111827',
+  black: '#1C1C1C',
   white: '#FFFFFF',
-  overlay: 'rgba(17,24,39,0.52)',
+  overlay: 'rgba(28,28,28,0.52)',
   darkBlockFg: '#FFFFFF',
 
   // Primary aliases
-  primary: '#4F46E5',
-  primaryDark: '#3730A3',
-  primarySoft: '#EEF2FF',
-  primaryMuted: '#A5B4FC',
+  primary: '#7C3AED',
+  primaryDark: '#6D28D9',
+  primarySoft: '#F3E8FF',
+  primaryMuted: '#C4B5FD',
 
-  // Âmbar — acento quente pontual
-  warmAccent: '#D97706',
-  warmAccentSoft: '#FFFBEB',
+  // Âmbar — XP / conquistas
+  warmAccent: '#FFB800',
+  warmAccentSoft: '#FFF8E7',
 
-  // Ciano — acento tecnológico
-  cyan: '#0891B2',
-  cyanSoft: '#ECFEFF',
+  // Teal — competência C3
+  cyan: '#0D9488',
+  cyanSoft: '#F0FDFA',
 
-  // Rosa/Pink — competência C5
-  rose: '#DB2777',
+  // Rosa — competência C5
+  rose: '#EC4899',
   roseSoft: '#FDF2F8',
 };
 
 const darkColors = {
-  background: '#090B14',
-  surface: '#111827',
-  surfaceElevated: '#171C2E',
-  surfaceSoft: '#1F2937',
-  surfaceMuted: '#2D3348',
+  background: '#141414',
+  surface: '#1E1E1E',
+  surfaceElevated: '#252525',
+  surfaceSoft: '#2A2A2A',
+  surfaceMuted: '#333333',
 
-  text: '#F9FAFB',
-  softText: '#D1D5DB',
-  mutedText: '#9CA3AF',
+  text: '#F5F5F5',
+  softText: '#D0D0D0',
+  mutedText: '#8B8B8B',
 
-  border: '#2D3348',
-  borderStrong: '#3D4663',
-  input: '#1F2937',
+  border: '#333333',
+  borderStrong: '#444444',
+  input: '#252525',
 
-  accent: '#818CF8',
-  accentSoft: '#252A55',
-  accentHover: '#A5B4FC',
+  accent: '#9B6EFF',         // violeta clareado para dark mode
+  accentSoft: '#2E1065',
+  accentHover: '#C4B5FD',
 
-  secondary: '#C084FC',
-  secondarySoft: '#3B0764',
+  secondary: '#FFD700',
+  secondarySoft: '#3D2E00',
 
-  darkBlock: '#F9FAFB',
-  darkBlockSoft: '#E5E7EB',
+  darkBlock: '#F5F5F5',
+  darkBlockSoft: '#D0D0D0',
 
-  success: '#4ADE80',
-  successSoft: '#052E16',
+  success: '#77EE00',        // verde mais brilhante em dark
+  successSoft: '#0A2E00',
 
-  warning: '#FDBA74',
-  warningSoft: '#431407',
+  warning: '#FFA500',
+  warningSoft: '#3D1A00',
 
   info: '#38BDF8',
   infoSoft: '#082F49',
 
-  danger: '#F87171',
-  dangerSoft: '#450A0A',
+  danger: '#FF6B6B',
+  dangerSoft: '#3D0000',
 
-  black: '#090B14',
+  black: '#141414',
   white: '#FFFFFF',
   overlay: 'rgba(0,0,0,0.72)',
-  darkBlockFg: '#090B14',
+  darkBlockFg: '#141414',
 
-  primary: '#818CF8',
-  primaryDark: '#A5B4FC',
-  primarySoft: '#252A55',
-  primaryMuted: '#6366F1',
+  primary: '#9B6EFF',
+  primaryDark: '#C4B5FD',
+  primarySoft: '#2E1065',
+  primaryMuted: '#7C3AED',
 
-  warmAccent: '#FCD34D',
-  warmAccentSoft: '#451A03',
+  warmAccent: '#FFD700',
+  warmAccentSoft: '#3D2E00',
 
-  cyan: '#22D3EE',
-  cyanSoft: '#083344',
+  cyan: '#2DD4BF',
+  cyanSoft: '#0D3B38',
 
   rose: '#F472B6',
   roseSoft: '#500724',
@@ -176,9 +176,9 @@ export const theme = {
   shadows: {
     card: Platform.select({
       ios: {
-        shadowColor: '#1E1B4B',
+        shadowColor: '#09090B',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
+        shadowOpacity: 0.07,
         shadowRadius: 10,
       },
       android: { elevation: 2 },
@@ -186,9 +186,9 @@ export const theme = {
     }),
     hard: Platform.select({
       ios: {
-        shadowColor: '#1E1B4B',
+        shadowColor: '#09090B',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
+        shadowOpacity: 0.06,
         shadowRadius: 6,
       },
       android: { elevation: 2 },
@@ -196,9 +196,9 @@ export const theme = {
     }),
     strong: Platform.select({
       ios: {
-        shadowColor: '#1E1B4B',
+        shadowColor: '#09090B',
         shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.14,
+        shadowOpacity: 0.16,
         shadowRadius: 20,
       },
       android: { elevation: 6 },
@@ -206,9 +206,9 @@ export const theme = {
     }),
     float: Platform.select({
       ios: {
-        shadowColor: '#1E1B4B',
+        shadowColor: '#09090B',
         shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 0.12,
+        shadowOpacity: 0.14,
         shadowRadius: 28,
       },
       android: { elevation: 8 },
@@ -261,48 +261,48 @@ export const theme = {
     },
     body: {
       fontFamily: fonts.body,
-      fontSize: 16,
-      lineHeight: 26,  // ratio 1.625x — ideal para leitura prolongada
+      fontSize: 17,
+      lineHeight: 28,
       fontWeight: '400' as const,
     },
     bodySmall: {
       fontFamily: fonts.body,
-      fontSize: 15,
-      lineHeight: 24,  // ratio 1.60x
+      fontSize: 16,
+      lineHeight: 26,
       fontWeight: '400' as const,
     },
     label: {
       fontFamily: fonts.bodySemiBold,
-      fontSize: 14,
-      lineHeight: 22,  // ratio 1.57x
+      fontSize: 15,
+      lineHeight: 23,
       fontWeight: '600' as const,
       letterSpacing: 0.2,
     },
     caption: {
       fontFamily: fonts.bodyMedium,
-      fontSize: 13,
-      lineHeight: 20,  // ratio 1.54x
+      fontSize: 14,
+      lineHeight: 22,
       fontWeight: '500' as const,
     },
     monoLabel: {
       fontFamily: fonts.bodySemiBold,
-      fontSize: 12,
-      lineHeight: 18,
+      fontSize: 13,
+      lineHeight: 20,
       fontWeight: '700' as const,
       letterSpacing: 0.6,
       textTransform: 'uppercase' as const,
     },
     monoButton: {
       fontFamily: fonts.bodyBold,
-      fontSize: 16,
-      lineHeight: 24,
+      fontSize: 17,
+      lineHeight: 26,
       fontWeight: '700' as const,
       letterSpacing: 0.1,
     },
     monoStatus: {
       fontFamily: fonts.bodySemiBold,
-      fontSize: 13,
-      lineHeight: 20,
+      fontSize: 14,
+      lineHeight: 22,
       fontWeight: '600' as const,
       letterSpacing: 0.2,
     },

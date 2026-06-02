@@ -121,6 +121,12 @@ echo "=== 11. Backup automático do banco ==="
 echo "0 2 * * * root cd /opt/enem-ia/backend && node src/utils/backup-db.js >> /opt/enem-ia/data/logs/backup.log 2>&1" \
   > /etc/cron.d/enem-backup
 
+# ── 11b. Retenção de imagens ───────────────────────────────────────────────────
+echo "=== 11b. Retenção de imagens ==="
+# Roda todo dia às 4h da manhã: remove órfãs e aplica quota por professor
+echo "0 4 * * * root cd /opt/enem-ia/backend && node src/utils/image-retention.js >> /opt/enem-ia/data/logs/retention.log 2>&1" \
+  > /etc/cron.d/enem-retention
+
 # ── 12. Backend com PM2 (cluster mode) ────────────────────────────────────────
 echo "=== 12. Backend PM2 ==="
 cd /opt/enem-ia/backend

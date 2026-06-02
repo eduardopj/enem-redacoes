@@ -51,7 +51,7 @@ function NavItem({ tab, isActive, isFab }: { tab: Tab; isActive: boolean; isFab:
       <Pressable onPress={handlePress} style={styles.fabWrap} hitSlop={8}>
         <Animated.View style={[styles.fabPill, { backgroundColor: colors.accent, transform: [{ scale }] }]}>
           <Ionicons name="add" size={18} color="#fff" />
-          <Text style={styles.fabPillLabel}>Nova</Text>
+          <Text style={styles.fabPillLabel}>Redação</Text>
         </Animated.View>
       </Pressable>
     );
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderTopWidth: 1,
     paddingTop: 4,
-    shadowColor: '#101828',
+    shadowColor: '#09090B',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 14,
-    shadowColor: '#101828',
+    shadowColor: '#09090B',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.12,
     shadowRadius: 8,

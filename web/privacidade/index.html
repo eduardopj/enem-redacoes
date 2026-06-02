@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Política de Privacidade — ENEM IA</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #7C3AED;
+      --accent-soft: #F3E8FF;
+      --text: #1C1C1C;
+      --soft-text: #4B4B4B;
+      --muted: #777777;
+      --border: #E5E5E5;
+      --bg: #FFFFFF;
+      --surface: #F9F9F9;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 16px;
+    }
+
+    header {
+      background: var(--accent);
+      padding: 40px 24px 36px;
+      text-align: center;
+    }
+
+    .logo-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 20px;
+      margin-bottom: 16px;
+      font-size: 28px;
+    }
+
+    header h1 {
+      color: #fff;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      color: rgba(255,255,255,0.75);
+      font-size: 14px;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    .updated {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 32px;
+    }
+
+    .intro {
+      background: var(--surface);
+      border-left: 4px solid var(--accent);
+      border-radius: 0 12px 12px 0;
+      padding: 20px 24px;
+      margin-bottom: 40px;
+      color: var(--soft-text);
+      font-size: 15px;
+    }
+
+    h2 {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 40px 0 14px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h2 .icon {
+      font-size: 20px;
+    }
+
+    p {
+      color: var(--soft-text);
+      margin-bottom: 14px;
+      font-size: 15px;
+    }
+
+    ul, ol {
+      color: var(--soft-text);
+      padding-left: 22px;
+      margin-bottom: 14px;
+      font-size: 15px;
+    }
+
+    li { margin-bottom: 8px; }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: 14px;
+    }
+
+    .data-table th {
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .data-table th:first-child { border-radius: 10px 0 0 0; }
+    .data-table th:last-child  { border-radius: 0 10px 0 0; }
+
+    .data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--soft-text);
+      vertical-align: top;
+    }
+
+    .data-table tr:nth-child(even) td { background: var(--surface); }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    .highlight-box {
+      background: var(--accent-soft);
+      border: 1px solid #C4B5FD;
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin: 16px 0 24px;
+    }
+
+    .highlight-box p { color: var(--accent); margin: 0; font-size: 14px; font-weight: 500; }
+
+    .contact-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom: 4px solid var(--accent);
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 40px;
+    }
+
+    .contact-box h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .contact-box a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .contact-box a:hover { text-decoration: underline; }
+
+    strong { color: var(--text); }
+
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+      .data-table { font-size: 13px; }
+      .data-table th, .data-table td { padding: 8px 10px; }
+      h2 { font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">🎓</div>
+  <h1>Política de Privacidade</h1>
+  <p>ENEM IA — Correção Inteligente de Redações</p>
+</header>
+
+<div class="container">
+
+  <span class="updated">Última atualização: maio de 2026</span>
+
+  <div class="intro">
+    Esta Política de Privacidade descreve como o <strong>ENEM IA</strong> coleta, utiliza, armazena e protege os dados pessoais de professores, alunos e demais usuários da plataforma, em conformidade com a <strong>Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018)</strong> e demais normas aplicáveis.
+  </div>
+
+  <!-- 1 -->
+  <h2><span class="icon">🏢</span> 1. Controlador dos Dados</h2>
+  <p>
+    O responsável pelo tratamento dos seus dados pessoais é <strong>Eduardo Pinheiro Júnior</strong>, desenvolvedor e operador do aplicativo ENEM IA.
+  </p>
+  <p>
+    Para exercer seus direitos ou esclarecer dúvidas, entre em contato pelo e-mail: <strong>dudu.juni0r@gmail.com</strong>.
+  </p>
+
+  <!-- 2 -->
+  <h2><span class="icon">📋</span> 2. Dados Coletados</h2>
+  <p>Coletamos apenas os dados estritamente necessários para o funcionamento da plataforma:</p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Dado</th>
+        <th>De quem</th>
+        <th>Finalidade</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Nome completo e e-mail</strong></td>
+        <td>Professor</td>
+        <td>Criação e autenticação da conta</td>
+      </tr>
+      <tr>
+        <td><strong>Nome do aluno</strong></td>
+        <td>Aluno (cadastrado pelo professor)</td>
+        <td>Identificação nas correções e relatórios</td>
+      </tr>
+      <tr>
+        <td><strong>Imagem da redação</strong></td>
+        <td>Aluno</td>
+        <td>Processamento pela IA para correção</td>
+      </tr>
+      <tr>
+        <td><strong>Texto da redação</strong></td>
+        <td>Aluno</td>
+        <td>Avaliação pedagógica automatizada</td>
+      </tr>
+      <tr>
+        <td><strong>Notas e feedbacks gerados</strong></td>
+        <td>Sistema (IA)</td>
+        <td>Exibição ao professor e ao aluno; histórico de evolução</td>
+      </tr>
+      <tr>
+        <td><strong>Dados de uso do app</strong></td>
+        <td>Professor / Aluno</td>
+        <td>Diagnóstico de erros via Sentry (logs anônimos)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Não coletamos dados financeiros, documentos de identidade (CPF/RG), geolocalização, contatos telefônicos ou qualquer dado sensível além dos listados acima.</p>
+
+  <!-- 3 -->
+  <h2><span class="icon">⚖️</span> 3. Base Legal para o Tratamento</h2>
+  <p>O tratamento de dados é realizado com base nas seguintes hipóteses previstas pela LGPD:</p>
+  <ul>
+    <li><strong>Execução de contrato</strong> (art. 7º, V): dados necessários para prestar o serviço de correção de redações contratado pelo professor.</li>
+    <li><strong>Legítimo interesse</strong> (art. 7º, IX): dados de uso para garantir a estabilidade e segurança da plataforma.</li>
+    <li><strong>Consentimento</strong> (art. 7º, I): para situações específicas informadas no momento da coleta, como envio de comunicações.</li>
+  </ul>
+
+  <!-- 4 -->
+  <h2><span class="icon">🤖</span> 4. Uso de Inteligência Artificial (OpenAI)</h2>
+  <p>
+    O conteúdo das redações (imagem ou texto) é enviado à <strong>OpenAI</strong> para processamento automatizado pela IA, a fim de gerar a correção pedagógica. A OpenAI atua como <strong>operadora de dados</strong> sob nossas instruções.
+  </p>
+
+  <div class="highlight-box">
+    <p>As redações enviadas à OpenAI <strong>não são utilizadas para treinar os modelos de IA</strong> da OpenAI, conforme os termos da API vigentes. O conteúdo é processado e descartado após a geração da resposta.</p>
+  </div>
+
+  <p>
+    A OpenAI está sediada nos Estados Unidos. A transferência internacional de dados ocorre com base nas salvaguardas previstas nos Termos de Serviço da API OpenAI. Para mais informações, consulte a <a href="https://openai.com/privacy" target="_blank" rel="noopener">Política de Privacidade da OpenAI</a>.
+  </p>
+
+  <!-- 5 -->
+  <h2><span class="icon">🗄️</span> 5. Armazenamento e Retenção</h2>
+  <p>
+    Os dados são armazenados em servidor próprio localizado na <strong>DigitalOcean</strong> (região Amsterdam, UE), com acesso restrito e comunicação exclusivamente via HTTPS.
+  </p>
+  <ul>
+    <li>Dados de conta (professor): mantidos enquanto a conta estiver ativa.</li>
+    <li>Redações e correções: mantidas pelo prazo de uso ativo da conta do professor; excluídas em até 30 dias após o encerramento da conta.</li>
+    <li>Logs de erro (Sentry): retidos por até 90 dias, sem identificação pessoal do aluno.</li>
+    <li>Imagens das redações: excluídas do servidor após o processamento pela IA, respeitando política de retenção configurada (padrão: 90 dias).</li>
+  </ul>
+
+  <!-- 6 -->
+  <h2><span class="icon">🔒</span> 6. Segurança</h2>
+  <p>Adotamos as seguintes medidas técnicas para proteger seus dados:</p>
+  <ul>
+    <li>Comunicação criptografada via <strong>TLS/HTTPS</strong> em todas as requisições.</li>
+    <li>Autenticação com tokens seguros (JWT) e armazenamento local criptografado no dispositivo.</li>
+    <li>Acesso ao servidor restrito a chaves SSH.</li>
+    <li>Backups automáticos com retenção controlada.</li>
+    <li>Monitoramento de erros com dados anonimizados (Sentry).</li>
+  </ul>
+  <p>Apesar das medidas acima, nenhum sistema de segurança é absolutamente inviolável. Em caso de incidente de segurança relevante, os titulares afetados serão notificados conforme exigido pela LGPD.</p>
+
+  <!-- 7 -->
+  <h2><span class="icon">👥</span> 7. Compartilhamento de Dados</h2>
+  <p>Não vendemos, alugamos nem comercializamos seus dados pessoais. O compartilhamento ocorre apenas com:</p>
+  <ul>
+    <li><strong>OpenAI</strong>: exclusivamente para processar o conteúdo das redações (ver seção 4).</li>
+    <li><strong>Sentry</strong>: para registro de erros técnicos, sem dados pessoais identificáveis dos alunos.</li>
+    <li><strong>DigitalOcean</strong>: infraestrutura de hospedagem, sem acesso ao conteúdo das redações.</li>
+    <li><strong>Autoridades competentes</strong>: quando exigido por lei ou decisão judicial.</li>
+  </ul>
+
+  <!-- 8 -->
+  <h2><span class="icon">👤</span> 8. Direitos dos Titulares</h2>
+  <p>Nos termos da LGPD, você tem direito a:</p>
+  <ul>
+    <li><strong>Confirmação e acesso</strong>: saber se tratamos seus dados e obter uma cópia.</li>
+    <li><strong>Correção</strong>: solicitar a atualização de dados incompletos, inexatos ou desatualizados.</li>
+    <li><strong>Exclusão</strong>: solicitar a eliminação de dados desnecessários ou tratados em desconformidade.</li>
+    <li><strong>Portabilidade</strong>: receber seus dados em formato estruturado.</li>
+    <li><strong>Revogação do consentimento</strong>: retirar o consentimento a qualquer momento, sem prejudicar o tratamento anterior.</li>
+    <li><strong>Informação sobre compartilhamento</strong>: saber com quais entidades seus dados foram compartilhados.</li>
+  </ul>
+  <p>Para exercer qualquer direito, entre em contato pelo e-mail <strong>dudu.juni0r@gmail.com</strong>. Responderemos em até 15 dias úteis.</p>
+
+  <!-- 9 -->
+  <h2><span class="icon">👨‍👩‍👧</span> 9. Dados de Menores de Idade</h2>
+  <p>
+    O ENEM IA é destinado a professores do ensino médio. O cadastro de alunos menores de 18 anos é realizado exclusivamente pelo professor responsável, que declara ter a autorização necessária da escola ou dos responsáveis legais para incluir os dados dos alunos na plataforma para fins educacionais.
+  </p>
+  <p>
+    Não coletamos dados de menores de forma direta. O professor é o controlador dos dados dos alunos em sua turma e responsável pela conformidade com a legislação aplicável (inclusive ECA e LGPD).
+  </p>
+
+  <!-- 10 -->
+  <h2><span class="icon">🔄</span> 10. Alterações nesta Política</h2>
+  <p>
+    Esta Política pode ser atualizada periodicamente para refletir melhorias no serviço ou mudanças legais. Em caso de alterações relevantes, notificaremos os professores cadastrados por e-mail com antecedência mínima de 15 dias. A data da última atualização está sempre indicada no topo deste documento.
+  </p>
+
+  <!-- Contato -->
+  <div class="contact-box">
+    <h3>📬 Contato e Exercício de Direitos</h3>
+    <p><strong>Responsável:</strong> Eduardo Pinheiro Júnior</p>
+    <p><strong>E-mail:</strong> <a href="mailto:dudu.juni0r@gmail.com">dudu.juni0r@gmail.com</a></p>
+    <p style="margin-top: 10px; color: #777; font-size: 14px;">
+      Para solicitações relacionadas à LGPD (acesso, correção, exclusão de dados), envie um e-mail com o assunto <em>"Privacidade ENEM IA"</em> e descreva sua solicitação. Responderemos em até 15 dias úteis.
+    </p>
+  </div>
+
+</div>
+
+<footer>
+  &copy; 2026 ENEM IA · Todos os direitos reservados ·
+  <a href="mailto:dudu.juni0r@gmail.com" style="color: #7C3AED; text-decoration: none;">dudu.juni0r@gmail.com</a>
+</footer>
+
+</body>
+</html>

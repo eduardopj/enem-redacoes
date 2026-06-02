@@ -3,7 +3,6 @@ import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card } from './Card';
-import { SwipeableRow } from './SwipeableRow';
 
 type StudentCardProps = {
   name: string;
@@ -12,6 +11,7 @@ type StudentCardProps = {
   essayCount?: number;
   trend?: 'up' | 'down' | 'stable' | null;
   onPress?: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
 };
 
@@ -22,6 +22,7 @@ export function StudentCard({
   essayCount,
   trend,
   onPress,
+  onEdit,
   onDelete,
 }: StudentCardProps) {
   const { colors } = useAppTheme();
@@ -52,7 +53,7 @@ export function StudentCard({
     trend === 'down' ? colors.danger :
     colors.mutedText;
 
-  const content = (
+  return (
     <Card>
       <Pressable onPress={onPress} style={styles.row}>
         <View style={[styles.avatar, { backgroundColor: hasStats ? sColor + '16' : colors.accentSoft }]}>
@@ -95,15 +96,24 @@ export function StudentCard({
           )}
         </View>
       </Pressable>
+
+      {(onEdit || onDelete) && (
+        <View style={[styles.actions, { borderTopColor: colors.border }]}>
+          {onEdit && (
+            <Pressable onPress={onEdit} style={[styles.actionBtn, { backgroundColor: colors.accentSoft }]} hitSlop={4}>
+              <Ionicons name="pencil-outline" size={13} color={colors.accent} />
+              <Text style={[styles.actionBtnText, { color: colors.accent }]}>Editar</Text>
+            </Pressable>
+          )}
+          {onDelete && (
+            <Pressable onPress={onDelete} style={[styles.actionBtn, { backgroundColor: colors.dangerSoft }]} hitSlop={4}>
+              <Ionicons name="trash-outline" size={13} color={colors.danger} />
+              <Text style={[styles.actionBtnText, { color: colors.danger }]}>Excluir</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
     </Card>
-  );
-
-  if (!onDelete) return content;
-
-  return (
-    <SwipeableRow onDelete={onDelete} label="Excluir">
-      {content}
-    </SwipeableRow>
   );
 }
 
@@ -144,5 +154,24 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingTop: 10,
+    marginTop: 6,
+    borderTopWidth: 1,
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  actionBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

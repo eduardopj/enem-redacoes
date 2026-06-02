@@ -1,6 +1,7 @@
 import { appendFileSync, existsSync, mkdirSync, renameSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getRequestId } from './request-context.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = process.env.DATA_DIR ?? join(__dirname, '../../../data');
@@ -43,6 +44,8 @@ export function writeLog(level, message, meta = {}) {
     message,
     service: 'enem-redacoes-backend',
     timestamp: new Date().toISOString(),
+    // Auto-injected from AsyncLocalStorage — '-' when outside request context (startup, cron, etc.)
+    requestId: getRequestId(),
     ...meta,
   };
   const line = JSON.stringify(entry);

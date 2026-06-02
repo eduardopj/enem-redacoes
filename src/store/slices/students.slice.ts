@@ -28,6 +28,21 @@ export const createStudentsSlice: StateCreator<AppState, [['zustand/persist', un
       }));
     },
 
+    updateStudent: (studentId, data) => {
+      set((state) => ({
+        students: state.students.map((s) => {
+          if (s.id !== studentId) return s;
+          const turmaId = data.turmaId === null ? undefined : (data.turmaId ?? s.turmaId);
+          const className =
+            data.className ??
+            (data.turmaId != null
+              ? (state.turmas.find((t) => t.id === data.turmaId)?.name ?? s.className)
+              : s.className);
+          return { ...s, name: data.name ?? s.name, turmaId, className };
+        }),
+      }));
+    },
+
     deleteStudent: (studentId) =>
       set((state) => ({
         students: state.students.filter((s) => s.id !== studentId),

@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
   stepLabel: { fontSize: 15, fontWeight: '700' },
 
   // Mode selector
-  modeCard: { borderRadius: 18, padding: 18, gap: 14, marginBottom: 12, shadowColor: '#101828', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 14, elevation: 3 },
+  modeCard: { borderRadius: 18, padding: 18, gap: 14, marginBottom: 12, shadowColor: '#09090B', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 14, elevation: 3 },
   modeRow: { flexDirection: 'row', gap: 10 },
   modeOption: {
     flex: 1, borderRadius: 14, borderWidth: 1.5,

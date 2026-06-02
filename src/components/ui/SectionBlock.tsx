@@ -69,7 +69,7 @@ export function SectionBlock({ number, label, done, locked = false, colors, chil
 }
 
 const styles = StyleSheet.create({
-  block: { borderRadius: 16, overflow: 'hidden', shadowColor: '#101828', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  block: { borderRadius: 16, overflow: 'hidden', shadowColor: '#09090B', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 16, paddingBottom: 12 },
   numBadge: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   num: { fontSize: 12, fontWeight: '700', color: '#fff' },

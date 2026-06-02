@@ -42,7 +42,7 @@ export function AppFooter() {
             backgroundColor: colors.surface,
             paddingBottom: safeBottom,
             borderTopColor: colors.border,
-            shadowColor: '#101828',
+            shadowColor: '#09090B',
           },
         ]}
       >
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 10,
     borderTopWidth: 1,
-    shadowColor: '#101828',
+    shadowColor: '#09090B',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.04,
     shadowRadius: 10,

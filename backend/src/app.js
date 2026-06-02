@@ -6,16 +6,29 @@ import helmet from 'helmet';
 import { randomUUID } from 'node:crypto';
 import { env } from './config/env.js';
 import { requireAuth } from './middleware/auth.js';
+import { requestContext } from './utils/request-context.js';
 import { authRoutes } from './routes/auth.routes.js';
+import { docsRoutes } from './routes/docs.routes.js';
 import { openAiRoutes } from './routes/openai.routes.js';
 import { researchRoutes } from './routes/research.routes.js';
 import { syncRoutes } from './routes/sync.routes.js';
 import db from './services/database.js';
 import { getQueueStats } from './utils/correction-queue.js';
 import { writeLog } from './utils/logger.js';
-import { captureException } from './utils/sentry.js';
+import { captureException, Sentry } from './utils/sentry.js';
+import { createRateLimitStore } from './utils/rate-limit-store.js';
+import { createExpressMiddleware } from '@trpc/server/adapters/express';
+import { appRouter } from './trpc/router.js';
+import { createContext } from './trpc/context.js';
 
 const app = express();
+
+// Trust the immediate upstream proxy (Nginx on the same host).
+// Required so express-rate-limit can read X-Forwarded-For safely.
+app.set('trust proxy', 1);
+
+// Resolved once at startup — shared across all rate limiters
+const rateLimitStore = await createRateLimitStore();
 
 // Security headers — disabled CSP/CORP since this is a pure JSON API consumed by mobile
 app.use(helmet({
@@ -47,7 +60,8 @@ app.use(
 app.use((req, res, next) => {
   req.requestId = String(req.headers['x-request-id'] || randomUUID());
   res.setHeader('X-Request-Id', req.requestId);
-  next();
+  // Propaga requestId para todo o chain async — lido automaticamente pelo logger
+  requestContext.run({ requestId: req.requestId }, next);
 });
 
 app.use(express.json({ limit: env.requestBodyLimit }));
@@ -96,6 +110,7 @@ const correctionLimiter = makeRateLimiter({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
+  store: rateLimitStore,
   message: (_req, res) => ({
     success: false,
     requestId: res.req?.requestId,
@@ -112,6 +127,7 @@ const authLimiter = makeRateLimiter({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  store: rateLimitStore,
   message: (_req, res) => ({
     success: false,
     requestId: res.req?.requestId,
@@ -128,6 +144,7 @@ const turmaLookupLimiter = makeRateLimiter({
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
+  store: rateLimitStore,
   message: (_req, res) => ({
     success: false,
     requestId: res.req?.requestId,
@@ -145,6 +162,12 @@ function syncAuth(req, res, next) {
   return requireAuth(req, res, next);
 }
 
+// ── tRPC (typed end-to-end contract, alongside REST for backwards compat) ─────
+app.use('/trpc', createExpressMiddleware({ router: appRouter, createContext }));
+
+// ── Docs (public — no auth, no rate limit) ───────────────────────────────────
+app.use('/', docsRoutes);
+
 // ── v1 routes (canonical) ────────────────────────────────────────────────────
 app.use('/v1/auth', authLimiter, authRoutes);
 app.use('/v1/research', researchRoutes);
@@ -160,6 +183,9 @@ app.use('/sync/turmas/by-code', turmaLookupLimiter);
 app.use('/sync', syncAuth, syncRoutes);
 app.use('/openai/correct-essay', correctionLimiter);
 app.use('/openai', requireAuth, openAiRoutes);
+
+// Sentry must capture errors before any other error handler sees them
+Sentry.setupExpressErrorHandler?.(app);
 
 app.use((err, req, res, _next) => {
   captureException(err, { requestId: req.requestId, path: req.originalUrl });

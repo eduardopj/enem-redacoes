@@ -6,7 +6,6 @@ import {
   EmptyState,
   EssayCard,
   ScreenContainer,
-  StaggerItem,
 } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
@@ -147,11 +146,38 @@ export default function RedacoesScreen() {
           />
         ) : (
           <>
-            <View style={styles.summaryGrid}>
-              <SummaryCard label="Pendentes" value={pendingCount} icon="time-outline" tone={pendingCount > 0 ? colors.warning : colors.mutedText} />
-              <SummaryCard label="Corrigidas" value={correctedEssays.length} icon="checkmark-circle-outline" tone={colors.success} />
-              <SummaryCard label="Revisão" value={reviewCount} icon="alert-circle-outline" tone={reviewCount > 0 ? colors.danger : colors.mutedText} />
-              <SummaryCard label="Média IA" value={avgScore ?? '--'} icon="sparkles-outline" tone={colors.accent} />
+            <View style={styles.kpiRow}>
+              <View style={[styles.kpiCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={styles.kpiCardTop}>
+                  <Text style={[styles.kpiCardLabel, { color: colors.mutedText }]}>Redações</Text>
+                  {pendingCount > 0 && (
+                    <View style={[styles.kpiBadge, { backgroundColor: colors.warning + '20' }]}>
+                      <Text style={[styles.kpiBadgeText, { color: colors.warning }]}>{pendingCount} pend.</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={[styles.kpiCardValue, { color: colors.text }]}>{teacherEssays.length}</Text>
+                <Text style={[styles.kpiCardSub, { color: colors.success }]}>
+                  {correctedEssays.length} corrigidas
+                </Text>
+              </View>
+
+              <View style={[styles.kpiCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={styles.kpiCardTop}>
+                  <Text style={[styles.kpiCardLabel, { color: colors.mutedText }]}>Desempenho</Text>
+                  {reviewCount > 0 && (
+                    <View style={[styles.kpiBadge, { backgroundColor: colors.danger + '14' }]}>
+                      <Text style={[styles.kpiBadgeText, { color: colors.danger }]}>{reviewCount} rev.</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={[styles.kpiCardValue, { color: avgScore ? colors.accent : colors.mutedText }]}>
+                  {avgScore ?? '—'}
+                </Text>
+                <Text style={[styles.kpiCardSub, { color: colors.mutedText }]}>
+                  {avgScore ? 'média IA /1000' : 'sem correções ainda'}
+                </Text>
+              </View>
             </View>
 
             {/* Busca */}
@@ -223,15 +249,17 @@ export default function RedacoesScreen() {
                 tip="Tente buscar pelo nome do aluno ou pelo título do tema da redação."
               />
             ) : (
-              <FlatList
-                data={filteredEssays}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.list}
-                scrollEnabled={false}
-                renderItem={({ item: essay, index }) => {
-                  const studentName = getStudentName(essay.studentId);
-                  return (
-                    <StaggerItem index={index}>
+              <Card style={styles.listCard}>
+                <FlatList
+                  data={filteredEssays}
+                  keyExtractor={(item) => item.id}
+                  scrollEnabled={false}
+                  ItemSeparatorComponent={() => (
+                    <View style={[styles.divider, { backgroundColor: colors.border }]} />
+                  )}
+                  renderItem={({ item: essay }) => {
+                    const studentName = getStudentName(essay.studentId);
+                    return (
                       <EssayCard
                         studentName={studentName}
                         themeTitle={essay.themeTitle}
@@ -240,13 +268,14 @@ export default function RedacoesScreen() {
                         competencies={essay.competencies}
                         createdAt={essay.createdAt}
                         correctedAt={essay.correctedAt}
+                        hasError={essay.status === 'pendente' && Boolean(essay.errorMessage)}
                         onPress={() => router.push(`/redacao/${essay.id}`)}
                         onDelete={() => handleDelete(essay.id, studentName)}
                       />
-                    </StaggerItem>
-                  );
-                }}
-              />
+                    );
+                  }}
+                />
+              </Card>
             )}
           </>
         )}
@@ -275,46 +304,60 @@ function FilterChip({ label, active, onPress }: { label: string; active: boolean
   );
 }
 
-function SummaryCard({ label, value, icon, tone }: { label: string; value: number | string; icon: keyof typeof Ionicons.glyphMap; tone: string }) {
-  const { colors } = useAppTheme();
-  return (
-    <Card style={styles.summaryCard}>
-      <View style={[styles.summaryIcon, { backgroundColor: tone + '16' }]}>
-        <Ionicons name={icon} size={15} color={tone} />
-      </View>
-      <Text style={[styles.summaryValue, { color: colors.text }]}>{value}</Text>
-      <Text style={[styles.summaryLabel, { color: colors.mutedText }]} numberOfLines={1}>
-        {label}
-      </Text>
-    </Card>
-  );
-}
 
 const styles = StyleSheet.create({
-  summaryGrid: {
+  // KPI cards (item 2)
+  kpiRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
+    gap: 12,
   },
-  summaryCard: {
-    width: '48%',
-    padding: theme.spacing.md,
-    gap: 6,
+  kpiCard: {
+    flex: 1,
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 16,
+    gap: 4,
   },
-  summaryIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
+  kpiCardTop: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
   },
-  summaryValue: {
-    fontSize: 20,
-    fontWeight: '800',
+  kpiCardLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.1,
   },
-  summaryLabel: {
-    fontSize: 11,
+  kpiBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  kpiBadgeText: {
+    fontSize: 10,
     fontWeight: '700',
+  },
+  kpiCardValue: {
+    fontSize: 34,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    lineHeight: 40,
+  },
+  kpiCardSub: {
+    fontSize: 11,
+    fontWeight: '600',
+    lineHeight: 16,
+  },
+
+  // List card + divider (item 3)
+  listCard: {
+    padding: 0,
+    overflow: 'hidden',
+  },
+  divider: {
+    height: 1,
+    marginHorizontal: 16,
   },
   searchRow: {
     flexDirection: 'row',
@@ -367,8 +410,5 @@ const styles = StyleSheet.create({
   sortLabel: {
     fontSize: 11,
     fontWeight: '600',
-  },
-  list: {
-    gap: theme.spacing.md,
   },
 });

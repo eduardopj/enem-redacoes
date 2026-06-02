@@ -12,6 +12,24 @@ const transporter = env.smtpHost
   : null;
 
 /**
+ * Envia um e-mail de alerta genérico (ex: falha no backup).
+ * No-op silencioso se SMTP não estiver configurado.
+ */
+export async function sendAlertEmailRaw(to, subject, bodyText) {
+  if (!transporter) {
+    writeLog('warn', 'alert_email_not_sent_no_smtp', { to, subject });
+    return;
+  }
+  await transporter.sendMail({
+    from: env.smtpFrom,
+    to,
+    subject,
+    text: bodyText,
+    html: `<pre style="font-family:monospace">${bodyText}</pre>`,
+  });
+}
+
+/**
  * Sends a password-reset code to the teacher's e-mail.
  * Falls back to console.log in dev when SMTP is not configured.
  * Returns true on success, throws on SMTP error.

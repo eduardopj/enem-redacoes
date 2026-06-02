@@ -1,6 +1,7 @@
 import { networkInterfaces } from 'os';
 import { app } from './app.js';
 import { env } from './config/env.js';
+import { startBackupScheduler } from './services/backup.scheduler.js';
 import { initSentry } from './utils/sentry.js';
 import { writeLog } from './utils/logger.js';
 import { correctionQueue } from './utils/correction-queue.js';
@@ -26,6 +27,8 @@ const server = app.listen(env.port, '0.0.0.0', () => {
   console.log(`\n→ .env do app: EXPO_PUBLIC_BACKEND_URL=http://${ip}:${env.port}\n`);
   // Signal PM2 that the process is ready (wait_ready: true in ecosystem.config.cjs)
   process.send?.('ready');
+  // Backup diário automático (padrão: 3am, configurável via BACKUP_HOUR)
+  startBackupScheduler();
 });
 
 // ── Graceful shutdown ──────────────────────────────────────────────────────────

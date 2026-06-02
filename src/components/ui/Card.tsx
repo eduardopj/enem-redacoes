@@ -21,8 +21,19 @@ export function Card({ children, style, variant = 'default', accentBorder, noPad
     outlined: colors.surface,
   }[variant];
 
+  // Duolingo-style: border-bottom mais espesso cria profundidade sem shadow
   const borderStyle = variant === 'default' || variant === 'outlined'
-    ? { borderWidth: 1, borderColor: colors.border }
+    ? {
+        borderWidth: 2,
+        borderColor: colors.border,
+        borderBottomWidth: 5,
+        borderBottomColor: colors.borderStrong,
+      }
+    : variant === 'flat'
+    ? {
+        borderWidth: 1,
+        borderColor: colors.border,
+      }
     : {};
 
   return (
@@ -56,7 +67,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: theme.radius.xl,
     padding: theme.spacing.md,
-    ...theme.shadows.card,
     position: 'relative',
     overflow: 'hidden',
   },

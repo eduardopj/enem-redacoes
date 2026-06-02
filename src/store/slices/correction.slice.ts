@@ -1,13 +1,13 @@
 import { OPENAI_CONFIG } from '@/constants/openai';
 import { registerWithBackend } from '@/services/auth/backend-auth';
-import { correctEssayWithOpenAI } from '@/services/openai/correct-essay';
+import { executeCorrection } from '@/services/correction/correction-executor';
 import { saveEssayForResearch } from '@/services/research/save-essay';
-import { pushEssayToBackend } from '@/services/sync/sync-essays';
+import { backendEssayRepository } from '@/repositories/BackendEssayRepository';
+import { EssayInputMode, EssayStatus } from '@/types/enums';
 import { StateCreator } from 'zustand';
 import { isNetworkError, isRetriableError } from '../utils/essay-helpers';
 import type { AppState, CorrectionSlice } from '../store.types';
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import * as Sentry from '@sentry/react-native';
 
 // Tentativa 1 falhou → aguarda 8s; tentativa 2 → 20s; depois desiste
 const RETRY_DELAYS = [8_000, 20_000];
@@ -34,7 +34,7 @@ export const createCorrectionSlice: StateCreator<AppState, [['zustand/persist', 
       if (retryQueue.length === 0) return;
       for (const essayId of retryQueue) {
         const essay = essays.find((e) => e.id === essayId);
-        if (!essay || essay.status === 'corrigida' || essay.status === 'processando') {
+        if (!essay || essay.status === EssayStatus.Corrigida || essay.status === EssayStatus.Processando) {
           removeFromRetryQueue(essayId);
           continue;
         }
@@ -51,25 +51,17 @@ export const createCorrectionSlice: StateCreator<AppState, [['zustand/persist', 
       const essay = get().essays.find((item) => item.id === essayId);
       if (!essay) throw new Error('Redação não encontrada.');
 
-      const isTextMode = essay.inputMode === 'digitada' && !!essay.essayText;
+      const isTextMode = essay.inputMode === EssayInputMode.Digitada && !!essay.essayText;
       if (!isTextMode && !essay.imageUri)
         throw new Error('Para corrigir com IA, envie uma imagem da redação.');
 
-      const updateFeedback = (feedback: string) =>
-        set((state) => ({
-          essays: state.essays.map((item) =>
-            item.id === essayId
-              ? { ...item, status: 'processando', feedback, updatedAt: new Date().toISOString() }
-              : item
-          ),
-        }));
-
+      // Mark as processing + increment attempt counter
       set((state) => ({
         essays: state.essays.map((item) =>
           item.id === essayId
             ? {
                 ...item,
-                status: 'processando',
+                status: EssayStatus.Processando,
                 errorMessage: undefined,
                 correctionAttempts: (item.correctionAttempts ?? 0) + 1,
                 updatedAt: new Date().toISOString(),
@@ -78,8 +70,6 @@ export const createCorrectionSlice: StateCreator<AppState, [['zustand/persist', 
             : item
         ),
       }));
-
-      await wait(450);
 
       // Auto-register if no token (e.g. default teacher session, or token lost)
       let backendToken = get().backendToken;
@@ -95,69 +85,32 @@ export const createCorrectionSlice: StateCreator<AppState, [['zustand/persist', 
       }
 
       try {
-        const result = await correctEssayWithOpenAI(
-          isTextMode
-            ? { themeTitle: essay.themeTitle, essayText: essay.essayText, token: backendToken ?? undefined }
-            : { themeTitle: essay.themeTitle, imageUri: essay.imageUri, imageMimeType: essay.imageMimeType, token: backendToken ?? undefined }
+        const result = await executeCorrection(
+          {
+            themeTitle: essay.themeTitle,
+            imageUri: isTextMode ? undefined : essay.imageUri,
+            imageMimeType: isTextMode ? undefined : essay.imageMimeType,
+            essayText: isTextMode ? essay.essayText : undefined,
+            token: backendToken ?? undefined,
+          },
+          ({ label, partial }) => {
+            set((state) => ({
+              essays: state.essays.map((item) =>
+                item.id === essayId
+                  ? { ...item, feedback: label, ...(partial ?? {}), updatedAt: new Date().toISOString() }
+                  : item
+              ),
+            }));
+          },
         );
 
-        updateFeedback('ETAPA 2/4 - transcrevendo texto');
+        // Final consolidation — mark as corrigida
         set((state) => ({
           essays: state.essays.map((item) =>
             item.id === essayId
               ? {
                   ...item,
-                  transcription: result.transcription,
-                  transcriptionNotes: result.transcriptionNotes,
-                  transcriptionConfidence: result.transcriptionConfidence,
-                  writingMode: result.writingMode,
-                  legibility: result.legibility,
-                  themeAdequacy: result.themeAdequacy,
-                  scoreReliability: result.scoreReliability,
-                  confidenceLevel: result.scoreReliability.level,
-                  reviewRequired:
-                    result.scoreReliability.level === 'baixa' ||
-                    result.transcriptionConfidence === 'baixa',
-                }
-              : item
-          ),
-        }));
-        await wait(450);
-
-        updateFeedback('ETAPA 3/4 - analisando competências');
-        set((state) => ({
-          essays: state.essays.map((item) =>
-            item.id === essayId
-              ? { ...item, competencies: result.competencies, competencyFeedbacks: result.competencyFeedbacks, totalScore: result.totalScore }
-              : item
-          ),
-        }));
-        await wait(450);
-
-        updateFeedback('ETAPA 4/4 - preparando devolutiva');
-        set((state) => ({
-          essays: state.essays.map((item) =>
-            item.id === essayId
-              ? {
-                  ...item,
-                  strengths: result.strengths,
-                  weaknesses: result.weaknesses,
-                  improvements: result.improvements,
-                  generalObservation: result.generalObservation,
-                  congratulations: result.congratulations,
-                }
-              : item
-          ),
-        }));
-        await wait(450);
-
-        // Final update — mark as corrigida with all fields consolidated
-        set((state) => ({
-          essays: state.essays.map((item) =>
-            item.id === essayId
-              ? {
-                  ...item,
-                  status: 'corrigida',
+                  status: EssayStatus.Corrigida,
                   correctedAt: new Date().toISOString(),
                   updatedAt: new Date().toISOString(),
                   themeTitle:
@@ -178,10 +131,8 @@ export const createCorrectionSlice: StateCreator<AppState, [['zustand/persist', 
                   legibility: result.legibility,
                   themeAdequacy: result.themeAdequacy,
                   scoreReliability: result.scoreReliability,
-                  confidenceLevel: result.scoreReliability.level,
-                  reviewRequired:
-                    result.scoreReliability.level === 'baixa' ||
-                    result.transcriptionConfidence === 'baixa',
+                  confidenceLevel: result.confidenceLevel,
+                  reviewRequired: result.reviewRequired,
                   generalObservation: result.generalObservation,
                   congratulations: result.congratulations,
                   feedback: result.feedback,
@@ -206,7 +157,7 @@ export const createCorrectionSlice: StateCreator<AppState, [['zustand/persist', 
         const updatedEssay = get().essays.find((e) => e.id === essayId);
         if (updatedEssay && student) {
           const turma = get().turmas.find((t) => t.id === student.turmaId);
-          pushEssayToBackend(updatedEssay, student.name, student.turmaId, turma?.name, get().backendToken ?? undefined)
+          backendEssayRepository.push(updatedEssay, student.name, student.turmaId, turma?.name, get().backendToken ?? undefined)
             .then(() => {
               set((state) => ({
                 essays: state.essays.map((e) =>
@@ -228,7 +179,6 @@ export const createCorrectionSlice: StateCreator<AppState, [['zustand/persist', 
           message.toLowerCase().includes('rate') ||
           message.toLowerCase().includes('limite');
 
-        // Attempt count was incremented at the top of this call
         const currentAttempts = get().essays.find((e) => e.id === essayId)?.correctionAttempts ?? 1;
         const canRetry = !isRateLimited && isRetriableError(error) && currentAttempts < MAX_ATTEMPTS;
         const retryDelay = RETRY_DELAYS[currentAttempts - 1] ?? RETRY_DELAYS[RETRY_DELAYS.length - 1];
@@ -245,7 +195,7 @@ export const createCorrectionSlice: StateCreator<AppState, [['zustand/persist', 
             item.id === essayId
               ? {
                   ...item,
-                  status: canRetry ? 'processando' : 'pendente',
+                  status: canRetry ? EssayStatus.Processando : EssayStatus.Pendente,
                   errorMessage: canRetry ? undefined : userMessage,
                   updatedAt: new Date().toISOString(),
                   feedback: userMessage,
@@ -255,7 +205,7 @@ export const createCorrectionSlice: StateCreator<AppState, [['zustand/persist', 
         }));
 
         if (canRetry) {
-          // Backoff automático — retry sem intervenção do usuário
+          Sentry.metrics.increment('correction.retry', 1, { tags: { attempt: String(currentAttempts) } });
           setTimeout(() => {
             get().evaluateEssayWithOpenAI(essayId).catch(() => {});
           }, retryDelay);

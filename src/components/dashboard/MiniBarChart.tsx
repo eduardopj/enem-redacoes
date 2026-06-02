@@ -1,3 +1,4 @@
+import { getScoreColor } from '@/utils/analytics';
 import { useAppTheme } from '@/theme/ThemeContext';
 import type { Essay } from '@/types/app';
 import { router } from 'expo-router';
@@ -9,13 +10,6 @@ type Props = {
   getStudentName: (id: string) => string;
 };
 
-function scoreGradientColor(score: number, colors: ReturnType<typeof useAppTheme>['colors']): string {
-  if (score >= 900) return colors.success;
-  if (score >= 550) return colors.accent;
-  if (score >= 380) return colors.warning;
-  return colors.danger;
-}
-
 export const MiniBarChart = React.memo(function MiniBarChart({ essays, getStudentName }: Props) {
   const { colors } = useAppTheme();
   return (
@@ -24,7 +18,7 @@ export const MiniBarChart = React.memo(function MiniBarChart({ essays, getStuden
         const score = essay.totalScore ?? 0;
         const pct = (score / 1000) * 100;
         const name = getStudentName(essay.studentId).split(' ')[0];
-        const barColor = scoreGradientColor(score, colors);
+        const barColor = getScoreColor(score, colors);
         return (
           <Pressable
             key={essay.id}

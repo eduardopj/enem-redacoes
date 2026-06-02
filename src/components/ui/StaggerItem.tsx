@@ -7,21 +7,22 @@ type StaggerItemProps = PropsWithChildren<{
 
 export function StaggerItem({ children, index = 0 }: StaggerItemProps) {
   const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(20)).current;
+  const translateY = useRef(new Animated.Value(14)).current;
 
   useEffect(() => {
+    const delay = index * 80;
     Animated.parallel([
       Animated.timing(opacity, {
         toValue: 1,
-        duration: 320,
-        delay: index * 50,
+        duration: 260,
+        delay,
         useNativeDriver: true,
       }),
       Animated.spring(translateY, {
         toValue: 0,
-        delay: index * 50,
-        damping: 16,
-        stiffness: 140,
+        delay,
+        damping: 20,
+        stiffness: 160,
         useNativeDriver: true,
       }),
     ]).start();

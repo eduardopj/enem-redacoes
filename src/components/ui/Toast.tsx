@@ -10,6 +10,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@/theme/ThemeContext';
 
+const BOTTOM_NAV_HEIGHT = 60;
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -73,7 +75,7 @@ function ToastLayer({
 
   return (
     <View
-      style={[styles.layer, { bottom: Math.max(insets.bottom + 80, 100) }]}
+      style={[styles.layer, { bottom: BOTTOM_NAV_HEIGHT + Math.max(insets.bottom, 8) + 12 }]}
       pointerEvents="box-none"
     >
       {toasts.map((toast) => (
@@ -192,7 +194,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 13,
     borderRadius: 16,
-    shadowColor: '#101828',
+    shadowColor: '#09090B',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.18,
     shadowRadius: 20,

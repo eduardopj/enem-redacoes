@@ -1,5 +1,5 @@
 import { StudentRoute } from '@/components/auth/StudentRoute';
-import { AnimatedNumber, Card, ProgressBar, PulsingDot, ScreenContainer, StaggerItem, StatusBadge } from '@/components/ui';
+import { AnimatedNumber, Card, ProgressBar, PulsingDot, ScreenContainer, SparkDatum, Sparkline, StaggerItem, StatusBadge } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
@@ -15,10 +15,18 @@ import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-nativ
 
 const COMP_LABELS: Record<string, string> = {
   c1: 'Norma Culta',
-  c2: 'Tema',
+  c2: 'Compreensão do Tema',
   c3: 'Argumentação',
-  c4: 'Coesão',
-  c5: 'Intervenção',
+  c4: 'Coesão Textual',
+  c5: 'Proposta de Intervenção',
+};
+
+const COMP_TIPS: Record<string, string> = {
+  c1: 'Evite gírias, "a gente" e formas verbais informais. Releia cada parágrafo procurando erros de concordância e pontuação antes de entregar.',
+  c2: 'Cada parágrafo de desenvolvimento deve retomar diretamente o tema da proposta. Evite tangenciar ou abordar assuntos paralelos.',
+  c3: 'Estruture cada argumento com: afirmação + justificativa + exemplo concreto. Afirmações genéricas sem evidências reduzem sua nota.',
+  c4: 'Varie os conectivos: além disso, entretanto, por conseguinte, visto que. Não repita "porém" ou "mas" em todo parágrafo.',
+  c5: 'Sua proposta deve ter: agente (quem faz) + ação (o quê) + modo (como) + finalidade (para quê). Seja específico — evite "o governo deve investir em X".',
 };
 
 function getLevelInfo(avg: number, colors: any): { level: string; icon: keyof typeof Ionicons.glyphMap; color: string } {
@@ -125,6 +133,22 @@ export default function StudentHomeScreen() {
   const weak = useMemo(() => weakestComp(myEssays), [myEssays]);
   const processing = useMemo(() => myEssays.filter(e => e.status === 'processando'), [myEssays]);
   const pending = useMemo(() => myEssays.filter(e => e.status === 'pendente' && !e.feedback?.startsWith('Erro')), [myEssays]);
+  const sparkData = useMemo<SparkDatum[]>(() => {
+    const sorted = [...correctedEssays]
+      .filter(e => e.correctedAt && e.totalScore != null)
+      .sort((a, b) => (a.correctedAt ?? '').localeCompare(b.correctedAt ?? ''))
+      .slice(-8);
+    return sorted.map(e => {
+      const d = new Date(e.correctedAt!);
+      return { value: e.totalScore!, label: `${d.getDate()}/${d.getMonth() + 1}` };
+    });
+  }, [correctedEssays]);
+
+  const sparkTrend = useMemo(() => {
+    if (sparkData.length < 2) return null;
+    return sparkData[sparkData.length - 1].value - sparkData[0].value;
+  }, [sparkData]);
+
   const compColors = getCompColors(colors);
   const levelInfo = avg != null ? getLevelInfo(avg, colors) : null;
   const scoreColor = avg != null ? getScoreColor(avg, colors) : colors.mutedText;
@@ -234,6 +258,44 @@ export default function StudentHomeScreen() {
             </View>
           )}
         </StaggerItem>
+
+        {/* ── Score evolution sparkline ── */}
+        {sparkData.length >= 3 && (
+          <StaggerItem index={2}>
+            <Card>
+              <View style={[styles.sectionHeader, { marginBottom: 8 }]}>
+                <View style={styles.sectionHeaderLeft}>
+                  <Ionicons name="trending-up-outline" size={15} color={colors.accent} />
+                  <Text style={[styles.sectionLabel, { color: colors.softText }]}>Sua evolução</Text>
+                  {sparkTrend != null && (
+                    <View style={[
+                      styles.trendPill,
+                      { backgroundColor: sparkTrend >= 0 ? colors.success + '18' : colors.danger + '18' },
+                    ]}>
+                      <Ionicons
+                        name={sparkTrend >= 0 ? 'trending-up' : 'trending-down'}
+                        size={11}
+                        color={sparkTrend >= 0 ? colors.success : colors.danger}
+                      />
+                      <Text style={[styles.trendText, { color: sparkTrend >= 0 ? colors.success : colors.danger }]}>
+                        {sparkTrend >= 0 ? '+' : ''}{sparkTrend} pts
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <Pressable
+                  onPress={() => router.push('/student/evolucao' as any)}
+                  style={styles.seeAllBtn}
+                  hitSlop={8}
+                >
+                  <Text style={[styles.seeAllText, { color: colors.accent }]}>Ver tudo</Text>
+                  <Ionicons name="chevron-forward" size={12} color={colors.accent} />
+                </Pressable>
+              </View>
+              <Sparkline data={sparkData} height={82} color={scoreColor} />
+            </Card>
+          </StaggerItem>
+        )}
 
         {/* ── Processing alert ── */}
         {processing.length > 0 && (
@@ -346,27 +408,38 @@ export default function StudentHomeScreen() {
           </StaggerItem>
         )}
 
-        {/* ── Weak competency tip ── */}
+        {/* ── Foco da semana ── */}
         {weak && correctedEssays.length >= 2 && (
           <StaggerItem index={4}>
-            <View style={[styles.tipCard, { backgroundColor: compColors[weak.key] + '0E', borderColor: compColors[weak.key] + '28' }]}>
-              <View style={styles.tipHeader}>
-                <View style={[styles.tipIconWrap, { backgroundColor: compColors[weak.key] + '18' }]}>
-                  <Ionicons name="bulb-outline" size={16} color={compColors[weak.key]} />
+            <View style={[styles.focusCard, { backgroundColor: compColors[weak.key] + '0C', borderColor: compColors[weak.key] + '30' }]}>
+              {/* Header */}
+              <View style={styles.focusHeader}>
+                <View style={[styles.focusIconWrap, { backgroundColor: compColors[weak.key] + '20' }]}>
+                  <Ionicons name="flag-outline" size={15} color={compColors[weak.key]} />
                 </View>
-                <Text style={[styles.tipTitle, { color: colors.text }]}>Foque aqui para crescer</Text>
+                <Text style={[styles.focusEyebrow, { color: compColors[weak.key] }]}>FOCO DA SEMANA</Text>
               </View>
-              <View style={styles.tipCompRow}>
-                <View style={[styles.tipCompBadge, { backgroundColor: compColors[weak.key] + '22' }]}>
-                  <Text style={[styles.tipCompKey, { color: compColors[weak.key] }]}>{weak.key.toUpperCase()}</Text>
+
+              {/* Competency row */}
+              <View style={styles.focusCompRow}>
+                <View style={[styles.focusKeyBadge, { backgroundColor: compColors[weak.key] }]}>
+                  <Text style={styles.focusKeyText}>{weak.key.toUpperCase()}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.tipCompName, { color: colors.text }]}>{COMP_LABELS[weak.key]}</Text>
-                  <Text style={[styles.tipCompScore, { color: compColors[weak.key] }]}>
-                    Média: {weak.avg}/200
+                  <Text style={[styles.focusCompName, { color: colors.text }]}>{COMP_LABELS[weak.key]}</Text>
+                  <Text style={[styles.focusScore, { color: compColors[weak.key] }]}>
+                    Média atual: {weak.avg}/200
                   </Text>
                 </View>
                 <VerticalBar value={weak.avg} max={200} color={compColors[weak.key]} />
+              </View>
+
+              {/* Tip */}
+              <View style={[styles.focusTipBox, { backgroundColor: compColors[weak.key] + '12' }]}>
+                <Ionicons name="bulb-outline" size={13} color={compColors[weak.key]} />
+                <Text style={[styles.focusTipText, { color: colors.softText }]}>
+                  {COMP_TIPS[weak.key]}
+                </Text>
               </View>
             </View>
           </StaggerItem>
@@ -437,7 +510,7 @@ const styles = StyleSheet.create({
   heroCard: {
     borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#101828', shadowOffset: { width: 0, height: 6 },
+    shadowColor: '#09090B', shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12, shadowRadius: 16, elevation: 6,
   },
   heroCardTop: {
@@ -508,8 +581,11 @@ const styles = StyleSheet.create({
   processingSub: { fontSize: 12, lineHeight: 16 },
 
   // Last essay
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 12 },
+  sectionHeaderLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 },
   sectionLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.1 },
+  seeAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  seeAllText: { fontSize: 12, fontWeight: '600' },
   lastEssayRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
   lastEssayTheme: { fontSize: 15, fontWeight: '600', lineHeight: 20 },
   lastEssayMeta: { flexDirection: 'row' },
@@ -527,18 +603,18 @@ const styles = StyleSheet.create({
   },
   seeResultText: { fontSize: 13, fontWeight: '700' },
 
-  // Weak comp tip
-  tipCard: { borderRadius: 14, borderWidth: 1, padding: 14, gap: 10 },
-  tipHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  tipIconWrap: { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  tipTitle: { fontSize: 14, fontWeight: '700' },
-  tipCompRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  tipCompBadge: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  tipCompKey: { fontSize: 11, fontWeight: '800' },
-  tipCompName: { fontSize: 14, fontWeight: '600', lineHeight: 18 },
-  tipCompScore: { fontSize: 12, fontWeight: '700' },
-  tipBarTrack: { width: 10, height: 36, borderRadius: 5, overflow: 'hidden', justifyContent: 'flex-end' },
-  tipBarFill: { width: '100%', borderRadius: 5 },
+  // Foco da semana card (item 5)
+  focusCard: { borderRadius: 18, borderWidth: 1, padding: 16, gap: 12 },
+  focusHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  focusIconWrap: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  focusEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  focusCompRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  focusKeyBadge: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  focusKeyText: { fontSize: 12, fontWeight: '800', color: '#fff' },
+  focusCompName: { fontSize: 15, fontWeight: '700', lineHeight: 20 },
+  focusScore: { fontSize: 12, fontWeight: '600', marginTop: 2 },
+  focusTipBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, borderRadius: 10, padding: 10 },
+  focusTipText: { flex: 1, fontSize: 13, lineHeight: 19 },
 
   // Actions
   actionsRow: { flexDirection: 'row', gap: 10 },
@@ -572,7 +648,7 @@ const styles = StyleSheet.create({
   atividadesCard: {
     borderRadius: 18, borderWidth: 1,
     padding: 16, gap: 14,
-    shadowColor: '#101828', shadowOffset: { width: 0, height: 3 },
+    shadowColor: '#09090B', shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.06, shadowRadius: 12, elevation: 2,
   },
   atividadesHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },

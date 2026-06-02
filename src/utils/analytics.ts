@@ -38,11 +38,11 @@ export function getScoreColor(
 // ─── Competency helpers ────────────────────────────────────────────────────
 
 export const COMP_COLORS = {
-  c1: '#4F46E5',
-  c2: '#7C3AED',
-  c3: '#0891B2',
-  c4: '#D97706',
-  c5: '#DB2777',
+  c1: '#7C3AED',  // violeta (primary) — Norma Culta
+  c2: '#1CB0F6',  // azul céu          — Compreensão do Tema
+  c3: '#58CC02',  // verde Duolingo    — Argumentação
+  c4: '#FFB800',  // âmbar/gold        — Coesão Textual
+  c5: '#EC4899',  // rosa              — Proposta de Intervenção
 } as const;
 
 export function getCompColors(_colors?: unknown): Record<string, string> {

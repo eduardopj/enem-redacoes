@@ -1,9 +1,19 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import db from './database.js';
-import { getTeacherPushToken } from './auth.service.js';
+import {
+  checkEssayConflict,
+  findEssayById,
+  findEssayImagePath,
+  findEssaysByTeacher,
+  updateEssayTeacherEval,
+  upsertEssayRow,
+} from '../repositories/essay.repository.js';
+import { findTurmaByCode, upsertTurmaRow } from '../repositories/turma.repository.js';
+import { getTeacherPushTokenById } from '../repositories/teacher.repository.js';
 import { validateAndOptimizeImage } from '../utils/image.js';
+import { storeImage } from '../utils/image-storage.js';
+import { env } from '../config/env.js';
 
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
 
@@ -26,104 +36,69 @@ mkdirSync(IMAGES_DIR, { recursive: true });
 
 const ALLOWED_IMAGE_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
-// Pre-compile the INSERT/UPDATE statement once at module load for efficiency
-const upsertStmt = db.prepare(`
-  INSERT INTO essays (
-    id, teacherId, studentId, studentName, turmaId, turmaName,
-    themeTitle, inputMode, essayText, status,
-    totalScore, teacherScore, teacherNote, correctionJson,
-    createdAt, correctedAt, updatedAt, imagePath, submittedByStudent, syncedAt
-  ) VALUES (
-    @id, @teacherId, @studentId, @studentName, @turmaId, @turmaName,
-    @themeTitle, @inputMode, @essayText, @status,
-    @totalScore, @teacherScore, @teacherNote, @correctionJson,
-    @createdAt, @correctedAt, @updatedAt, @imagePath, @submittedByStudent, datetime('now')
-  )
-  ON CONFLICT(id) DO UPDATE SET
-    teacherId    = excluded.teacherId,
-    studentId    = excluded.studentId,
-    studentName  = excluded.studentName,
-    turmaId      = excluded.turmaId,
-    turmaName    = excluded.turmaName,
-    themeTitle   = excluded.themeTitle,
-    inputMode    = excluded.inputMode,
-    essayText    = excluded.essayText,
-    status       = excluded.status,
-    totalScore   = excluded.totalScore,
-    teacherScore = excluded.teacherScore,
-    teacherNote  = excluded.teacherNote,
-    correctionJson = excluded.correctionJson,
-    createdAt    = excluded.createdAt,
-    correctedAt  = excluded.correctedAt,
-    updatedAt    = excluded.updatedAt,
-    imagePath    = COALESCE(excluded.imagePath, essays.imagePath),
-    submittedByStudent = excluded.submittedByStudent,
-    syncedAt     = excluded.syncedAt
-`);
-
-const existingStmt = db.prepare('SELECT updatedAt, status FROM essays WHERE id = ?');
-
 export async function upsertEssay(essay) {
   // ── Quick conflict check (read, outside transaction) ──────────────────────
-  const existing = existingStmt.get(essay.id);
+  const existing = checkEssayConflict(essay.id);
   if (existing?.updatedAt && essay.updatedAt && existing.updatedAt >= essay.updatedAt) {
-    return { ok: true, skipped: true };
+    return { ok: true, skipped: true, imageUrl: null };
   }
 
   const isNew = !existing;
 
-  // ── P1: Validate magic bytes + optimize image BEFORE touching the DB ──────
-  // Async work must happen outside the synchronous better-sqlite3 transaction.
+  // ── P1: Validate + optimize image BEFORE touching the DB ─────────────────
+  // Local mode: pre-compute the path (known before write).
+  // S3 mode:    imagePath stays null; S3 key is derived from essay ID.
   let imageBuffer = null;
-  let imagePath = null;
+  let localImagePath = null;
   if (essay.imageBase64 && essay.imageMimeType && ALLOWED_IMAGE_MIME.has(essay.imageMimeType)) {
     const optimized = await validateAndOptimizeImage(essay.imageBase64);
     imageBuffer = Buffer.from(optimized.base64, 'base64');
-    // All images are normalized to WebP regardless of original format
-    imagePath = join(IMAGES_DIR, `${essay.id}.webp`);
+    if (!env.s3Bucket) {
+      // Reserve the local path so the DB row is immediately consistent
+      localImagePath = join(IMAGES_DIR, `${essay.id}.webp`);
+    }
   }
 
   // ── P2: Atomic DB write ───────────────────────────────────────────────────
-  // better-sqlite3 transactions are synchronous and throw on any failure,
-  // automatically rolling back — ensuring the essay row is never half-written.
-  const doInsert = db.transaction(() => {
-    upsertStmt.run({
-      id: essay.id,
-      teacherId: essay.teacherId,
-      studentId: essay.studentId,
-      studentName: essay.studentName ?? null,
-      turmaId: essay.turmaId ?? null,
-      turmaName: essay.turmaName ?? null,
-      themeTitle: essay.themeTitle ?? null,
-      inputMode: essay.inputMode ?? 'manuscrita',
-      essayText: essay.essayText ?? null,
-      status: essay.status ?? 'corrigida',
-      totalScore: essay.totalScore ?? null,
-      teacherScore: essay.teacherScore ?? null,
-      teacherNote: essay.teacherNote ?? null,
-      correctionJson: essay.correctionJson != null ? JSON.stringify(essay.correctionJson) : null,
-      createdAt: essay.createdAt ?? null,
-      correctedAt: essay.correctedAt ?? null,
-      updatedAt: essay.updatedAt ?? null,
-      imagePath,
-      // submittedByStudent is server-enforced: only allow true on NEW essays (INSERT path).
-      // This prevents a teacher device from retroactively re-flagging an existing essay.
-      submittedByStudent: isNew && essay.submittedByStudent ? 1 : 0,
-    });
+  // better-sqlite3 transactions are synchronous — no async inside.
+  upsertEssayRow({
+    id: essay.id,
+    teacherId: essay.teacherId,
+    studentId: essay.studentId,
+    studentName: essay.studentName ?? null,
+    turmaId: essay.turmaId ?? null,
+    turmaName: essay.turmaName ?? null,
+    themeTitle: essay.themeTitle ?? null,
+    inputMode: essay.inputMode ?? 'manuscrita',
+    essayText: essay.essayText ?? null,
+    status: essay.status ?? 'corrigida',
+    totalScore: essay.totalScore ?? null,
+    teacherScore: essay.teacherScore ?? null,
+    teacherNote: essay.teacherNote ?? null,
+    correctionJson: essay.correctionJson != null ? JSON.stringify(essay.correctionJson) : null,
+    createdAt: essay.createdAt ?? null,
+    correctedAt: essay.correctedAt ?? null,
+    updatedAt: essay.updatedAt ?? null,
+    imagePath: localImagePath, // COALESCE in SQL keeps existing if null
+    submittedByStudent: isNew && essay.submittedByStudent ? 1 : 0,
   });
-  doInsert();
 
-  // ── Write image file AFTER successful DB commit ───────────────────────────
-  // If the file write fails here, the DB has an imagePath that doesn't exist yet.
-  // The next sync of the same essay will retry the write — acceptable trade-off.
-  if (imageBuffer && imagePath) {
-    writeFileSync(imagePath, imageBuffer);
+  // ── P3: Store image AFTER successful DB commit ────────────────────────────
+  // Local: writes bytes to disk (path was already committed in DB).
+  // S3:    uploads to S3; returns the CDN/S3 URL (no DB update needed — URL is deterministic).
+  let imageUrl = null;
+  if (imageBuffer) {
+    const stored = await storeImage(essay.id, imageBuffer, localImagePath);
+    imageUrl = stored.imageUrl; // non-null only in S3 mode
   }
+
+  // imageUrl is non-null only in S3 mode — returned to frontend so it can set imageRemoteUrl to the CDN URL.
+  // In local mode the frontend constructs the URL from backendUrl config; we return null.
 
   // Push notification: new student essay that was AI-corrected
   const correctedStatuses = ['corrigida', 'precisa_revisao', 'baixa_confiabilidade'];
   if (isNew && essay.submittedByStudent && correctedStatuses.includes(essay.status)) {
-    const pushToken = getTeacherPushToken(essay.teacherId);
+    const pushToken = getTeacherPushTokenById(essay.teacherId);
     if (pushToken) {
       const studentName = essay.studentName ?? 'Aluno';
       const theme = essay.themeTitle ?? 'Redação';
@@ -137,80 +112,33 @@ export async function upsertEssay(essay) {
     }
   }
 
-  return { ok: true, skipped: false };
+  return { ok: true, skipped: false, imageUrl };
 }
 
-/**
- * Returns a paginated page of essays for the given teacher.
- * cursor: ISO datetime of the syncedAt of the last seen row (exclusive)
- * limit: max rows to return (default 50)
- */
-export function getEssaysByTeacher(teacherId, { cursor, limit = 50 } = {}) {
-  const safeLimit = Math.min(Math.max(1, Number(limit)), 200);
-  const fetch = safeLimit + 1; // fetch one extra to detect hasMore
-
-  let rows;
-  if (cursor) {
-    rows = db
-      .prepare(`
-        SELECT * FROM essays
-        WHERE teacherId = ? AND COALESCE(syncedAt, createdAt) < ?
-        ORDER BY COALESCE(syncedAt, createdAt) DESC
-        LIMIT ?
-      `)
-      .all(teacherId, cursor, fetch);
-  } else {
-    rows = db
-      .prepare(`
-        SELECT * FROM essays
-        WHERE teacherId = ?
-        ORDER BY COALESCE(syncedAt, createdAt) DESC
-        LIMIT ?
-      `)
-      .all(teacherId, fetch);
-  }
-
-  const hasMore = rows.length > safeLimit;
-  const data = rows.slice(0, safeLimit).map(parseRow);
-  const nextCursor = hasMore ? data[data.length - 1].syncedAt : null;
-
-  return { data, hasMore, nextCursor };
+export function getEssaysByTeacher(teacherId, opts) {
+  return findEssaysByTeacher(teacherId, opts);
 }
 
 export function getEssayById(id) {
-  const row = db.prepare(`SELECT * FROM essays WHERE id = ?`).get(id);
-  return row ? parseRow(row) : null;
+  return findEssayById(id);
 }
 
 export function getEssayImagePath(id) {
-  const row = db.prepare(`SELECT imagePath FROM essays WHERE id = ?`).get(id);
-  return row?.imagePath ?? null;
+  return findEssayImagePath(id);
 }
 
 export function updateTeacherEval(id, teacherScore, teacherNote) {
-  db.prepare(`UPDATE essays SET teacherScore = ?, teacherNote = ? WHERE id = ?`)
-    .run(teacherScore ?? null, teacherNote ?? null, id);
+  updateEssayTeacherEval(id, teacherScore, teacherNote);
   return { ok: true };
 }
 
-function parseRow(row) {
-  return {
-    ...row,
-    correctionJson: row.correctionJson ? JSON.parse(row.correctionJson) : null,
-    imagePath: undefined, // don't expose internal filesystem path
-  };
-}
-
-export function upsertTurma({ joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName }) {
-  db.prepare(`
-    INSERT OR REPLACE INTO turmas (joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName);
+export function upsertTurma(data) {
+  upsertTurmaRow(data);
   return { ok: true };
 }
 
 export function getTurmaByCode(joinCode) {
-  return db.prepare(`SELECT * FROM turmas WHERE joinCode = ?`).get(joinCode) ?? null;
+  return findTurmaByCode(joinCode);
 }
 
 export { IMAGES_DIR };

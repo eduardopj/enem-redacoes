@@ -85,7 +85,7 @@ function QRScanner({ onScan, onClose }: { onScan: (data: string) => void; onClos
 const qrStyles = StyleSheet.create({
   permWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 16 },
   permText: { color: '#fff', fontSize: 16, textAlign: 'center', lineHeight: 24 },
-  permBtn: { backgroundColor: '#6366F1', borderRadius: 14, paddingHorizontal: 28, paddingVertical: 14, width: '100%', alignItems: 'center' },
+  permBtn: { backgroundColor: '#7C3AED', borderRadius: 14, paddingHorizontal: 28, paddingVertical: 14, width: '100%', alignItems: 'center' },
   permBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
   overlay: { ...StyleSheet.absoluteFillObject, flexDirection: 'column' },
   topOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
@@ -237,7 +237,7 @@ export default function StudentLoginScreen() {
                   emoji="📱"
                   title="Escanear QR Code"
                   desc="Aponte a câmera para o QR Code da turma"
-                  accent="#6366F1"
+                  accent="#7C3AED"
                   onPress={() => setShowQR(true)}
                 />
                 <OptionCard
@@ -291,11 +291,11 @@ export default function StudentLoginScreen() {
 
                 {error ? <ErrorBox msg={error} colors={colors} /> : null}
 
-                <ActionBtn title="Entrar na turma" loading={loading} onPress={handleCodeJoin} accent="#6366F1" />
+                <ActionBtn title="Entrar na turma" loading={loading} onPress={handleCodeJoin} accent="#7C3AED" />
 
                 <Pressable onPress={() => setShowQR(true)} style={s.qrBtn}>
-                  <Ionicons name="qr-code-outline" size={16} color="#6366F1" />
-                  <Text style={[s.qrBtnText, { color: '#6366F1' }]}>Escanear QR Code</Text>
+                  <Ionicons name="qr-code-outline" size={16} color="#7C3AED" />
+                  <Text style={[s.qrBtnText, { color: '#7C3AED' }]}>Escanear QR Code</Text>
                 </Pressable>
               </View>
             )}
@@ -373,8 +373,8 @@ function Field({ label, icon, colors, ...props }: { label: string; icon: string;
   return (
     <View style={s.fieldWrap}>
       <Text style={[s.fieldLabel, { color: colors.softText }]}>{label}</Text>
-      <View style={[s.fieldRow, { backgroundColor: colors.input, borderColor: focused ? '#6366F1' : colors.border }]}>
-        <Ionicons name={icon as any} size={17} color={focused ? '#6366F1' : colors.mutedText} />
+      <View style={[s.fieldRow, { backgroundColor: colors.input, borderColor: focused ? '#7C3AED' : colors.border }]}>
+        <Ionicons name={icon as any} size={17} color={focused ? '#7C3AED' : colors.mutedText} />
         <TextInput
           {...props}
           style={[s.fieldInput, { color: colors.text }]}
@@ -424,10 +424,10 @@ const s = StyleSheet.create({
   hero: { alignItems: 'center', paddingTop: 32, paddingBottom: 28, gap: 6 },
   logoGradient: {
     width: 80, height: 80, borderRadius: 24,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#F3E8FF',
     alignItems: 'center', justifyContent: 'center',
     marginBottom: 10,
-    shadowColor: '#6366F1', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8,
+    shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8,
   },
   logoEmoji: { fontSize: 38 },
   brand: { fontSize: 11, fontWeight: '800', letterSpacing: 2.5 },
@@ -437,7 +437,7 @@ const s = StyleSheet.create({
   optCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     borderRadius: 18, borderWidth: 1.5, padding: 16,
-    shadowColor: '#101828', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+    shadowColor: '#09090B', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
   optEmoji: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   optTitle: { fontSize: 16, fontWeight: '700', lineHeight: 21, marginBottom: 2 },
@@ -459,7 +459,7 @@ const s = StyleSheet.create({
   actionBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     borderRadius: 16, paddingVertical: 16,
-    shadowColor: '#6366F1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12, elevation: 5,
+    shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12, elevation: 5,
   },
   actionBtnText: { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: 0.2 },
   qrBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 },

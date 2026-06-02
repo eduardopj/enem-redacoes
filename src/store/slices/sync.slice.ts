@@ -1,4 +1,4 @@
-import { fetchEssaysByTeacher } from '@/services/sync/sync-essays';
+import { backendEssayRepository } from '@/repositories/BackendEssayRepository';
 import { StateCreator } from 'zustand';
 import { mergeRemoteEssays } from '../utils/essay-helpers';
 import type { AppState, SyncSlice } from '../store.types';
@@ -12,7 +12,7 @@ export const createSyncSlice: StateCreator<AppState, [['zustand/persist', unknow
       const teacher = get().currentTeacher;
       if (!teacher) return;
       try {
-        const { data, hasMore, nextCursor } = await fetchEssaysByTeacher(
+        const { data, hasMore, nextCursor } = await backendEssayRepository.fetchByTeacher(
           teacher.id,
           get().backendToken ?? undefined,
         );
@@ -29,7 +29,7 @@ export const createSyncSlice: StateCreator<AppState, [['zustand/persist', unknow
       const { backendSyncCursor, backendSyncHasMore } = get();
       if (!teacher || !backendSyncHasMore || !backendSyncCursor) return;
       try {
-        const { data, hasMore, nextCursor } = await fetchEssaysByTeacher(
+        const { data, hasMore, nextCursor } = await backendEssayRepository.fetchByTeacher(
           teacher.id,
           get().backendToken ?? undefined,
           backendSyncCursor,

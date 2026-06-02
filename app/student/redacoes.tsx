@@ -1,10 +1,10 @@
 import { StudentRoute } from '@/components/auth/StudentRoute';
-import { Card, EmptyState, ScreenContainer, StaggerItem, StatusBadge } from '@/components/ui';
+import { Card, EmptyState, ScreenContainer, StatusBadge } from '@/components/ui';
 import { useAppStore } from '@/store/app-store';
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Essay } from '@/types/app';
-import { getCompColors, getScoreColor } from '@/utils/analytics';
+import { getScoreColor } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
@@ -13,31 +13,6 @@ import { Animated, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput,
 type Filter = 'todas' | 'corrigida' | 'processando' | 'pendente';
 type Sort = 'data' | 'nota_desc' | 'nota_asc';
 
-function MiniCompBars({ competencies }: { competencies: NonNullable<Essay['competencies']> }) {
-  const { colors } = useAppTheme();
-  const cc = Object.values(getCompColors(colors));
-  const vals = [competencies.c1, competencies.c2, competencies.c3, competencies.c4, competencies.c5];
-  return (
-    <View style={barStyles.wrap}>
-      {vals.map((v, i) => (
-        <View key={i} style={barStyles.col}>
-          <View style={[barStyles.track, { backgroundColor: colors.input }]}>
-            <View style={[barStyles.fill, { height: `${(v / 200) * 100}%`, backgroundColor: cc[i] }]} />
-          </View>
-          <Text style={[barStyles.label, { color: cc[i] }]}>C{i + 1}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-const barStyles = StyleSheet.create({
-  wrap: { flexDirection: 'row', gap: 6, alignItems: 'flex-end', height: 28 },
-  col: { flex: 1, alignItems: 'center', gap: 2 },
-  track: { width: '100%', height: 20, borderRadius: 3, justifyContent: 'flex-end', overflow: 'hidden' },
-  fill: { width: '100%', borderRadius: 3 },
-  label: { fontSize: 8, fontWeight: '700' },
-});
 
 function FilterChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   const { colors } = useAppTheme();
@@ -170,17 +145,19 @@ export default function StudentRedacoesScreen() {
             {filtered.length === 0 ? (
               <EmptyState icon="filter-outline" title="Nenhuma redação neste filtro" description="Ajuste o filtro ou a busca." />
             ) : (
-              <FlatList
-                data={filtered}
-                keyExtractor={e => e.id}
-                scrollEnabled={false}
-                contentContainerStyle={styles.list}
-                renderItem={({ item: essay, index }) => (
-                  <StaggerItem index={index}>
+              <Card style={styles.listCard}>
+                <FlatList
+                  data={filtered}
+                  keyExtractor={e => e.id}
+                  scrollEnabled={false}
+                  ItemSeparatorComponent={() => (
+                    <View style={[styles.divider, { backgroundColor: colors.border }]} />
+                  )}
+                  renderItem={({ item: essay }) => (
                     <StudentEssayCard essay={essay} colors={colors} />
-                  </StaggerItem>
-                )}
-              />
+                  )}
+                />
+              </Card>
             )}
           </>
         )}
@@ -193,15 +170,6 @@ function StudentEssayCard({ essay, colors }: { essay: Essay; colors: any }) {
   const scoreColor = essay.status === 'corrigida' && essay.totalScore != null
     ? getScoreColor(essay.totalScore, colors)
     : colors.mutedText;
-  const scale = useRef(new Animated.Value(1)).current;
-  const animateScale = (toValue: number) => {
-    Animated.spring(scale, {
-      toValue,
-      stiffness: 250,
-      damping: 18,
-      useNativeDriver: true,
-    }).start();
-  };
 
   const handlePress = () => {
     if (essay.status === 'corrigida') {
@@ -211,89 +179,85 @@ function StudentEssayCard({ essay, colors }: { essay: Essay; colors: any }) {
     }
   };
 
+  const dateStr = essay.createdAt
+    ? new Date(essay.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+    : null;
+
+  const hasError = essay.status === 'pendente' && Boolean(essay.errorMessage);
+
   return (
-    <Animated.View style={{ transform: [{ scale }] }}>
-    <Card>
-      <Pressable
-        onPress={handlePress}
-        onPressIn={() => animateScale(0.97)}
-        onPressOut={() => animateScale(1)}
-      >
-        <View style={cardStyles.topRow}>
-          {/* Score pill or status */}
-          {essay.status === 'corrigida' && essay.totalScore != null ? (
-            <View style={[cardStyles.scorePill, { backgroundColor: scoreColor + '14' }]}>
-              <Text style={[cardStyles.scoreNum, { color: scoreColor }]}>{essay.totalScore}</Text>
-              <Text style={[cardStyles.scoreDenom, { color: scoreColor + '99' }]}>/1000</Text>
-            </View>
-          ) : (
-            <View style={[cardStyles.scorePill, { backgroundColor: colors.input }]}>
-              <Ionicons
-                name={essay.status === 'processando' ? 'sync-outline' : 'time-outline'}
-                size={22}
-                color={colors.mutedText}
-              />
-            </View>
-          )}
-
-          {/* Info */}
-          <View style={{ flex: 1 }}>
-            <Text style={[cardStyles.themeTitle, { color: colors.text }]} numberOfLines={2}>
-              {essay.themeTitle}
-            </Text>
-            {essay.createdAt && (
-              <Text style={[cardStyles.date, { color: colors.mutedText }]}>
-                {new Date(essay.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
-              </Text>
-            )}
-          </View>
-
-          <Ionicons name="chevron-forward" size={16} color={colors.mutedText} />
+    <Pressable onPress={handlePress} style={cardStyles.row}>
+      {/* Left: date box or score box */}
+      {essay.status === 'corrigida' && essay.totalScore != null ? (
+        <View style={[cardStyles.scoreBox, { backgroundColor: scoreColor + '14' }]}>
+          <Text style={[cardStyles.scoreNum, { color: scoreColor }]}>{essay.totalScore}</Text>
+          <Text style={[cardStyles.scoreSuffix, { color: scoreColor + '99' }]}>pts</Text>
         </View>
+      ) : (
+        <View style={[cardStyles.iconBox, {
+          backgroundColor: hasError ? colors.danger + '14' : colors.input,
+        }]}>
+          <Ionicons
+            name={hasError ? 'alert-circle-outline' : essay.status === 'processando' ? 'sync-outline' : 'time-outline'}
+            size={18}
+            color={hasError ? colors.danger : colors.mutedText}
+          />
+        </View>
+      )}
 
-        {/* Mini comp bars */}
-        {essay.status === 'corrigida' && essay.competencies && (
-          <View style={[cardStyles.compSection, { borderTopColor: colors.border }]}>
-            <MiniCompBars competencies={essay.competencies} />
-          </View>
-        )}
-
-        <View style={[cardStyles.metaRow, { borderTopColor: colors.border }]}>
+      {/* Info */}
+      <View style={cardStyles.info}>
+        <Text style={[cardStyles.themeTitle, { color: colors.text }]} numberOfLines={1}>
+          {essay.themeTitle}
+        </Text>
+        <View style={cardStyles.metaRow}>
           <StatusBadge status={essay.status} />
-          {essay.status === 'corrigida' && essay.totalScore != null && (
-            <Text style={[cardStyles.scoreLabel, { color: colors.mutedText }]}>
-              {getScoreLabel(essay.totalScore, colors)}
-            </Text>
-          )}
+          {dateStr ? (
+            <Text style={[cardStyles.date, { color: colors.mutedText }]}>{dateStr}</Text>
+          ) : null}
         </View>
-      </Pressable>
-    </Card>
-    </Animated.View>
+      </View>
+
+      <Ionicons name="chevron-forward" size={14} color={colors.mutedText} />
+    </Pressable>
   );
 }
 
-function getScoreLabel(score: number, _colors: any): string {
-  if (score >= 900) return 'Excelente';
-  if (score >= 750) return 'Muito bom';
-  if (score >= 600) return 'Bom';
-  if (score >= 450) return 'Regular';
-  if (score >= 300) return 'Insuficiente';
-  return 'Muito baixo';
-}
 
 const cardStyles = StyleSheet.create({
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
-  scorePill: { borderRadius: 12, padding: 8, alignItems: 'center', minWidth: 56, justifyContent: 'center' },
-  scoreNum: { fontSize: 20, fontWeight: '800', letterSpacing: 0, lineHeight: 24 },
-  scoreDenom: { fontSize: 10, fontWeight: '600' },
-  themeTitle: { fontSize: 14, fontWeight: '600', lineHeight: 20, marginBottom: 2 },
-  date: { fontSize: 11, lineHeight: 16 },
-  compSection: { paddingTop: theme.spacing.sm, marginBottom: theme.spacing.sm, borderTopWidth: 1 },
-  metaRow: {
-    paddingTop: theme.spacing.sm, borderTopWidth: 1,
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    minHeight: 60,
   },
-  scoreLabel: { fontSize: 11, fontWeight: '600' },
+  scoreBox: {
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    alignItems: 'center',
+    minWidth: 52,
+    flexShrink: 0,
+  },
+  scoreNum: { fontSize: 15, fontWeight: '800', lineHeight: 18 },
+  scoreSuffix: { fontSize: 10, fontWeight: '600' },
+  iconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  info: {
+    flex: 1,
+    gap: 4,
+  },
+  themeTitle: { fontSize: 14, fontWeight: '600', lineHeight: 19 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  date: { fontSize: 11 },
 });
 
 const styles = StyleSheet.create({
@@ -321,5 +285,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6,
   },
   sortLabel: { fontSize: 11, fontWeight: '600' },
-  list: { gap: theme.spacing.md },
+  listCard: { padding: 0, overflow: 'hidden' },
+  divider: { height: 1, marginHorizontal: 16 },
 });

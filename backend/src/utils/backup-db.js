@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 /**
- * backup-db.js — Backup diário do banco SQLite.
+ * backup-db.js — Backup do banco SQLite.
  *
- * Uso:
- *   node backup-db.js
+ * Uso manual (CLI):
+ *   node src/utils/backup-db.js
  *
- * Cron (no droplet): 0 3 * * * cd /opt/enem-redacoes/backend && node src/utils/backup-db.js >> /var/log/enem-backup.log 2>&1
+ * Uso programático (agendador interno):
+ *   import { runBackup } from './backup-db.js';
+ *   await runBackup();
  *
- * Mantém os últimos 14 backups locais (2 semanas).
- * Se a env var BACKUP_DIR não estiver definida, usa ./data/backups.
+ * Mantém os últimos MAX_BACKUPS backups (padrão: 14).
  */
 
 import Database from 'better-sqlite3';
@@ -26,32 +27,11 @@ function log(level, message, meta = {}) {
   console.log(JSON.stringify({ level, message, service: 'backup-db', timestamp: new Date().toISOString(), ...meta }));
 }
 
-function run() {
-  mkdirSync(BACKUP_DIR, { recursive: true });
-
-  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const destPath = join(BACKUP_DIR, `essays-${ts}.db`);
-
-  // Use SQLite's online backup API — safe even with concurrent writes (WAL mode)
-  const db = new Database(DB_PATH, { readonly: true });
-  db.backup(destPath)
-    .then(() => {
-      db.close();
-      log('info', 'backup_success', { destPath, sizeBytes: statSync(destPath).size });
-      pruneOldBackups();
-    })
-    .catch((err) => {
-      db.close();
-      log('error', 'backup_failed', { error: err.message });
-      process.exit(1);
-    });
-}
-
 function pruneOldBackups() {
   const files = readdirSync(BACKUP_DIR)
     .filter((f) => f.startsWith('essays-') && f.endsWith('.db'))
     .map((f) => ({ name: f, mtime: statSync(join(BACKUP_DIR, f)).mtimeMs }))
-    .sort((a, b) => b.mtime - a.mtime); // newest first
+    .sort((a, b) => b.mtime - a.mtime);
 
   const toDelete = files.slice(MAX_BACKUPS);
   for (const f of toDelete) {
@@ -60,4 +40,32 @@ function pruneOldBackups() {
   }
 }
 
-run();
+/**
+ * Executa um backup online do SQLite (seguro mesmo com writes simultâneos em WAL mode).
+ * Retorna o caminho do arquivo de backup criado.
+ */
+export async function runBackup() {
+  mkdirSync(BACKUP_DIR, { recursive: true });
+
+  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const destPath = join(BACKUP_DIR, `essays-${ts}.db`);
+
+  const db = new Database(DB_PATH, { readonly: true });
+  try {
+    await db.backup(destPath);
+    const sizeBytes = statSync(destPath).size;
+    log('info', 'backup_success', { destPath, sizeBytes });
+    pruneOldBackups();
+    return destPath;
+  } finally {
+    db.close();
+  }
+}
+
+// Execução direta via CLI
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  runBackup().catch((err) => {
+    log('error', 'backup_failed', { error: err.message });
+    process.exit(1);
+  });
+}

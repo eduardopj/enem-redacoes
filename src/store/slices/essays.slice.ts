@@ -1,4 +1,5 @@
-import { pushTeacherEvalToBackend } from '@/services/sync/sync-essays';
+import { backendEssayRepository } from '@/repositories/BackendEssayRepository';
+import { AtividadeStatus, ConfidenceLevel, EssayInputMode, EssaySourceType, EssayStatus } from '@/types/enums';
 import type { Atividade } from '@/types/app';
 import { generateId } from '@/utils/id';
 import { StateCreator } from 'zustand';
@@ -26,16 +27,16 @@ export const createEssaysSlice: StateCreator<AppState, [['zustand/persist', unkn
             teacherId,
             studentId,
             themeTitle: input.themeTitle,
-            inputMode: input.inputMode ?? 'manuscrita',
+            inputMode: input.inputMode ?? EssayInputMode.Manuscrita,
             essayText: input.essayText,
             imageName: input.imageName,
             imageUri: input.imageUri,
             imageMimeType: input.imageMimeType,
             documentName: input.documentName,
             documentUri: input.documentUri,
-            status: 'pendente',
-            sourceType: input.imageUri ? 'image' : 'document',
-            confidenceLevel: 'media',
+            status: EssayStatus.Pendente,
+            sourceType: input.imageUri ? EssaySourceType.Image : EssaySourceType.Document,
+            confidenceLevel: ConfidenceLevel.Media,
             reviewRequired: false,
             submittedByStudent,
             correctionAttempts: 0,
@@ -92,7 +93,7 @@ export const createEssaysSlice: StateCreator<AppState, [['zustand/persist', unkn
             : essay
         ),
       }));
-      pushTeacherEvalToBackend(essayId, teacherScore, teacherNote, get().backendToken ?? undefined).catch(() => {});
+      backendEssayRepository.pushTeacherEval(essayId, teacherScore, teacherNote, get().backendToken ?? undefined).catch(() => {});
     },
 
     markEssayTeacherViewed: (essayId) =>
@@ -103,6 +104,26 @@ export const createEssaysSlice: StateCreator<AppState, [['zustand/persist', unkn
             : essay
         ),
       })),
+
+    // Called once on hydration. Any essay still in 'processando' was interrupted
+    // when the app was killed — reset to 'pendente' so the user can retry.
+    recoverStuckEssays: () =>
+      set((state) => {
+        if (!state.essays.some((e) => e.status === EssayStatus.Processando)) return {};
+        return {
+          essays: state.essays.map((e) =>
+            e.status === EssayStatus.Processando
+              ? {
+                  ...e,
+                  status: EssayStatus.Pendente,
+                  errorMessage: 'Correção interrompida. Toque em "Corrigir com IA" para tentar novamente.',
+                  feedback: undefined,
+                  updatedAt: new Date().toISOString(),
+                }
+              : e
+          ),
+        };
+      }),
 
     addAtividade: (input) => {
       const teacher = get().currentTeacher;
@@ -116,7 +137,7 @@ export const createEssaysSlice: StateCreator<AppState, [['zustand/persist', unkn
         description: input.description?.trim() || undefined,
         dueDate: input.dueDate || undefined,
         createdAt: new Date().toISOString(),
-        status: 'ativa',
+        status: AtividadeStatus.Ativa,
       };
       set((state) => ({ atividades: [...state.atividades, nova] }));
       return id;
@@ -125,7 +146,7 @@ export const createEssaysSlice: StateCreator<AppState, [['zustand/persist', unkn
     encerrarAtividade: (id) =>
       set((state) => ({
         atividades: state.atividades.map((a) =>
-          a.id === id ? { ...a, status: 'encerrada' } : a
+          a.id === id ? { ...a, status: AtividadeStatus.Encerrada } : a
         ),
       })),
   });

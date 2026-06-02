@@ -54,6 +54,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   textWrap: { flex: 1, gap: 2 },
-  title: { fontSize: 14, fontWeight: '700', lineHeight: 19 },
-  description: { fontSize: 12, lineHeight: 17 },
+  title: { fontSize: 15, fontWeight: '700', lineHeight: 21 },
+  description: { fontSize: 14, lineHeight: 21 },
 });

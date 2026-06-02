@@ -54,7 +54,7 @@ export function Skeleton({
   style,
   shimmer,
 }: SkeletonProps) {
-  const { colors } = useAppTheme();
+  const { colors, isDark } = useAppTheme();
 
   const localShimmer = useRef(new Animated.Value(0)).current;
   const activeShimmer = shimmer ?? localShimmer;
@@ -78,6 +78,8 @@ export function Skeleton({
     outputRange: [-300, 300],
   });
 
+  const shimmerBg = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.72)';
+
   return (
     <View
       accessibilityLabel="Carregando"
@@ -88,12 +90,11 @@ export function Skeleton({
         style,
       ]}
     >
-      {/* Barra de shimmer deslizando */}
       <Animated.View
         style={[
           StyleSheet.absoluteFill,
           styles.shimmer,
-          { transform: [{ translateX }] },
+          { transform: [{ translateX }], backgroundColor: shimmerBg },
         ]}
       />
     </View>
@@ -355,7 +356,6 @@ const styles = StyleSheet.create({
   },
   shimmer: {
     width: 120,
-    backgroundColor: 'rgba(255,255,255,0.22)',
   },
   page: {
     gap: 14,
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     gap: 12,
-    shadowColor: '#101828',
+    shadowColor: '#09090B',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,

@@ -15,11 +15,16 @@ module.exports = {
     {
       name: 'enem-backend',
       script: './src/server.js',
+      // tsx ESM loader resolves TypeScript imports in src/trpc/ at runtime
+      interpreter_args: '--import tsx/esm',
 
-      // Cluster mode: one worker per CPU core (auto-detected)
-      // Adjust to a fixed number (e.g. instances: 2) if OpenAI rate limits become an issue
-      instances: 'max',
-      exec_mode: 'cluster',
+      // Fork mode: reliable with interpreter_args + tsx.
+      // On multi-core servers, run multiple instances (e.g. instances: 4) and
+      // place Nginx upstream in front — each instance listens on the same port
+      // via SO_REUSEPORT (Linux kernel balances requests across forks).
+      // On this single-vCPU Droplet, instances: 1 is correct.
+      instances: 1,
+      exec_mode: 'fork',
 
       // Restart if memory exceeds 500 MB (catches memory leaks)
       max_memory_restart: '500M',
@@ -27,12 +32,19 @@ module.exports = {
       // Give the graceful shutdown handler time to drain the correction queue
       kill_timeout: 160000,
 
+      // Retry policy: up to 10 restarts with exponential backoff
+      max_restarts: 10,
+      restart_delay: 4000,
+      exp_backoff_restart_delay: 100,
+
       // Wait for process.send('ready') before marking as online
       wait_ready: true,
       listen_timeout: 15000,
 
       // Merge all worker logs into a single file (easier to read with pm2 logs)
       merge_logs: true,
+      error_file: '/var/log/enem-backend/error.log',
+      out_file: '/var/log/enem-backend/out.log',
 
       env: {
         NODE_ENV: 'production',

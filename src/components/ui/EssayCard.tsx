@@ -1,6 +1,5 @@
-import { COMP_COLORS, formatRelativeDate } from '@/utils/analytics';
+import { formatRelativeDate, getScoreColor } from '@/utils/analytics';
 import { useAppTheme } from '@/theme/ThemeContext';
-import { theme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { StatusBadge } from './StatusBadge';
@@ -19,68 +18,36 @@ type EssayCardProps = {
   competencies?: Competencies;
   createdAt?: string;
   correctedAt?: string;
+  hasError?: boolean;
   onPress?: () => void;
   onDelete?: () => void;
 };
-
-const COMP_LABELS = ['C1', 'C2', 'C3', 'C4', 'C5'];
-
-function MiniCompBars({ competencies }: { competencies: Competencies }) {
-  const compColors = [COMP_COLORS.c1, COMP_COLORS.c2, COMP_COLORS.c3, COMP_COLORS.c4, COMP_COLORS.c5];
-  const vals = [competencies.c1, competencies.c2, competencies.c3, competencies.c4, competencies.c5];
-  return (
-    <View style={barStyles.wrap}>
-      {vals.map((v, i) => (
-        <View key={i} style={barStyles.col}>
-          <Text style={[barStyles.scoreLabel, { color: compColors[i] }]}>{v}</Text>
-          <View style={[barStyles.track, { backgroundColor: compColors[i] + '18' }]}>
-            <View style={[barStyles.fill, { height: `${(v / 200) * 100}%`, backgroundColor: compColors[i] }]} />
-          </View>
-          <Text style={[barStyles.label, { color: compColors[i] }]}>{COMP_LABELS[i]}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-const barStyles = StyleSheet.create({
-  wrap: { flexDirection: 'row', gap: 8, alignItems: 'flex-end', height: 48, marginTop: 4 },
-  col: { flex: 1, alignItems: 'center', gap: 2 },
-  track: { width: '100%', height: 24, borderRadius: 4, justifyContent: 'flex-end', overflow: 'hidden' },
-  fill: { width: '100%', borderRadius: 4 },
-  label: { fontSize: 9, fontWeight: '700', letterSpacing: 0.2 },
-  scoreLabel: { fontSize: 10, fontWeight: '700', lineHeight: 12 },
-});
 
 export function EssayCard({
   studentName,
   themeTitle,
   status,
   totalScore,
-  competencies,
   createdAt,
   correctedAt,
+  hasError,
   onPress,
   onDelete,
 }: EssayCardProps) {
   const { colors } = useAppTheme();
 
-  const scoreColor =
-    typeof totalScore === 'number'
-      ? totalScore >= 900 ? colors.success
-        : totalScore >= 550 ? colors.accent
-        : totalScore >= 380 ? colors.warning
-        : colors.danger
-      : colors.mutedText;
+  const scoreColor = typeof totalScore === 'number'
+    ? getScoreColor(totalScore, colors)
+    : colors.mutedText;
 
   const accentColor =
-    status === 'corrigida' && typeof totalScore === 'number' ? scoreColor
+    hasError ? colors.danger
+    : status === 'corrigida' && typeof totalScore === 'number' ? scoreColor
     : status === 'processando' ? colors.info
     : colors.warning;
 
   const displayDate = correctedAt ?? createdAt;
   const relDate = displayDate ? formatRelativeDate(displayDate) : null;
-  const dateLabel = correctedAt ? 'Corrigida' : 'Enviada';
 
   const initials = studentName
     .split(' ')
@@ -90,108 +57,87 @@ export function EssayCard({
     .join('')
     .toUpperCase();
 
-  const showCompBars = status === 'corrigida' && competencies;
-
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <View style={[styles.accentStrip, { backgroundColor: accentColor }]} />
-
-      <Pressable onPress={onPress} style={styles.inner}>
-        <View style={styles.topRow}>
-          <View style={[styles.avatar, { backgroundColor: accentColor + '14' }]}>
-            <Text style={[styles.avatarText, { color: accentColor }]}>{initials}</Text>
-          </View>
-
-          <View style={styles.topInfo}>
-            <Text style={[styles.studentName, { color: colors.text }]}>{studentName}</Text>
-            <Text style={[styles.themeTitle, { color: colors.mutedText }]} numberOfLines={1}>
-              {themeTitle}
-            </Text>
-          </View>
-
-          {status === 'corrigida' && typeof totalScore === 'number' ? (
-            <View style={[styles.scorePill, { backgroundColor: scoreColor + '12' }]}>
-              <Text style={[styles.scoreValue, { color: scoreColor }]}>{totalScore}</Text>
-              <Text style={[styles.scoreLabel, { color: scoreColor + 'AA' }]}>pts</Text>
-            </View>
-          ) : (
-            <View style={[styles.arrowWrap, { backgroundColor: colors.input }]}>
-              <Ionicons name="chevron-forward" size={15} color={colors.softText} />
-            </View>
-          )}
+    <View>
+      <Pressable onPress={onPress} style={styles.row}>
+        {/* Avatar */}
+        <View style={[styles.avatar, { backgroundColor: accentColor + '18' }]}>
+          <Text style={[styles.avatarText, { color: accentColor }]}>{initials}</Text>
         </View>
 
-        {showCompBars ? (
-          <View style={[styles.compSection, { borderTopColor: colors.border }]}>
-            <MiniCompBars competencies={competencies!} />
-          </View>
-        ) : null}
+        {/* Info */}
+        <View style={styles.info}>
+          <Text style={[styles.themeTitle, { color: colors.text }]} numberOfLines={1}>
+            {themeTitle}
+          </Text>
+          <Text style={[styles.meta, { color: colors.mutedText }]} numberOfLines={1}>
+            {studentName}{relDate ? ` · ${relDate}` : ''}
+          </Text>
+        </View>
 
-        <View style={[styles.metaRow, { borderTopColor: colors.border }]}>
+        {/* Right side */}
+        {hasError ? (
+          <View style={[styles.errorPill, { backgroundColor: colors.dangerSoft }]}>
+            <Ionicons name="alert-circle" size={12} color={colors.danger} />
+            <Text style={[styles.errorPillText, { color: colors.danger }]}>Erro</Text>
+          </View>
+        ) : status === 'corrigida' && typeof totalScore === 'number' ? (
+          <View style={[styles.scorePill, { backgroundColor: scoreColor + '14' }]}>
+            <Text style={[styles.scoreNum, { color: scoreColor }]}>{totalScore}</Text>
+          </View>
+        ) : (
           <StatusBadge status={status} />
-          {relDate ? (
-            <Text style={[styles.dateRelative, { color: colors.mutedText }]}>
-              {dateLabel} {relDate}
-            </Text>
-          ) : null}
-        </View>
+        )}
+
+        <Ionicons name="chevron-forward" size={14} color={colors.mutedText} style={styles.chevron} />
       </Pressable>
 
       {onDelete ? (
-        <Pressable
-          onPress={onDelete}
-          style={[styles.deleteButton, { backgroundColor: colors.dangerSoft }]}
-        >
-          <Ionicons name="trash-outline" size={13} color={colors.danger} />
-          <Text style={[styles.deleteLabel, { color: colors.danger }]}>Excluir</Text>
-        </Pressable>
+        <View style={styles.deleteWrap}>
+          <Pressable
+            onPress={onDelete}
+            style={[styles.deleteBtn, { backgroundColor: colors.dangerSoft }]}
+          >
+            <Ionicons name="trash-outline" size={12} color={colors.danger} />
+            <Text style={[styles.deleteText, { color: colors.danger }]}>Excluir</Text>
+          </Pressable>
+        </View>
       ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    overflow: 'hidden',
-    ...theme.shadows.card,
-  },
-  accentStrip: {
-    height: 3,
-    width: '100%',
-  },
-  inner: {
-    padding: theme.spacing.md,
-  },
-  topRow: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.sm,
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    minHeight: 60,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   avatarText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  topInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  studentName: {
     fontSize: 14,
     fontWeight: '700',
-    lineHeight: 19,
+  },
+  info: {
+    flex: 1,
+    gap: 3,
   },
   themeTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 19,
+  },
+  meta: {
     fontSize: 12,
     lineHeight: 16,
   },
@@ -200,56 +146,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     alignItems: 'center',
+    minWidth: 52,
     flexShrink: 0,
-    minWidth: 54,
   },
-  scoreValue: {
-    fontSize: 18,
+  scoreNum: {
+    fontSize: 15,
     fontWeight: '800',
-    lineHeight: 22,
+    lineHeight: 18,
   },
-  scoreLabel: {
-    fontSize: 9,
-    fontWeight: '700',
-    lineHeight: 12,
-  },
-  arrowWrap: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  compSection: {
-    paddingTop: theme.spacing.xs,
-    marginBottom: theme.spacing.xs,
-    borderTopWidth: 1,
-  },
-  metaRow: {
-    paddingTop: theme.spacing.xs,
-    borderTopWidth: 1,
+  errorPill: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-  },
-  dateRelative: {
-    fontSize: 11,
-    fontWeight: '500',
-    lineHeight: 15,
-  },
-  deleteButton: {
-    flexDirection: 'row',
-    alignSelf: 'flex-end',
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
     borderRadius: 999,
-    margin: theme.spacing.xs,
-    marginTop: 0,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    flexShrink: 0,
   },
-  deleteLabel: {
+  errorPillText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  chevron: {
+    flexShrink: 0,
+  },
+  deleteWrap: {
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    alignItems: 'flex-end',
+  },
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+  },
+  deleteText: {
     fontSize: 11,
     fontWeight: '600',
   },

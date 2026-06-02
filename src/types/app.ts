@@ -1,11 +1,15 @@
 import type { EssayCorrection } from './correction';
+import type {
+  AtividadeStatus,
+  ConfidenceLevel,
+  EssayInputMode,
+  EssaySourceType,
+  EssayStatus,
+  TurmaPeriod,
+} from './enums';
 
-export type EssayStatus =
-  | 'pendente'
-  | 'processando'
-  | 'corrigida'
-  | 'precisa_revisao'
-  | 'baixa_confiabilidade';
+// Re-export so consumers can import everything from '@/types/app' as before
+export type { AtividadeStatus, ConfidenceLevel, EssayInputMode, EssaySourceType, EssayStatus, TurmaPeriod };
 
 export type Teacher = {
   id: string;
@@ -18,7 +22,7 @@ export type Turma = {
   id: string;
   teacherId: string;
   name: string;
-  period?: 'manhã' | 'tarde' | 'noite' | 'integral';
+  period?: TurmaPeriod;
   year?: string;
   subject?: string;
   joinCode?: string;
@@ -40,10 +44,10 @@ export type Student = {
   teacherId: string;
   turmaId?: string;
   name: string;
-  className: string;    // kept for backward compat; mirrors turma.name when turmaId set
+  className: string;
   accessCode?: string;
   state?: string;
-  birthDate?: string;   // ISO date string, e.g. "2007-03-15"
+  birthDate?: string;
 };
 
 export type StudentSession = {
@@ -62,10 +66,6 @@ export type ThemeItem = {
   category: string;
 };
 
-export type EssayInputMode = 'manuscrita' | 'digitada' | 'upload';
-export type EssaySourceType = 'image' | 'document';
-export type ConfidenceLevel = 'alta' | 'media' | 'baixa';
-
 export type Atividade = {
   id: string;
   turmaId: string;
@@ -74,10 +74,9 @@ export type Atividade = {
   description?: string;
   dueDate?: string;
   createdAt: string;
-  status: 'ativa' | 'encerrada';
+  status: AtividadeStatus;
 };
 
-// Essay base fields (identity, media, status, meta)
 type EssayBase = {
   id: string;
   teacherId: string;
@@ -107,8 +106,6 @@ type EssayBase = {
   correctedAt?: string;
 };
 
-// Essay = base fields + AI correction fields (no duplication with BackendCorrectionJson)
 export type Essay = EssayBase & EssayCorrection;
 
-// Re-export for convenience
 export type { EssayCorrection };

@@ -20,6 +20,11 @@ type ButtonProps = {
   fullWidth?: boolean;
 };
 
+const DEPTH = 4;
+
+// Variants that get the Duolingo 3D floor effect
+const DEPTH_VARIANTS: ButtonVariant[] = ['primary', 'success', 'dark'];
+
 export function Button({
   title,
   onPress,
@@ -33,27 +38,48 @@ export function Button({
   fullWidth,
 }: ButtonProps) {
   const { colors } = useAppTheme();
+  const translateY = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
 
   const isDisabled = disabled || loading;
+  const hasDepth = DEPTH_VARIANTS.includes(variant);
 
   const handlePressIn = () => {
+    if (isDisabled) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Animated.spring(scale, {
-      toValue: 0.97,
-      damping: 20,
-      stiffness: 280,
-      useNativeDriver: true,
-    }).start();
+    if (hasDepth) {
+      Animated.spring(translateY, {
+        toValue: DEPTH,
+        damping: 18,
+        stiffness: 400,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.spring(scale, {
+        toValue: 0.97,
+        damping: 20,
+        stiffness: 280,
+        useNativeDriver: true,
+      }).start();
+    }
   };
 
   const handlePressOut = () => {
-    Animated.spring(scale, {
-      toValue: 1,
-      damping: 20,
-      stiffness: 280,
-      useNativeDriver: true,
-    }).start();
+    if (hasDepth) {
+      Animated.spring(translateY, {
+        toValue: 0,
+        damping: 18,
+        stiffness: 400,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.spring(scale, {
+        toValue: 1,
+        damping: 20,
+        stiffness: 280,
+        useNativeDriver: true,
+      }).start();
+    }
   };
 
   const bgColor: Record<ButtonVariant, string> = {
@@ -65,6 +91,18 @@ export function Button({
     success: colors.success,
     dark: colors.darkBlock,
     soft: colors.surfaceSoft,
+  };
+
+  // Floor color — slightly darker than the button surface
+  const floorColor: Record<ButtonVariant, string> = {
+    primary: colors.accentHover,
+    secondary: 'transparent',
+    ghost: 'transparent',
+    danger: 'transparent',
+    outline: 'transparent',
+    success: '#3D9200',
+    dark: '#000000',
+    soft: 'transparent',
   };
 
   const textColor: Record<ButtonVariant, string> = {
@@ -107,47 +145,77 @@ export function Button({
     lg: { minH: 58, px: theme.spacing.xl, fontSize: 17, iconSize: 20 },
   }[size];
 
+  const pressable = (
+    <Pressable
+      onPress={onPress}
+      disabled={isDisabled}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={[
+        styles.base,
+        {
+          backgroundColor: bgColor[variant],
+          minHeight: sizeConfig.minH,
+          paddingHorizontal: sizeConfig.px,
+          borderColor: borderColor[variant],
+          borderWidth: hasBorder ? 1 : 0,
+        },
+      ]}
+    >
+      <View style={styles.content}>
+        {loading ? (
+          <ActivityIndicator
+            size="small"
+            color={
+              variant === 'primary' || variant === 'success'
+                ? '#FFFFFF'
+                : variant === 'dark'
+                ? colors.darkBlockFg
+                : colors.accent
+            }
+          />
+        ) : (
+          <>
+            {leftIcon ? (
+              <Ionicons name={leftIcon} size={sizeConfig.iconSize} color={iconColor[variant]} />
+            ) : null}
+            <Text
+              style={[styles.label, { color: textColor[variant], fontSize: sizeConfig.fontSize }]}
+              numberOfLines={2}
+            >
+              {title}
+            </Text>
+            {rightSlot}
+          </>
+        )}
+      </View>
+    </Pressable>
+  );
+
   return (
-    <Animated.View style={[{ transform: [{ scale }] }, fullWidth && { width: '100%' }, style]}>
-      <Pressable
-        onPress={onPress}
-        disabled={isDisabled}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        style={[
-          styles.base,
-          {
-            backgroundColor: bgColor[variant],
-            minHeight: sizeConfig.minH,
-            paddingHorizontal: sizeConfig.px,
-            borderColor: borderColor[variant],
-            borderWidth: hasBorder ? 1 : 0,
-          },
-          isDisabled && styles.disabled,
-        ]}
-      >
-        <View style={styles.content}>
-          {loading ? (
-            <ActivityIndicator
-              size="small"
-              color={variant === 'primary' || variant === 'success' ? '#FFFFFF' : variant === 'dark' ? colors.darkBlockFg : colors.accent}
-            />
-          ) : (
-            <>
-              {leftIcon ? (
-                <Ionicons name={leftIcon} size={sizeConfig.iconSize} color={iconColor[variant]} />
-              ) : null}
-              <Text
-                style={[styles.label, { color: textColor[variant], fontSize: sizeConfig.fontSize }]}
-                numberOfLines={2}
-              >
-                {title}
-              </Text>
-              {rightSlot}
-            </>
-          )}
+    <Animated.View
+      style={[
+        { transform: [{ scale }] },
+        fullWidth && { width: '100%' },
+        style,
+        isDisabled && styles.disabled,
+      ]}
+    >
+      {hasDepth ? (
+        <View
+          style={{
+            backgroundColor: floorColor[variant],
+            borderRadius: 16,
+            paddingBottom: DEPTH,
+          }}
+        >
+          <Animated.View style={{ transform: [{ translateY }] }}>
+            {pressable}
+          </Animated.View>
         </View>
-      </Pressable>
+      ) : (
+        pressable
+      )}
     </Animated.View>
   );
 }

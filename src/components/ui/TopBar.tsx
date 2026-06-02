@@ -59,7 +59,16 @@ export function TopBar({ showHomeButton = true, showBack = false, title }: TopBa
           <Text style={[styles.pageTitle, { color: colors.text }]} numberOfLines={1}>
             {title}
           </Text>
+        ) : showBack ? (
+          // Em sub-telas: logo é marca, não botão — home já está no left
+          <View style={styles.logoBtn}>
+            <View style={[styles.logoIcon, { backgroundColor: colors.accent }]}>
+              <Ionicons name="school" size={13} color="#FFFFFF" />
+            </View>
+            <Text style={[styles.logoText, { color: colors.mutedText }]}>ENEM IA</Text>
+          </View>
         ) : (
+          // Em telas raiz: logo navega para home
           <Pressable
             onPress={() => router.replace('/dashboard')}
             style={styles.logoBtn}

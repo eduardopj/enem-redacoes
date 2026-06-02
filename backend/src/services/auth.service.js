@@ -1,6 +1,20 @@
 import { createHash, pbkdf2Sync, randomBytes, timingSafeEqual } from 'node:crypto';
 import { rmSync } from 'node:fs';
-import db from './database.js';
+import {
+  clearTeacherResetToken,
+  createTeacher,
+  deleteTeacherCascade,
+  findTeacherByEmail,
+  findTeacherByToken,
+  findTeacherResetInfo,
+  findTeacherTokenInfo,
+  getTeacherPushTokenById,
+  revokeTeacherToken,
+  saveTeacherPushToken,
+  updateTeacherPasswordHash,
+  updateTeacherResetToken,
+  updateTeacherToken,
+} from '../repositories/teacher.repository.js';
 
 const TOKEN_TTL_MS    = 365 * 24 * 60 * 60 * 1000; // 1 year
 const RENEW_WITHIN_MS =   7 * 24 * 60 * 60 * 1000; // renew if expiring within 7 days
@@ -55,9 +69,7 @@ function generateToken() {
  * only when the teacher has NO stored hash (backward-compat path, legacy rows).
  */
 export function registerTeacher(teacherId, teacherEmail, teacherName, clientPasswordHash) {
-  const existing = db
-    .prepare('SELECT token, expiresAt, passwordHash FROM teachers WHERE teacherId = ?')
-    .get(teacherId);
+  const existing = findTeacherTokenInfo(teacherId);
 
   if (existing) {
     // Password verification when both sides have a hash
@@ -66,8 +78,7 @@ export function registerTeacher(teacherId, teacherEmail, teacherName, clientPass
     }
     // Legacy row: no stored hash yet — store it now if provided
     if (!existing.passwordHash && clientPasswordHash) {
-      db.prepare('UPDATE teachers SET passwordHash = ? WHERE teacherId = ?')
-        .run(hashPasswordForStorage(clientPasswordHash), teacherId);
+      updateTeacherPasswordHash(teacherId, hashPasswordForStorage(clientPasswordHash));
     }
 
     // Check token expiry
@@ -80,8 +91,7 @@ export function registerTeacher(teacherId, teacherEmail, teacherName, clientPass
     // Renew expiring token
     const token      = generateToken();
     const newExpires = new Date(Date.now() + TOKEN_TTL_MS).toISOString();
-    db.prepare('UPDATE teachers SET token = ?, expiresAt = ?, revokedAt = NULL WHERE teacherId = ?')
-      .run(token, newExpires, teacherId);
+    updateTeacherToken(teacherId, token, newExpires);
     return token;
   }
 
@@ -89,9 +99,7 @@ export function registerTeacher(teacherId, teacherEmail, teacherName, clientPass
   const token      = generateToken();
   const expiresAt  = new Date(Date.now() + TOKEN_TTL_MS).toISOString();
   const storedHash = clientPasswordHash ? hashPasswordForStorage(clientPasswordHash) : null;
-  db.prepare(
-    'INSERT INTO teachers (teacherId, teacherEmail, teacherName, token, expiresAt, passwordHash) VALUES (?, ?, ?, ?, ?, ?)'
-  ).run(teacherId, teacherEmail ?? '', teacherName ?? '', token, expiresAt, storedHash);
+  createTeacher({ teacherId, teacherEmail, teacherName, token, expiresAt, passwordHash: storedHash });
   return token;
 }
 
@@ -100,9 +108,7 @@ export function registerTeacher(teacherId, teacherEmail, teacherName, clientPass
  * Returns { token, teacherId } on success, or null on failure.
  */
 export function loginTeacher(teacherEmail, clientPasswordHash) {
-  const teacher = db
-    .prepare('SELECT teacherId, token, expiresAt, passwordHash, revokedAt FROM teachers WHERE LOWER(teacherEmail) = LOWER(?)')
-    .get(teacherEmail.trim());
+  const teacher = findTeacherByEmail(teacherEmail);
 
   if (!teacher) return null;
   if (!teacher.passwordHash) return null; // teacher registered before passwords — must re-register
@@ -115,8 +121,7 @@ export function loginTeacher(teacherEmail, clientPasswordHash) {
   if (needsRenew) {
     const token     = generateToken();
     const expiresAt = new Date(Date.now() + TOKEN_TTL_MS).toISOString();
-    db.prepare('UPDATE teachers SET token = ?, expiresAt = ?, revokedAt = NULL WHERE teacherId = ?')
-      .run(token, expiresAt, teacher.teacherId);
+    updateTeacherToken(teacher.teacherId, token, expiresAt);
     return { token, teacherId: teacher.teacherId };
   }
 
@@ -127,8 +132,7 @@ export function loginTeacher(teacherEmail, clientPasswordHash) {
  * Revokes a token immediately (server-side logout).
  */
 export function revokeToken(token) {
-  db.prepare('UPDATE teachers SET revokedAt = ? WHERE token = ?')
-    .run(new Date().toISOString(), token);
+  revokeTeacherToken(token);
 }
 
 /**
@@ -136,11 +140,9 @@ export function revokeToken(token) {
  */
 export function validateToken(token) {
   if (!token || token.length !== 64) return null;
-  const teacher = db
-    .prepare('SELECT teacherId, teacherEmail, expiresAt, revokedAt FROM teachers WHERE token = ?')
-    .get(token);
+  const teacher = findTeacherByToken(token);
   if (!teacher) return null;
-  if (teacher.revokedAt) return null; // explicitly revoked (server-side logout)
+  if (teacher.revokedAt) return null;
   if (teacher.expiresAt && new Date(teacher.expiresAt) < new Date()) return null;
   return { teacherId: teacher.teacherId, teacherEmail: teacher.teacherEmail };
 }
@@ -156,9 +158,7 @@ const RESET_TTL_MS = 15 * 60 * 1000; // 15 minutes
  * Always returns true-ish to prevent e-mail enumeration — handle null silently.
  */
 export function forgotPassword(teacherEmail) {
-  const teacher = db
-    .prepare('SELECT teacherId FROM teachers WHERE LOWER(teacherEmail) = LOWER(?)')
-    .get(teacherEmail.trim());
+  const teacher = findTeacherByEmail(teacherEmail);
 
   if (!teacher) return null; // email not registered — caller should NOT reveal this
 
@@ -166,8 +166,7 @@ export function forgotPassword(teacherEmail) {
   const codeHash = createHash('sha256').update(code).digest('hex');
   const expiresAt = new Date(Date.now() + RESET_TTL_MS).toISOString();
 
-  db.prepare('UPDATE teachers SET resetToken = ?, resetTokenExpiresAt = ? WHERE teacherId = ?')
-    .run(codeHash, expiresAt, teacher.teacherId);
+  updateTeacherResetToken(teacher.teacherId, codeHash, expiresAt);
 
   return { teacherEmail: teacherEmail.trim().toLowerCase(), code };
 }
@@ -177,44 +176,30 @@ export function forgotPassword(teacherEmail) {
  * Returns true on success, false on invalid/expired code.
  */
 export function resetPassword(teacherEmail, code, newClientHash) {
-  const teacher = db
-    .prepare('SELECT teacherId, resetToken, resetTokenExpiresAt FROM teachers WHERE LOWER(teacherEmail) = LOWER(?)')
-    .get(teacherEmail.trim());
+  const teacher = findTeacherByEmail(teacherEmail);
+  if (!teacher) return false;
 
-  if (!teacher?.resetToken || !teacher?.resetTokenExpiresAt) return false;
-  if (new Date(teacher.resetTokenExpiresAt) < new Date()) return false;
+  const resetInfo = findTeacherResetInfo(teacher.teacherId);
+  if (!resetInfo?.resetToken || !resetInfo?.resetTokenExpiresAt) return false;
+  if (new Date(resetInfo.resetTokenExpiresAt) < new Date()) return false;
 
-  const codeHash   = createHash('sha256').update(code).digest('hex');
-  const storedBuf  = Buffer.from(teacher.resetToken, 'hex');
+  const codeHash    = createHash('sha256').update(code).digest('hex');
+  const storedBuf   = Buffer.from(resetInfo.resetToken, 'hex');
   const incomingBuf = Buffer.from(codeHash, 'hex');
   if (storedBuf.length !== incomingBuf.length) return false;
   if (!timingSafeEqual(storedBuf, incomingBuf)) return false;
 
-  db.prepare(
-    'UPDATE teachers SET passwordHash = ?, resetToken = NULL, resetTokenExpiresAt = NULL WHERE teacherId = ?'
-  ).run(hashPasswordForStorage(newClientHash), teacher.teacherId);
-
+  clearTeacherResetToken(teacher.teacherId, hashPasswordForStorage(newClientHash));
   return true;
 }
 
 /**
  * Permanently deletes a teacher account and all associated data (essays + images).
- * Runs DB deletes in a transaction; image file removal is best-effort after commit.
+ * DB deletes run atomically in a transaction; image file removal is best-effort after commit.
  */
 export function deleteTeacherAccount(teacherId) {
-  // Collect image paths before deletion so we can clean up files after the DB commit
-  const imagePaths = db
-    .prepare('SELECT imagePath FROM essays WHERE teacherId = ? AND imagePath IS NOT NULL')
-    .all(teacherId)
-    .map((r) => r.imagePath);
+  const imagePaths = deleteTeacherCascade(teacherId);
 
-  db.transaction(() => {
-    db.prepare('DELETE FROM essays WHERE teacherId = ?').run(teacherId);
-    db.prepare('DELETE FROM turmas WHERE teacherId = ?').run(teacherId);
-    db.prepare('DELETE FROM teachers WHERE teacherId = ?').run(teacherId);
-  })();
-
-  // Best-effort file cleanup — DB is already committed so we don't throw on failure
   for (const p of imagePaths) {
     try { rmSync(p, { force: true }); } catch (_) { /* ignore */ }
   }
@@ -224,14 +209,12 @@ export function deleteTeacherAccount(teacherId) {
  * Salva ou atualiza o push token Expo de um professor.
  */
 export function savePushToken(teacherId, pushToken) {
-  db.prepare('UPDATE teachers SET pushToken = ? WHERE teacherId = ?')
-    .run(pushToken ?? null, teacherId);
+  saveTeacherPushToken(teacherId, pushToken);
 }
 
 /**
  * Retorna o push token Expo do professor, ou null se não registrado.
  */
 export function getTeacherPushToken(teacherId) {
-  const row = db.prepare('SELECT pushToken FROM teachers WHERE teacherId = ?').get(teacherId);
-  return row?.pushToken ?? null;
+  return getTeacherPushTokenById(teacherId);
 }

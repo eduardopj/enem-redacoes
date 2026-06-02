@@ -84,9 +84,16 @@ export type TurmasSlice = {
   generateTurmaJoinCode: (turmaId: string) => string | null;
 };
 
+export type UpdateStudentInput = {
+  name?: string;
+  turmaId?: string | null;
+  className?: string;
+};
+
 export type StudentsSlice = {
   students: Student[];
   addStudent: (input: CreateStudentInput) => void;
+  updateStudent: (studentId: string, data: UpdateStudentInput) => void;
   deleteStudent: (studentId: string) => void;
   generateStudentCode: (studentId: string) => string | null;
 };
@@ -107,6 +114,7 @@ export type EssaysSlice = {
   updateEssayTeacherEval: (essayId: string, teacherScore: number | undefined, teacherNote: string) => void;
   updateEssayCorrection: (essayId: string, data: BackendCorrectionJson) => void;
   markEssayTeacherViewed: (essayId: string) => void;
+  recoverStuckEssays: () => void;
   addAtividade: (input: CreateAtividadeInput) => string | null;
   encerrarAtividade: (id: string) => void;
 };

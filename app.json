@@ -11,7 +11,21 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.eduardopj.enemredacoes",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "deploymentTarget": "16.0",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "O app precisa acessar sua galeria para você escolher a foto da redação.",
+        "NSPhotoLibraryAddUsageDescription": "O app pode salvar fotos da redação na sua galeria.",
+        "NSMicrophoneUsageDescription": "O app pode precisar do microfone ao usar a câmera para fotografar redações.",
+        "NSAppTransportSecurity": {
+          "NSExceptionDomains": {
+            "146.190.47.67": {
+              "NSExceptionAllowsInsecureHTTPLoads": true,
+              "NSIncludesSubdomains": false
+            }
+          }
+        }
+      }
     },
     "android": {
       "edgeToEdgeEnabled": false,
@@ -21,7 +35,7 @@
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#4E76F8"
+        "backgroundColor": "#7C3AED"
       },
       "permissions": [
         "android.permission.CAMERA",
@@ -34,7 +48,7 @@
       ]
     },
     "androidNavigationBar": {
-      "backgroundColor": "#F7F4ED",
+      "backgroundColor": "#FFFFFF",
       "barStyle": "dark-content"
     },
     "web": {
@@ -46,7 +60,7 @@
         "expo-notifications",
         {
           "icon": "./assets/icon.png",
-          "color": "#4E76F8",
+          "color": "#7C3AED",
           "defaultChannel": "default"
         }
       ],
@@ -58,7 +72,12 @@
       ],
       "expo-build-properties",
       "expo-font",
-      "@sentry/react-native/expo"
+      [
+        "@sentry/react-native/expo",
+        {
+          "uploadSourceMaps": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -66,10 +85,10 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "e989326e-613c-4fd5-86ec-7b49ddae7b09"
+        "projectId": "be7dce9e-ec66-49d2-a774-58187eaf86ae"
       },
       "privacyPolicyUrl": "https://enemredacoes.app/privacidade"
     },
-    "owner": "eduardopj"
+    "owner": "eduardopjr"
   }
 }

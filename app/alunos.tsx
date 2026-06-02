@@ -16,7 +16,7 @@ import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useToast } from '@/components/ui/Toast';
 
 export default function AlunosScreen() {
@@ -81,8 +81,21 @@ export default function AlunosScreen() {
   }, [teacherStudents, search, selectedTurmaId]);
 
   const handleDelete = (studentId: string, studentName: string) => {
-    deleteStudent(studentId);
-    showToast({ message: `${studentName} removido`, type: 'success' });
+    Alert.alert(
+      'Excluir aluno',
+      `Tem certeza que deseja excluir ${studentName}? As redações deste aluno também serão removidas.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: () => {
+            deleteStudent(studentId);
+            showToast({ message: `${studentName} removido`, type: 'success' });
+          },
+        },
+      ]
+    );
   };
 
   const hasStudents = teacherStudents.length > 0;
@@ -228,6 +241,7 @@ export default function AlunosScreen() {
                       essayCount={stats?.count}
                       trend={stats?.trend}
                       onPress={() => router.push(`/aluno/${student.id}`)}
+                      onEdit={() => router.push(`/editar-aluno/${student.id}` as any)}
                       onDelete={() => handleDelete(student.id, student.name)}
                     />
                   </StaggerItem>

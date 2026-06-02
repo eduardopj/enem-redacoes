@@ -17,6 +17,21 @@ export const env = {
   smtpUser: process.env.SMTP_USER || '',
   smtpPass: process.env.SMTP_PASS || '',
   smtpFrom: process.env.SMTP_FROM || 'ENEM IA <no-reply@enemredacoes.app>',
+
+  // Optional Redis URL — when set, rate limiters use Redis instead of in-memory
+  // Example: redis://localhost:6379 or rediss://user:pass@host:6380
+  redisUrl: process.env.REDIS_URL || '',
+
+  // Optional S3 image storage — when set, images are uploaded to S3 instead of local filesystem
+  // Requires: S3_BUCKET, S3_REGION, and either IAM role or AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY
+  s3Bucket:    process.env.S3_BUCKET    || '',
+  s3Region:    process.env.S3_REGION    || 'us-east-1',
+  s3KeyPrefix: process.env.S3_KEY_PREFIX || 'essays/',
+  // Optional CloudFront domain — when set, public image URLs use CDN instead of S3 directly
+  cdnDomain:   process.env.CDN_DOMAIN   || '',
+
+  // PostgreSQL connection — when set, use PostgreSQL instead of SQLite (requires migration)
+  databaseUrl: process.env.DATABASE_URL || '',
 };
 
 if (!env.openAiApiKey) {

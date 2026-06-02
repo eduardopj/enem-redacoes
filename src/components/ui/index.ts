@@ -28,6 +28,7 @@ export * from './ScoreCelebration';
 export * from './ScoreSummaryCard';
 export * from './ScreenContainer';
 export * from './SelectedChip';
+export * from './Sparkline';
 export * from './SectionBlock';
 export * from './SectionHeader';
 export * from './Skeleton';

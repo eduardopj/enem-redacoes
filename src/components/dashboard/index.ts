@@ -1,5 +1,14 @@
 export { ClassKpi } from './ClassKpi';
+export { ClassPerformance } from './ClassPerformance';
+export { ContextualAction } from './ContextualAction';
+export type { ContextualActionData } from './ContextualAction';
+export { InboxCard } from './InboxCard';
 export { InsightMini } from './InsightMini';
 export { KpiCard } from './KpiCard';
+export { LastEssayCard } from './LastEssayCard';
 export { MiniBarChart } from './MiniBarChart';
+export { MyTurmasCard } from './MyTurmasCard';
+export type { TurmaSnapshot } from './MyTurmasCard';
 export { OnboardingStep } from './OnboardingStep';
+export { PedagogicalPanel } from './PedagogicalPanel';
+export { TopStudents } from './TopStudents';

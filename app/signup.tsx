@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   logoWrap: {
     width: 68, height: 68, borderRadius: 22,
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#3454D1', shadowOffset: { width: 0, height: 6 },
+    shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25, shadowRadius: 14, elevation: 6,
   },
   eyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 2, textTransform: 'uppercase' },

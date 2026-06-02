@@ -1,11 +1,3 @@
-/**
- * EvolutionBanner — detecta quando o aluno melhorou a nota em relação
- * à última redação corrigida no mesmo tema (ou qualquer tema) e exibe
- * um banner motivacional com animação de entrada.
- *
- * Uso: coloque antes do Card principal na tela de resultado.
- */
-import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Essay } from '@/types/app';
 import { Ionicons } from '@expo/vector-icons';
@@ -41,13 +33,15 @@ export function EvolutionBanner({ currentEssay, allEssays }: Props) {
   const { colors } = useAppTheme();
   const prevScore = getPreviousScore(currentEssay, allEssays);
   const currentScore = currentEssay.totalScore ?? 0;
+  const diff = prevScore != null ? currentScore - prevScore : null;
+  const same = diff === 0;
 
   const ty = useRef(new Animated.Value(-20)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.94)).current;
 
   useEffect(() => {
-    if (prevScore == null) return;
+    if (same) return;
     Animated.parallel([
       Animated.spring(ty, { toValue: 0, damping: 16, stiffness: 160, useNativeDriver: true }),
       Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }),
@@ -55,18 +49,29 @@ export function EvolutionBanner({ currentEssay, allEssays }: Props) {
     ]).start();
   }, []);
 
-  if (prevScore == null) return null;
+  if (same) return null;
 
-  const diff = currentScore - prevScore;
-  const improved = diff > 0;
-  const same = diff === 0;
+  const animStyle = { transform: [{ translateY: ty }, { scale }], opacity };
 
-  if (same) return null; // sem mudança — sem banner
+  if (prevScore == null) {
+    return (
+      <Animated.View
+        style={[styles.banner, { backgroundColor: colors.success + '14', borderColor: colors.success + '40' }, animStyle]}
+      >
+        <View style={[styles.iconCircle, { backgroundColor: colors.success + '22' }]}>
+          <Ionicons name="star" size={20} color={colors.success} />
+        </View>
+        <View style={styles.textCol}>
+          <Text style={[styles.diffLabel, { color: colors.success }]}>Primeira redação corrigida!</Text>
+          <Text style={[styles.sub, { color: colors.softText }]}>O começo de uma grande jornada. Continue assim!</Text>
+        </View>
+      </Animated.View>
+    );
+  }
 
+  const improved = diff! > 0;
   const accent = improved ? colors.success : colors.warning;
-  const icon: keyof typeof Ionicons.glyphMap = improved
-    ? 'trending-up'
-    : 'trending-down';
+  const icon: keyof typeof Ionicons.glyphMap = improved ? 'trending-up' : 'trending-down';
   const label = improved
     ? `+${diff} pontos desde a última redação`
     : `${diff} pontos desde a última redação`;
@@ -76,15 +81,7 @@ export function EvolutionBanner({ currentEssay, allEssays }: Props) {
 
   return (
     <Animated.View
-      style={[
-        styles.banner,
-        {
-          backgroundColor: accent + '14',
-          borderColor: accent + '40',
-          transform: [{ translateY: ty }, { scale }],
-          opacity,
-        },
-      ]}
+      style={[styles.banner, { backgroundColor: accent + '14', borderColor: accent + '40' }, animStyle]}
     >
       <View style={[styles.iconCircle, { backgroundColor: accent + '22' }]}>
         <Ionicons name={icon} size={20} color={accent} />
