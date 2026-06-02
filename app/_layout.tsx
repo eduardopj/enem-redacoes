@@ -1,4 +1,6 @@
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { OfflineBanner } from '@/components/ui/OfflineBanner';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { ToastProvider } from '@/components/ui/Toast';
 import { setUnauthorizedHandler } from '@/services/api';
 import { useAppStore } from '@/store/app-store';
@@ -18,13 +20,98 @@ import {
 } from '@expo-google-fonts/inter';
 import { useFonts } from 'expo-font';
 import * as Notifications from 'expo-notifications';
+import * as SplashScreen from 'expo-splash-screen';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef } from 'react';
-import { Alert, LogBox, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import Animated, {
+  Easing,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { Alert, LogBox, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
+  const opacity = useSharedValue(0);
+  const scale = useSharedValue(0.82);
+  const containerOpacity = useSharedValue(1);
+
+  useEffect(() => {
+    opacity.value = withSpring(1, { damping: 14, stiffness: 120 });
+    scale.value = withSpring(1, { damping: 14, stiffness: 120 });
+
+    containerOpacity.value = withDelay(
+      700,
+      withTiming(0, { duration: 320, easing: Easing.out(Easing.ease) }, (done) => {
+        if (done) runOnJS(onFinish)();
+      })
+    );
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const logoStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  const containerStyle = useAnimatedStyle(() => ({
+    opacity: containerOpacity.value,
+  }));
+
+  return (
+    <Animated.View style={[splashStyles.container, containerStyle]}>
+      <Animated.View style={[splashStyles.inner, logoStyle]}>
+        <View style={splashStyles.iconBox}>
+          <Text style={splashStyles.iconEmoji}>✏️</Text>
+        </View>
+        <Text style={splashStyles.title}>ENEM IA</Text>
+        <Text style={splashStyles.subtitle}>Correção inteligente de redações</Text>
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
+const splashStyles = StyleSheet.create({
+  container: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#7C3AED',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 999,
+  },
+  inner: { alignItems: 'center', gap: 16 },
+  iconBox: {
+    width: 96,
+    height: 96,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconEmoji: { fontSize: 48 },
+  title: {
+    fontFamily: 'Nunito_900Black',
+    fontSize: 36,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.75)',
+    letterSpacing: 0.1,
+  },
+});
 
 const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
 let sentryInitialized = false;
@@ -49,6 +136,7 @@ LogBox.ignoreLogs([
 
 function ThemedStack() {
   const { colors, isDark } = useAppTheme();
+  const { isOnline } = useOfflineSync();
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} translucent={false} />
@@ -60,6 +148,7 @@ function ThemedStack() {
           gestureEnabled: true,
         }}
       />
+      <OfflineBanner visible={!isOnline} />
     </>
   );
 }
@@ -71,6 +160,7 @@ function RootLayout() {
   const sentryConsent = useAppStore((state) => state.sentryConsent);
   const setSentryConsent = useAppStore((state) => state.setSentryConsent);
   const recoverStuckEssays = useAppStore((state) => state.recoverStuckEssays);
+  const [splashDone, setSplashDone] = useState(false);
   const [fontsLoaded] = useFonts({
     Nunito_400Regular,
     Nunito_600SemiBold,
@@ -82,6 +172,8 @@ function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
+
+  const handleSplashFinish = useCallback(() => setSplashDone(true), []);
 
   const notificationListener = useRef<Notifications.EventSubscription | null>(null);
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
@@ -132,7 +224,12 @@ function RootLayout() {
     };
   }, []);
 
-  if (!fontsLoaded) return <View style={{ flex: 1 }} />;
+  // Hide native splash once fonts are ready, then our animated splash takes over
+  useEffect(() => {
+    if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: '#7C3AED' }} />;
 
   return (
     <ErrorBoundary>
@@ -140,6 +237,7 @@ function RootLayout() {
         <ThemeProvider>
           <ToastProvider>
             <ThemedStack />
+            {!splashDone && <AnimatedSplash onFinish={handleSplashFinish} />}
           </ToastProvider>
         </ThemeProvider>
       </SafeAreaProvider>

@@ -12,7 +12,12 @@
       "Bash(ls \"/c/Users/eduar/.ssh/\" 2>&1)",
       "Read(//c/Users/eduar/.ssh//**)",
       "Bash(ssh-keygen -t ed25519 -C \"github-actions-enem-deploy\" -f \"/c/Users/eduar/.ssh/github-actions-deploy\" -N \"\")",
-      "Bash(ssh root@134.209.38.46 'mkdir -p ~/.ssh && echo '\\\\''__TRACKED_VAR__'\\\\'' >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && echo '\\\\''Chave adicionada com sucesso'\\\\''')"
+      "Bash(ssh root@134.209.38.46 'mkdir -p ~/.ssh && echo '\\\\''__TRACKED_VAR__'\\\\'' >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && echo '\\\\''Chave adicionada com sucesso'\\\\''')",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(curl -s https://134-209-38-46.nip.io/health)",
+      "Bash(git add *)",
+      "Bash(xargs grep -l \"totalScore\\\\|resultado\")"
     ]
   }
 }

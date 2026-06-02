@@ -33,6 +33,7 @@
     "openai": "^4.104.0",
     "p-queue": "^9.2.0",
     "p-retry": "^8.0.0",
+    "postgres": "^3.4.9",
     "rate-limit-redis": "^5.0.0",
     "sharp": "^0.34.5",
     "tsx": "^4.22.3",

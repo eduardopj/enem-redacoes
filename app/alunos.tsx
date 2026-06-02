@@ -16,7 +16,8 @@ import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useToast } from '@/components/ui/Toast';
 
 export default function AlunosScreen() {
@@ -225,10 +226,11 @@ export default function AlunosScreen() {
               </View>
             ) : null}
 
-            <FlatList
+            <FlashList
               data={filteredStudents}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.list}
+              estimatedItemSize={88}
               scrollEnabled={false}
               renderItem={({ item: student, index }) => {
                 const stats = studentStats[student.id];

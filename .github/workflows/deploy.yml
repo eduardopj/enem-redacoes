@@ -75,6 +75,10 @@ jobs:
           script: |
             set -e
 
+            echo "=== Snapshot current version for rollback ==="
+            rm -rf /opt/enem-ia/backend.previous
+            cp -r /opt/enem-ia/backend /opt/enem-ia/backend.previous
+
             echo "=== Extracting ==="
             tar -xzf /tmp/backend.tar.gz -C /opt/enem-ia/
 
@@ -93,8 +97,11 @@ jobs:
                 break
               fi
               if [ $i -eq 5 ]; then
-                echo "Health check FAILED after 5 attempts — rolling back"
-                pm2 restart ecosystem.config.cjs --update-env
+                echo "Health check FAILED — rolling back to previous version"
+                rm -rf /opt/enem-ia/backend
+                mv /opt/enem-ia/backend.previous /opt/enem-ia/backend
+                cd /opt/enem-ia/backend && npm ci --omit=dev
+                pm2 restart ecosystem.config.cjs --update-env || pm2 start ecosystem.config.cjs
                 exit 1
               fi
               echo "Attempt $i failed (HTTP $STATUS), retrying in 5s..."

@@ -13,7 +13,8 @@ import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 type FilterStatus = 'todas' | 'pendente' | 'processando' | 'corrigida' | 'precisa_revisao' | 'baixa_confiabilidade';
 type SortMode = 'data' | 'nota_asc' | 'nota_desc';
@@ -250,9 +251,10 @@ export default function RedacoesScreen() {
               />
             ) : (
               <Card style={styles.listCard}>
-                <FlatList
+                <FlashList
                   data={filteredEssays}
                   keyExtractor={(item) => item.id}
+                  estimatedItemSize={72}
                   scrollEnabled={false}
                   ItemSeparatorComponent={() => (
                     <View style={[styles.divider, { backgroundColor: colors.border }]} />

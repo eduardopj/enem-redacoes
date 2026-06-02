@@ -13,7 +13,8 @@ import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 const FREE_THEME_ID = '__tema_livre__';
 
@@ -121,10 +122,11 @@ export default function TemasScreen() {
               ) : null}
             </View>
 
-            <FlatList
+            <FlashList
               data={filteredThemes}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.list}
+              estimatedItemSize={72}
               scrollEnabled={false}
               renderItem={({ item, index }) => (
                 <StaggerItem index={index}>

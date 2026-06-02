@@ -1,0 +1,31 @@
+# Staging environment — replica o ambiente de produção localmente.
+# Uso: docker compose -f docker-compose.staging.yml up -d
+# Health: curl http://localhost:3333/health
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.staging
+    environment:
+      NODE_ENV: staging
+      PORT: 3333
+      DATA_DIR: /data
+      CORS_ORIGINS: "*"
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+      LOG_LEVEL: debug
+      REQUEST_BODY_LIMIT: 32mb
+    ports:
+      - "3333:3333"
+    volumes:
+      - staging_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3333/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  staging_data:
