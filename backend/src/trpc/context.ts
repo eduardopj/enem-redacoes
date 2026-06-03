@@ -8,10 +8,10 @@ export interface Context {
   requestId: string;
 }
 
-export function createContext({ req }: { req: Request }): Context {
+export async function createContext({ req }: { req: Request }): Promise<Context> {
   const header = req.headers.authorization ?? '';
   const rawToken = header.startsWith('Bearer ') ? header.slice(7).trim() : null;
-  const teacher = rawToken ? (validateToken as (t: string) => { teacherId: string; teacherEmail: string } | null)(rawToken) : null;
+  const teacher = rawToken ? await validateToken(rawToken) : null;
   return {
     teacherId: teacher?.teacherId ?? null,
     teacherEmail: teacher?.teacherEmail ?? null,

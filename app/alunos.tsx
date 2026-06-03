@@ -15,13 +15,13 @@ import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FlashList } from '@shopify/flash-list';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useToast } from '@/components/ui/Toast';
 
 export default function AlunosScreen() {
-  const { currentTeacher, hasHydrated, students, essays, turmas, deleteStudent } = useAppStore(
+  const { currentTeacher, hasHydrated, students, essays, turmas, deleteStudent, fetchStudentEssaysFromBackend } = useAppStore(
     useShallow((state) => ({
       currentTeacher: state.currentTeacher,
       hasHydrated: state.hasHydrated,
@@ -29,8 +29,14 @@ export default function AlunosScreen() {
       essays: state.essays,
       turmas: state.turmas,
       deleteStudent: state.deleteStudent,
+      fetchStudentEssaysFromBackend: state.fetchStudentEssaysFromBackend,
     }))
   );
+  const [refreshing, setRefreshing] = useState(false);
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try { await fetchStudentEssaysFromBackend(); } finally { setRefreshing(false); }
+  }, [fetchStudentEssaysFromBackend]);
   const { colors } = useAppTheme();
   const { showToast } = useToast();
 
@@ -114,7 +120,7 @@ export default function AlunosScreen() {
 
   return (
     <ProtectedRoute>
-      <ScreenContainer showBack showNav>
+      <ScreenContainer showBack showNav onRefresh={handleRefresh} refreshing={refreshing}>
         <AppHeader
           eyebrow="Turma"
           title="Alunos"

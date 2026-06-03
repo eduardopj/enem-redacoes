@@ -16,10 +16,10 @@ export const authRouter = router({
       teacherName:  z.string().min(1).max(200),
       passwordHash: z.string().length(64).optional(),
     }))
-    .mutation(({ input }) => {
-      const token = (registerTeacher as Function)(input.teacherId, input.teacherEmail, input.teacherName, input.passwordHash);
+    .mutation(async ({ input }) => {
+      const token = await registerTeacher(input.teacherId, input.teacherEmail ?? '', input.teacherName, input.passwordHash);
       if (token === null) throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Senha incorreta.' });
-      return { token: token as string };
+      return { token };
     }),
 
   login: publicProcedure
@@ -27,22 +27,22 @@ export const authRouter = router({
       email:        z.string().email().max(254),
       passwordHash: z.string().length(64),
     }))
-    .mutation(({ input }) => {
-      const result = (loginTeacher as Function)(input.email, input.passwordHash);
+    .mutation(async ({ input }) => {
+      const result = await loginTeacher(input.email, input.passwordHash);
       if (!result) throw new TRPCError({ code: 'UNAUTHORIZED', message: 'E-mail ou senha incorretos.' });
-      return result as { teacherId: string; teacherEmail: string; token: string };
+      return result;
     }),
 
   logout: protectedProcedure
-    .mutation(({ ctx }) => {
-      if (ctx.rawToken) (revokeToken as Function)(ctx.rawToken);
+    .mutation(async ({ ctx }) => {
+      if (ctx.rawToken) await revokeToken(ctx.rawToken);
       return { ok: true };
     }),
 
   savePushToken: protectedProcedure
     .input(z.object({ pushToken: z.string().min(1) }))
-    .mutation(({ ctx, input }) => {
-      (savePushToken as Function)(ctx.teacherId, input.pushToken);
+    .mutation(async ({ ctx, input }) => {
+      await savePushToken(ctx.teacherId!, input.pushToken);
       return { ok: true };
     }),
 });

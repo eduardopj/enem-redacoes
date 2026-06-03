@@ -9,7 +9,7 @@ import { ForgotPasswordSchema, LoginSchema, RegisterTeacherSchema, ResetPassword
 
 const router: RouterType = Router();
 
-router.post('/register', validateBody(RegisterTeacherSchema), (req: Request, res: Response) => {
+router.post('/register', validateBody(RegisterTeacherSchema), async (req: Request, res: Response) => {
   try {
     const { teacherId, teacherEmail, teacherName, passwordHash } = req.body as {
       teacherId: string;
@@ -17,7 +17,7 @@ router.post('/register', validateBody(RegisterTeacherSchema), (req: Request, res
       teacherName: string;
       passwordHash?: string;
     };
-    const token = registerTeacher(teacherId, teacherEmail ?? '', teacherName, passwordHash);
+    const token = await registerTeacher(teacherId, teacherEmail ?? '', teacherName, passwordHash);
     if (token === null) {
       return res.status(401).json({
         success: false,
@@ -33,10 +33,10 @@ router.post('/register', validateBody(RegisterTeacherSchema), (req: Request, res
   }
 });
 
-router.post('/login', validateBody(LoginSchema), (req: Request, res: Response) => {
+router.post('/login', validateBody(LoginSchema), async (req: Request, res: Response) => {
   try {
     const { email, passwordHash } = req.body as { email: string; passwordHash: string };
-    const result = loginTeacher(email, passwordHash);
+    const result = await loginTeacher(email, passwordHash);
     if (!result) {
       return res.status(401).json({
         success: false,
@@ -52,11 +52,11 @@ router.post('/login', validateBody(LoginSchema), (req: Request, res: Response) =
   }
 });
 
-router.post('/logout', requireAuth, (req: Request, res: Response) => {
+router.post('/logout', requireAuth, async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization ?? '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-    if (token) revokeToken(token);
+    if (token) await revokeToken(token);
     res.json({ success: true });
   } catch {
     res.status(500).json({
@@ -66,7 +66,7 @@ router.post('/logout', requireAuth, (req: Request, res: Response) => {
   }
 });
 
-router.post('/push-token', requireAuth, (req: Request, res: Response) => {
+router.post('/push-token', requireAuth, async (req: Request, res: Response) => {
   try {
     const { pushToken } = req.body as { pushToken?: unknown };
     if (!pushToken || typeof pushToken !== 'string') {
@@ -75,7 +75,7 @@ router.post('/push-token', requireAuth, (req: Request, res: Response) => {
         error: { code: 'INVALID_TOKEN', message: 'pushToken inválido.' },
       });
     }
-    savePushToken(req.teacherId, pushToken);
+    await savePushToken(req.teacherId, pushToken);
     res.json({ success: true });
   } catch {
     res.status(500).json({
@@ -95,7 +95,7 @@ router.post('/forgot-password', validateBody(ForgotPasswordSchema), async (req: 
     });
   }
   try {
-    const result = forgotPassword((req.body as { email: string }).email);
+    const result = await forgotPassword((req.body as { email: string }).email);
     // Always return 200 to prevent e-mail enumeration
     if (result) {
       await sendPasswordResetEmail(result.teacherEmail, result.code).catch((err: Error) => {
@@ -108,10 +108,10 @@ router.post('/forgot-password', validateBody(ForgotPasswordSchema), async (req: 
   }
 });
 
-router.post('/reset-password', validateBody(ResetPasswordSchema), (req: Request, res: Response) => {
+router.post('/reset-password', validateBody(ResetPasswordSchema), async (req: Request, res: Response) => {
   try {
     const { email, code, newPasswordHash } = req.body as { email: string; code: string; newPasswordHash: string };
-    const ok = resetPassword(email, code, newPasswordHash);
+    const ok = await resetPassword(email, code, newPasswordHash);
     if (!ok) {
       return res.status(400).json({
         success: false,
@@ -126,9 +126,9 @@ router.post('/reset-password', validateBody(ResetPasswordSchema), (req: Request,
 
 // ─── GDPR account deletion ────────────────────────────────────────────────────
 
-router.delete('/account', requireAuth, (req: Request, res: Response) => {
+router.delete('/account', requireAuth, async (req: Request, res: Response) => {
   try {
-    deleteTeacherAccount(req.teacherId);
+    await deleteTeacherAccount(req.teacherId);
     res.json({ success: true });
   } catch (err) {
     console.error('[auth] deleteTeacherAccount error:', err);

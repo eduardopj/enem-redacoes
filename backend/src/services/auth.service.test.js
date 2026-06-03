@@ -64,34 +64,34 @@ describe('hashPasswordForStorage / verifyStoredPasswordHash', () => {
 describe('registerTeacher', () => {
   const hash = 'c'.repeat(64);
 
-  it('creates a new teacher and returns a 64-char token', () => {
-    const token = registerTeacher('reg-1', 'reg1@test.com', 'Reg One', hash);
+  it('creates a new teacher and returns a 64-char token', async () => {
+    const token = await registerTeacher('reg-1', 'reg1@test.com', 'Reg One', hash);
     assert.equal(typeof token, 'string');
     assert.equal(token.length, 64);
     assert.ok(/^[0-9a-f]+$/.test(token));
   });
 
-  it('is idempotent with correct password — returns existing token', () => {
-    const t1 = registerTeacher('reg-2', 'reg2@test.com', 'Reg Two', hash);
-    const t2 = registerTeacher('reg-2', 'reg2@test.com', 'Reg Two', hash);
+  it('is idempotent with correct password — returns existing token', async () => {
+    const t1 = await registerTeacher('reg-2', 'reg2@test.com', 'Reg Two', hash);
+    const t2 = await registerTeacher('reg-2', 'reg2@test.com', 'Reg Two', hash);
     assert.equal(t1, t2);
   });
 
-  it('returns null when existing teacher provides wrong password', () => {
-    registerTeacher('reg-3', 'reg3@test.com', 'Reg Three', hash);
-    const result = registerTeacher('reg-3', 'reg3@test.com', 'Reg Three', 'd'.repeat(64));
+  it('returns null when existing teacher provides wrong password', async () => {
+    await registerTeacher('reg-3', 'reg3@test.com', 'Reg Three', hash);
+    const result = await registerTeacher('reg-3', 'reg3@test.com', 'Reg Three', 'd'.repeat(64));
     assert.equal(result, null);
   });
 
-  it('upgrades legacy row — stores hash when teacher had none', () => {
+  it('upgrades legacy row — stores hash when teacher had none', async () => {
     // Register without password (legacy)
-    const t1 = registerTeacher('reg-legacy', 'legacy@test.com', 'Legacy');
+    const t1 = await registerTeacher('reg-legacy', 'legacy@test.com', 'Legacy');
     assert.ok(t1);
     // Re-register with a password — should upgrade and return same token
-    const t2 = registerTeacher('reg-legacy', 'legacy@test.com', 'Legacy', hash);
+    const t2 = await registerTeacher('reg-legacy', 'legacy@test.com', 'Legacy', hash);
     assert.equal(t1, t2);
     // Now verify that the password is stored — wrong password returns null
-    const t3 = registerTeacher('reg-legacy', 'legacy@test.com', 'Legacy', 'e'.repeat(64));
+    const t3 = await registerTeacher('reg-legacy', 'legacy@test.com', 'Legacy', 'e'.repeat(64));
     assert.equal(t3, null);
   });
 });
@@ -102,34 +102,34 @@ describe('loginTeacher', () => {
   const email = 'login@test.com';
   const hash  = 'f'.repeat(64);
 
-  before(() => {
-    registerTeacher('login-teacher', email, 'Login Test', hash);
+  before(async () => {
+    await registerTeacher('login-teacher', email, 'Login Test', hash);
   });
 
-  it('returns token + teacherId on success', () => {
-    const result = loginTeacher(email, hash);
+  it('returns token + teacherId on success', async () => {
+    const result = await loginTeacher(email, hash);
     assert.ok(result !== null);
     assert.equal(typeof result.token, 'string');
     assert.equal(result.token.length, 64);
     assert.equal(result.teacherId, 'login-teacher');
   });
 
-  it('returns null for wrong password', () => {
-    assert.equal(loginTeacher(email, '0'.repeat(64)), null);
+  it('returns null for wrong password', async () => {
+    assert.equal(await loginTeacher(email, '0'.repeat(64)), null);
   });
 
-  it('returns null for unknown email', () => {
-    assert.equal(loginTeacher('nobody@test.com', hash), null);
+  it('returns null for unknown email', async () => {
+    assert.equal(await loginTeacher('nobody@test.com', hash), null);
   });
 
-  it('is case-insensitive on email', () => {
-    const result = loginTeacher('LOGIN@TEST.COM', hash);
+  it('is case-insensitive on email', async () => {
+    const result = await loginTeacher('LOGIN@TEST.COM', hash);
     assert.ok(result !== null);
   });
 
-  it('returns null for teacher with no stored hash (legacy)', () => {
-    registerTeacher('login-no-hash', 'nohash@test.com', 'No Hash');
-    assert.equal(loginTeacher('nohash@test.com', hash), null);
+  it('returns null for teacher with no stored hash (legacy)', async () => {
+    await registerTeacher('login-no-hash', 'nohash@test.com', 'No Hash');
+    assert.equal(await loginTeacher('nohash@test.com', hash), null);
   });
 });
 
@@ -140,29 +140,29 @@ describe('validateToken + revokeToken', () => {
   const hash  = '1'.repeat(64);
   let token;
 
-  before(() => {
-    registerTeacher('revoke-teacher', email, 'Revoke Test', hash);
-    const result = loginTeacher(email, hash);
+  before(async () => {
+    await registerTeacher('revoke-teacher', email, 'Revoke Test', hash);
+    const result = await loginTeacher(email, hash);
     token = result.token;
   });
 
-  it('validates an active token', () => {
-    const info = validateToken(token);
+  it('validates an active token', async () => {
+    const info = await validateToken(token);
     assert.ok(info !== null);
     assert.equal(info.teacherId, 'revoke-teacher');
     assert.equal(info.teacherEmail, email);
   });
 
-  it('returns null for unknown token', () => {
-    assert.equal(validateToken('a'.repeat(64)), null);
+  it('returns null for unknown token', async () => {
+    assert.equal(await validateToken('a'.repeat(64)), null);
   });
 
-  it('returns null for short token', () => {
-    assert.equal(validateToken('abc'), null);
+  it('returns null for short token', async () => {
+    assert.equal(await validateToken('abc'), null);
   });
 
-  it('returns null after revocation', () => {
-    revokeToken(token);
-    assert.equal(validateToken(token), null);
+  it('returns null after revocation', async () => {
+    await revokeToken(token);
+    assert.equal(await validateToken(token), null);
   });
 });

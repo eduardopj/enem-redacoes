@@ -1,7 +1,7 @@
 import { theme } from '@/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
 import { PropsWithChildren, useEffect, useRef } from 'react';
-import { Animated, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { Animated, KeyboardAvoidingView, Platform, RefreshControl, StyleSheet } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppFooter } from './AppFooter';
 import { BOTTOM_NAV_HEIGHT, BottomNav } from './BottomNav';
@@ -19,6 +19,9 @@ type ScreenContainerProps = PropsWithChildren<{
   showStudentNav?: boolean;
   /** Título exibido centralizado na TopBar em vez da logo */
   topBarTitle?: string;
+  /** Pull-to-refresh — passa onRefresh para habilitar */
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }>;
 
 export function ScreenContainer({
@@ -30,6 +33,8 @@ export function ScreenContainer({
   showNav = false,
   showStudentNav = false,
   topBarTitle,
+  onRefresh,
+  refreshing = false,
 }: ScreenContainerProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
@@ -93,6 +98,11 @@ export function ScreenContainer({
           keyboardDismissMode="on-drag"
           bounces
           style={[styles.scroll, { opacity: entryOpacity }]}
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            ) : undefined
+          }
         >
           {children}
         </Animated.ScrollView>

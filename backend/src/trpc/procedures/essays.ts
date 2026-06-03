@@ -40,15 +40,15 @@ export const essaysRouter = router({
       limit:  z.coerce.number().int().min(1).max(200).optional().default(50),
     }))
     .query(({ ctx, input }) =>
-      (getEssaysByTeacher as Function)(ctx.teacherId, { cursor: input.cursor, limit: input.limit })
+      getEssaysByTeacher(ctx.teacherId!, { cursor: input.cursor, limit: input.limit })
     ),
 
   detail: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
-    .query(({ ctx, input }) => {
-      const essay = (getEssayById as Function)(input.id);
+    .query(async ({ ctx, input }) => {
+      const essay = await getEssayById(input.id);
       if (!essay) throw new TRPCError({ code: 'NOT_FOUND', message: 'Redação não encontrada.' });
-      if (essay.teacherId !== ctx.teacherId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Acesso negado.' });
+      if ((essay as { teacherId: string }).teacherId !== ctx.teacherId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Acesso negado.' });
       return essay;
     }),
 
@@ -56,7 +56,7 @@ export const essaysRouter = router({
     .input(EssayInput)
     .mutation(async ({ ctx, input }) => {
       if (input.teacherId !== ctx.teacherId) throw new TRPCError({ code: 'FORBIDDEN', message: 'teacherId não confere com o token.' });
-      return (upsertEssay as Function)(input);
+      return upsertEssay(input);
     }),
 
   updateTeacherEval: protectedProcedure
@@ -65,11 +65,11 @@ export const essaysRouter = router({
       teacherScore: z.number().int().min(0).max(1000).optional().nullable(),
       teacherNote:  z.string().max(5000).optional().nullable(),
     }))
-    .mutation(({ ctx, input }) => {
-      const essay = (getEssayById as Function)(input.id);
+    .mutation(async ({ ctx, input }) => {
+      const essay = await getEssayById(input.id);
       if (!essay) throw new TRPCError({ code: 'NOT_FOUND', message: 'Redação não encontrada.' });
-      if (essay.teacherId !== ctx.teacherId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Acesso negado.' });
-      return (updateTeacherEval as Function)(input.id, input.teacherScore, input.teacherNote);
+      if ((essay as { teacherId: string }).teacherId !== ctx.teacherId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Acesso negado.' });
+      return updateTeacherEval(input.id, input.teacherScore ?? null, input.teacherNote ?? null);
     }),
 
   upsertTurma: protectedProcedure
@@ -81,15 +81,15 @@ export const essaysRouter = router({
       turmaId:      z.string().min(1),
       turmaName:    z.string().max(200).optional().default(''),
     }))
-    .mutation(({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       if (input.teacherId !== ctx.teacherId) throw new TRPCError({ code: 'FORBIDDEN', message: 'teacherId não confere com o token.' });
-      return (upsertTurma as Function)(input);
+      return upsertTurma(input);
     }),
 
   turmaByCode: publicProcedure
     .input(z.object({ code: z.string().min(6).max(20) }))
-    .query(({ input }) => {
-      const turma = (getTurmaByCode as Function)(input.code.toUpperCase());
+    .query(async ({ input }) => {
+      const turma = await getTurmaByCode(input.code.toUpperCase());
       if (!turma) throw new TRPCError({ code: 'NOT_FOUND', message: 'Código inválido ou expirado.' });
       return turma;
     }),

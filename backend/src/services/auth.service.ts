@@ -68,13 +68,13 @@ function generateToken(): string {
  * If passwordHash is omitted entirely (legacy / offline app): returns token without password check
  * only when the teacher has NO stored hash (backward-compat path, legacy rows).
  */
-export function registerTeacher(
+export async function registerTeacher(
   teacherId: string,
   teacherEmail: string,
   teacherName: string,
-  clientPasswordHash?: string | null
-): string | null {
-  const existing = findTeacherTokenInfo(teacherId);
+  clientPasswordHash?: string | null,
+): Promise<string | null> {
+  const existing = await findTeacherTokenInfo(teacherId);
 
   if (existing) {
     // Password verification when both sides have a hash
@@ -83,7 +83,7 @@ export function registerTeacher(
     }
     // Legacy row: no stored hash yet — store it now if provided
     if (!existing.passwordHash && clientPasswordHash) {
-      updateTeacherPasswordHash(teacherId, hashPasswordForStorage(clientPasswordHash));
+      await updateTeacherPasswordHash(teacherId, hashPasswordForStorage(clientPasswordHash));
     }
 
     // Check token expiry
@@ -96,7 +96,7 @@ export function registerTeacher(
     // Renew expiring token
     const token      = generateToken();
     const newExpires = new Date(Date.now() + TOKEN_TTL_MS).toISOString();
-    updateTeacherToken(teacherId, token, newExpires);
+    await updateTeacherToken(teacherId, token, newExpires);
     return token;
   }
 
@@ -104,7 +104,7 @@ export function registerTeacher(
   const token      = generateToken();
   const expiresAt  = new Date(Date.now() + TOKEN_TTL_MS).toISOString();
   const storedHash = clientPasswordHash ? hashPasswordForStorage(clientPasswordHash) : null;
-  createTeacher({ teacherId, teacherEmail, teacherName, token, expiresAt, passwordHash: storedHash });
+  await createTeacher({ teacherId, teacherEmail, teacherName, token, expiresAt, passwordHash: storedHash });
   return token;
 }
 
@@ -112,11 +112,11 @@ export function registerTeacher(
  * Login by email + clientPasswordHash (the SHA-256 hash produced by the client).
  * Returns { token, teacherId } on success, or null on failure.
  */
-export function loginTeacher(
+export async function loginTeacher(
   teacherEmail: string,
-  clientPasswordHash: string
-): { token: string; teacherId: string } | null {
-  const teacher = findTeacherByEmail(teacherEmail);
+  clientPasswordHash: string,
+): Promise<{ token: string; teacherId: string } | null> {
+  const teacher = await findTeacherByEmail(teacherEmail);
 
   if (!teacher) return null;
   if (!teacher.passwordHash) return null; // teacher registered before passwords — must re-register
@@ -129,7 +129,7 @@ export function loginTeacher(
   if (needsRenew) {
     const token     = generateToken();
     const expiresAt = new Date(Date.now() + TOKEN_TTL_MS).toISOString();
-    updateTeacherToken(teacher.teacherId, token, expiresAt);
+    await updateTeacherToken(teacher.teacherId, token, expiresAt);
     return { token, teacherId: teacher.teacherId };
   }
 
@@ -139,16 +139,16 @@ export function loginTeacher(
 /**
  * Revokes a token immediately (server-side logout).
  */
-export function revokeToken(token: string): void {
-  revokeTeacherToken(token);
+export async function revokeToken(token: string): Promise<void> {
+  await revokeTeacherToken(token);
 }
 
 /**
  * Validates the bearer token. Returns { teacherId, teacherEmail } or null.
  */
-export function validateToken(token: string): { teacherId: string; teacherEmail: string } | null {
+export async function validateToken(token: string): Promise<{ teacherId: string; teacherEmail: string } | null> {
   if (!token || token.length !== 64) return null;
-  const teacher = findTeacherByToken(token);
+  const teacher = await findTeacherByToken(token);
   if (!teacher) return null;
   if (teacher.revokedAt) return null;
   if (teacher.expiresAt && new Date(teacher.expiresAt) < new Date()) return null;
@@ -165,8 +165,10 @@ const RESET_TTL_MS = 15 * 60 * 1000; // 15 minutes
  * or null if the e-mail is not registered (never reveals this to callers).
  * Always returns true-ish to prevent e-mail enumeration — handle null silently.
  */
-export function forgotPassword(teacherEmail: string): { teacherEmail: string; code: string } | null {
-  const teacher = findTeacherByEmail(teacherEmail);
+export async function forgotPassword(
+  teacherEmail: string,
+): Promise<{ teacherEmail: string; code: string } | null> {
+  const teacher = await findTeacherByEmail(teacherEmail);
 
   if (!teacher) return null; // email not registered — caller should NOT reveal this
 
@@ -174,7 +176,7 @@ export function forgotPassword(teacherEmail: string): { teacherEmail: string; co
   const codeHash = createHash('sha256').update(code).digest('hex');
   const expiresAt = new Date(Date.now() + RESET_TTL_MS).toISOString();
 
-  updateTeacherResetToken(teacher.teacherId, codeHash, expiresAt);
+  await updateTeacherResetToken(teacher.teacherId, codeHash, expiresAt);
 
   return { teacherEmail: teacherEmail.trim().toLowerCase(), code };
 }
@@ -183,11 +185,15 @@ export function forgotPassword(teacherEmail: string): { teacherEmail: string; co
  * Validates code + sets new password.
  * Returns true on success, false on invalid/expired code.
  */
-export function resetPassword(teacherEmail: string, code: string, newClientHash: string): boolean {
-  const teacher = findTeacherByEmail(teacherEmail);
+export async function resetPassword(
+  teacherEmail: string,
+  code: string,
+  newClientHash: string,
+): Promise<boolean> {
+  const teacher = await findTeacherByEmail(teacherEmail);
   if (!teacher) return false;
 
-  const resetInfo = findTeacherResetInfo(teacher.teacherId);
+  const resetInfo = await findTeacherResetInfo(teacher.teacherId);
   if (!resetInfo?.resetToken || !resetInfo?.resetTokenExpiresAt) return false;
   if (new Date(resetInfo.resetTokenExpiresAt) < new Date()) return false;
 
@@ -197,7 +203,7 @@ export function resetPassword(teacherEmail: string, code: string, newClientHash:
   if (storedBuf.length !== incomingBuf.length) return false;
   if (!timingSafeEqual(storedBuf, incomingBuf)) return false;
 
-  clearTeacherResetToken(teacher.teacherId, hashPasswordForStorage(newClientHash));
+  await clearTeacherResetToken(teacher.teacherId, hashPasswordForStorage(newClientHash));
   return true;
 }
 
@@ -205,8 +211,8 @@ export function resetPassword(teacherEmail: string, code: string, newClientHash:
  * Permanently deletes a teacher account and all associated data (essays + images).
  * DB deletes run atomically in a transaction; image file removal is best-effort after commit.
  */
-export function deleteTeacherAccount(teacherId: string): void {
-  const imagePaths = deleteTeacherCascade(teacherId);
+export async function deleteTeacherAccount(teacherId: string): Promise<void> {
+  const imagePaths = await deleteTeacherCascade(teacherId);
 
   for (const p of imagePaths) {
     try { rmSync(p, { force: true }); } catch (_) { /* ignore */ }
@@ -216,13 +222,13 @@ export function deleteTeacherAccount(teacherId: string): void {
 /**
  * Salva ou atualiza o push token Expo de um professor.
  */
-export function savePushToken(teacherId: string, pushToken: string): void {
-  saveTeacherPushToken(teacherId, pushToken);
+export async function savePushToken(teacherId: string, pushToken: string): Promise<void> {
+  await saveTeacherPushToken(teacherId, pushToken);
 }
 
 /**
  * Retorna o push token Expo do professor, ou null se não registrado.
  */
-export function getTeacherPushToken(teacherId: string): string | null {
+export async function getTeacherPushToken(teacherId: string): Promise<string | null> {
   return getTeacherPushTokenById(teacherId);
 }

@@ -1,4 +1,4 @@
-import db from '../services/database.js';
+import { execute, query, queryOne, transaction } from '../services/db-client.js';
 
 interface EssayRow {
   id: string;
@@ -66,81 +66,89 @@ interface EssayPage {
   nextCursor: string | null;
 }
 
-const upsertStmt = db.prepare(`
-  INSERT INTO essays (
-    id, teacherId, studentId, studentName, turmaId, turmaName,
-    themeTitle, inputMode, essayText, status,
-    totalScore, teacherScore, teacherNote, correctionJson,
-    createdAt, correctedAt, updatedAt, imagePath, submittedByStudent, syncedAt
-  ) VALUES (
-    @id, @teacherId, @studentId, @studentName, @turmaId, @turmaName,
-    @themeTitle, @inputMode, @essayText, @status,
-    @totalScore, @teacherScore, @teacherNote, @correctionJson,
-    @createdAt, @correctedAt, @updatedAt, @imagePath, @submittedByStudent, datetime('now')
-  )
-  ON CONFLICT(id) DO UPDATE SET
-    teacherId    = excluded.teacherId,
-    studentId    = excluded.studentId,
-    studentName  = excluded.studentName,
-    turmaId      = excluded.turmaId,
-    turmaName    = excluded.turmaName,
-    themeTitle   = excluded.themeTitle,
-    inputMode    = excluded.inputMode,
-    essayText    = excluded.essayText,
-    status       = excluded.status,
-    totalScore   = excluded.totalScore,
-    teacherScore = excluded.teacherScore,
-    teacherNote  = excluded.teacherNote,
-    correctionJson = excluded.correctionJson,
-    createdAt    = excluded.createdAt,
-    correctedAt  = excluded.correctedAt,
-    updatedAt    = excluded.updatedAt,
-    imagePath    = COALESCE(excluded.imagePath, essays.imagePath),
-    submittedByStudent = excluded.submittedByStudent,
-    syncedAt     = excluded.syncedAt
-`);
-
-const checkConflictStmt = db.prepare('SELECT updatedAt, status FROM essays WHERE id = ?');
-
-export function findEssayById(id: string): ParsedEssayRow | null {
-  const row = db.prepare('SELECT * FROM essays WHERE id = ?').get(id) as EssayRow | undefined;
+export async function findEssayById(id: string): Promise<ParsedEssayRow | null> {
+  const row = await queryOne<EssayRow>('SELECT * FROM essays WHERE id = ?', [id]);
   return row ? parseRow(row) : null;
 }
 
 /** Returns `{ updatedAt, status }` for the stored essay, or undefined if not found. */
-export function checkEssayConflict(id: string): EssayConflict | undefined {
-  return checkConflictStmt.get(id) as EssayConflict | undefined;
+export async function checkEssayConflict(id: string): Promise<EssayConflict | undefined> {
+  const row = await queryOne<EssayConflict>('SELECT updatedAt, status FROM essays WHERE id = ?', [id]);
+  return row ?? undefined;
 }
 
 /**
  * Raw upsert — caller is responsible for resolving imagePath before calling.
  */
-export function upsertEssayRow(data: UpsertEssayParams): void {
-  db.transaction(() => upsertStmt.run(data))();
+export async function upsertEssayRow(data: UpsertEssayParams): Promise<void> {
+  await transaction([[
+    `INSERT INTO essays (
+      id, teacherId, studentId, studentName, turmaId, turmaName,
+      themeTitle, inputMode, essayText, status,
+      totalScore, teacherScore, teacherNote, correctionJson,
+      createdAt, correctedAt, updatedAt, imagePath, submittedByStudent, syncedAt
+    ) VALUES (
+      ?, ?, ?, ?, ?, ?,
+      ?, ?, ?, ?,
+      ?, ?, ?, ?,
+      ?, ?, ?, ?, ?, datetime('now')
+    )
+    ON CONFLICT(id) DO UPDATE SET
+      teacherId    = excluded.teacherId,
+      studentId    = excluded.studentId,
+      studentName  = excluded.studentName,
+      turmaId      = excluded.turmaId,
+      turmaName    = excluded.turmaName,
+      themeTitle   = excluded.themeTitle,
+      inputMode    = excluded.inputMode,
+      essayText    = excluded.essayText,
+      status       = excluded.status,
+      totalScore   = excluded.totalScore,
+      teacherScore = excluded.teacherScore,
+      teacherNote  = excluded.teacherNote,
+      correctionJson = excluded.correctionJson,
+      createdAt    = excluded.createdAt,
+      correctedAt  = excluded.correctedAt,
+      updatedAt    = excluded.updatedAt,
+      imagePath    = COALESCE(excluded.imagePath, essays.imagePath),
+      submittedByStudent = excluded.submittedByStudent,
+      syncedAt     = excluded.syncedAt`,
+    [
+      data.id, data.teacherId, data.studentId, data.studentName, data.turmaId, data.turmaName,
+      data.themeTitle, data.inputMode, data.essayText, data.status,
+      data.totalScore, data.teacherScore, data.teacherNote, data.correctionJson,
+      data.createdAt, data.correctedAt, data.updatedAt, data.imagePath, data.submittedByStudent,
+    ],
+  ]]);
 }
 
-export function findEssayImagePath(id: string): string | null {
-  const row = db.prepare('SELECT imagePath FROM essays WHERE id = ?').get(id) as { imagePath: string | null } | undefined;
+export async function findEssayImagePath(id: string): Promise<string | null> {
+  const row = await queryOne<{ imagePath: string | null }>('SELECT imagePath FROM essays WHERE id = ?', [id]);
   return row?.imagePath ?? null;
 }
 
-export function findEssaysByTeacher(teacherId: string, { cursor, limit = 50 }: GetEssaysByTeacherOpts = {}): EssayPage {
+export async function findEssaysByTeacher(
+  teacherId: string,
+  { cursor, limit = 50 }: GetEssaysByTeacherOpts = {},
+): Promise<EssayPage> {
   const safeLimit = Math.min(Math.max(1, Number(limit)), 200);
   const fetch = safeLimit + 1;
 
   const rows = cursor
-    ? (db.prepare(`
-        SELECT * FROM essays
-        WHERE teacherId = ? AND COALESCE(syncedAt, createdAt) < ?
-        ORDER BY COALESCE(syncedAt, createdAt) DESC
-        LIMIT ?
-      `).all(teacherId, cursor, fetch) as EssayRow[])
-    : (db.prepare(`
-        SELECT * FROM essays
-        WHERE teacherId = ?
-        ORDER BY COALESCE(syncedAt, createdAt) DESC
-        LIMIT ?
-      `).all(teacherId, fetch) as EssayRow[]);
+    ? await query<EssayRow>(
+        `SELECT * FROM essays
+         WHERE teacherId = ? AND COALESCE(syncedAt, createdAt) < ?
+         ORDER BY COALESCE(syncedAt, createdAt) DESC
+         LIMIT ?`,
+        [teacherId, cursor, fetch],
+      )
+    : await query<EssayRow>(
+        `SELECT * FROM essays
+         WHERE teacherId = ?
+         ORDER BY COALESCE(syncedAt, createdAt) DESC
+         LIMIT ?`,
+        [teacherId, fetch],
+      );
 
   const hasMore = rows.length > safeLimit;
   const data = rows.slice(0, safeLimit).map(parseRow);
@@ -149,19 +157,27 @@ export function findEssaysByTeacher(teacherId: string, { cursor, limit = 50 }: G
   return { data, hasMore, nextCursor };
 }
 
-export function updateEssayTeacherEval(id: string, teacherScore: number | null, teacherNote: string | null): void {
-  db.prepare('UPDATE essays SET teacherScore = ?, teacherNote = ? WHERE id = ?')
-    .run(teacherScore ?? null, teacherNote ?? null, id);
+export async function updateEssayTeacherEval(
+  id: string,
+  teacherScore: number | null,
+  teacherNote: string | null,
+): Promise<void> {
+  await execute(
+    'UPDATE essays SET teacherScore = ?, teacherNote = ? WHERE id = ?',
+    [teacherScore ?? null, teacherNote ?? null, id],
+  );
 }
 
-export function findImagePathsByTeacher(teacherId: string): string[] {
-  return (db.prepare('SELECT imagePath FROM essays WHERE teacherId = ? AND imagePath IS NOT NULL')
-    .all(teacherId) as { imagePath: string }[])
-    .map((r) => r.imagePath);
+export async function findImagePathsByTeacher(teacherId: string): Promise<string[]> {
+  const rows = await query<{ imagePath: string }>(
+    'SELECT imagePath FROM essays WHERE teacherId = ? AND imagePath IS NOT NULL',
+    [teacherId],
+  );
+  return rows.map((r) => r.imagePath);
 }
 
-export function deleteEssaysByTeacher(teacherId: string): void {
-  db.prepare('DELETE FROM essays WHERE teacherId = ?').run(teacherId);
+export async function deleteEssaysByTeacher(teacherId: string): Promise<void> {
+  await execute('DELETE FROM essays WHERE teacherId = ?', [teacherId]);
 }
 
 function parseRow(row: EssayRow): ParsedEssayRow {

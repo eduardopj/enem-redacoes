@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { Router } from 'express';
 import type { Request, Response, Router as RouterType } from 'express';
+import { cache } from '../utils/cache.js';
 import { requireAuth } from '../middleware/auth.js';
 import { validateBody, validateQuery } from '../middleware/validate.js';
 import {
@@ -39,6 +40,8 @@ router.post('/essays', validateBody(UpsertEssaySchema), async (req: Request, res
   }
   try {
     const result = await upsertEssay(req.body);
+    // Invalidate cached essay list for this teacher on any write
+    await cache.delPattern(`essays:${req.teacherId}:*`);
     res.json({ success: true, data: result });
   } catch (err) {
     console.error('[sync] upsertEssay error:', err);
@@ -47,13 +50,13 @@ router.post('/essays', validateBody(UpsertEssaySchema), async (req: Request, res
 });
 
 // ── Teacher registers turma join code ────────────────────────────────────────
-router.post('/turmas', validateBody(UpsertTurmaSchema), (req: Request, res: Response) => {
+router.post('/turmas', validateBody(UpsertTurmaSchema), async (req: Request, res: Response) => {
   // IDOR fix: validate body teacherId matches token
   if ((req.body as { teacherId: string }).teacherId !== req.teacherId) {
     return sendError(res, 403, 'FORBIDDEN', 'teacherId não confere com o token.');
   }
   try {
-    res.json({ success: true, data: upsertTurma(req.body) });
+    res.json({ success: true, data: await upsertTurma(req.body) });
   } catch (err) {
     console.error('[sync] upsertTurma error:', err);
     res.status(500).json({ success: false, error: { code: 'DB_ERROR', message: (err as Error).message } });
@@ -61,7 +64,7 @@ router.post('/turmas', validateBody(UpsertTurmaSchema), (req: Request, res: Resp
 });
 
 // ── Student looks up turma by join code (public) ─────────────────────────────
-router.get('/turmas/by-code/:code', (req: Request, res: Response) => {
+router.get('/turmas/by-code/:code', async (req: Request, res: Response) => {
   const code = String(req.params.code ?? '').toUpperCase();
   if (!code || code.length < 6) {
     return res.status(400).json({
@@ -70,7 +73,7 @@ router.get('/turmas/by-code/:code', (req: Request, res: Response) => {
     });
   }
   try {
-    const turma = getTurmaByCode(code);
+    const turma = await getTurmaByCode(code);
     if (!turma) {
       return res.status(404).json({
         success: false,
@@ -85,13 +88,20 @@ router.get('/turmas/by-code/:code', (req: Request, res: Response) => {
 
 // ── Teacher fetches paginated essays ─────────────────────────────────────────
 // IDOR fix: req.teacherId from auth token — ignores any teacherId query param
-router.get('/essays', validateQuery(GetEssaysByTeacherSchema), (req: Request, res: Response) => {
+// Redis cache: 30s TTL — invalidated on any essay write for this teacher
+router.get('/essays', validateQuery(GetEssaysByTeacherSchema), async (req: Request, res: Response) => {
   try {
-    const result = getEssaysByTeacher(req.teacherId, {
-      cursor: req.query.cursor as string | undefined,
+    const cursor = req.query.cursor as string | undefined;
+    const cacheKey = `essays:${req.teacherId}:${cursor ?? 'initial'}`;
+    const cached = await cache.get<Awaited<ReturnType<typeof getEssaysByTeacher>>>(cacheKey);
+
+    const result = cached ?? await getEssaysByTeacher(req.teacherId, {
+      cursor,
       limit: req.query.limit as number | undefined,
     });
-    // Weak ETag based on newest syncedAt + page size — cheap to compute, avoids re-parsing
+
+    if (!cached) await cache.set(cacheKey, result, 30);
+
     const firstItem = result.data[0] as { syncedAt?: string } | undefined;
     const etag = `"${firstItem?.syncedAt ?? '0'}-${result.data.length}-${result.hasMore}"`;
     if (req.headers['if-none-match'] === etag) return res.status(304).end();
@@ -105,9 +115,9 @@ router.get('/essays', validateQuery(GetEssaysByTeacherSchema), (req: Request, re
 });
 
 // ── Get single essay ─────────────────────────────────────────────────────────
-router.get('/essays/:id', (req: Request, res: Response) => {
+router.get('/essays/:id', async (req: Request, res: Response) => {
   try {
-    const essay = getEssayById(req.params.id as string);
+    const essay = await getEssayById(req.params.id as string);
     if (!essay) {
       return res.status(404).json({
         success: false,
@@ -125,13 +135,13 @@ router.get('/essays/:id', (req: Request, res: Response) => {
 });
 
 // ── Serve backed-up essay image ──────────────────────────────────────────────
-router.get('/images/:id', (req: Request, res: Response) => {
+router.get('/images/:id', async (req: Request, res: Response) => {
   try {
-    const essay = getEssayById(req.params.id as string);
+    const essay = await getEssayById(req.params.id as string);
     if (!essay) return sendError(res, 404, 'NOT_FOUND', 'Redação não encontrada.');
     if ((essay as { teacherId: string }).teacherId !== req.teacherId) return sendError(res, 403, 'FORBIDDEN', 'Acesso negado.');
 
-    const imagePath = getEssayImagePath(req.params.id as string);
+    const imagePath = await getEssayImagePath(req.params.id as string);
     if (!imagePath) return sendError(res, 404, 'NOT_FOUND', 'Imagem não encontrada.');
 
     // Path traversal protection: reject if resolved path escapes IMAGES_DIR
@@ -151,15 +161,15 @@ router.get('/images/:id', (req: Request, res: Response) => {
 });
 
 // ── Teacher adds/updates eval ────────────────────────────────────────────────
-router.put('/essays/:id/teacher-eval', validateBody(TeacherEvalSchema), (req: Request, res: Response) => {
+router.put('/essays/:id/teacher-eval', validateBody(TeacherEvalSchema), async (req: Request, res: Response) => {
   try {
     // Verify ownership before updating
-    const essay = getEssayById(req.params.id as string);
+    const essay = await getEssayById(req.params.id as string);
     if (!essay) return sendError(res, 404, 'NOT_FOUND', 'Redação não encontrada.');
     if ((essay as { teacherId: string }).teacherId !== req.teacherId) return sendError(res, 403, 'FORBIDDEN', 'Acesso negado.');
 
     const { teacherScore, teacherNote } = req.body as { teacherScore?: number | null; teacherNote?: string | null };
-    res.json({ success: true, data: updateTeacherEval(req.params.id as string, teacherScore ?? null, teacherNote ?? null) });
+    res.json({ success: true, data: await updateTeacherEval(req.params.id as string, teacherScore ?? null, teacherNote ?? null) });
   } catch (err) {
     res.status(500).json({ success: false, error: { code: 'DB_ERROR', message: (err as Error).message } });
   }

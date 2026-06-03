@@ -72,7 +72,7 @@ interface UpsertEssayResult {
 
 export async function upsertEssay(essay: UpsertEssayInput): Promise<UpsertEssayResult> {
   // ── Quick conflict check (read, outside transaction) ──────────────────────
-  const existing = checkEssayConflict(essay.id);
+  const existing = await checkEssayConflict(essay.id);
   if (existing?.updatedAt && essay.updatedAt && existing.updatedAt >= essay.updatedAt) {
     return { ok: true, skipped: true, imageUrl: null };
   }
@@ -94,8 +94,7 @@ export async function upsertEssay(essay: UpsertEssayInput): Promise<UpsertEssayR
   }
 
   // ── P2: Atomic DB write ───────────────────────────────────────────────────
-  // better-sqlite3 transactions are synchronous — no async inside.
-  upsertEssayRow({
+  await upsertEssayRow({
     id: essay.id,
     teacherId: essay.teacherId,
     studentId: essay.studentId,
@@ -132,7 +131,7 @@ export async function upsertEssay(essay: UpsertEssayInput): Promise<UpsertEssayR
   // Push notification: new student essay that was AI-corrected
   const correctedStatuses = ['corrigida', 'precisa_revisao', 'baixa_confiabilidade'];
   if (isNew && essay.submittedByStudent && correctedStatuses.includes(essay.status ?? 'corrigida')) {
-    const pushToken = getTeacherPushTokenById(essay.teacherId);
+    const pushToken = await getTeacherPushTokenById(essay.teacherId);
     if (pushToken) {
       const studentName = essay.studentName ?? 'Aluno';
       const theme = essay.themeTitle ?? 'Redação';
@@ -149,29 +148,38 @@ export async function upsertEssay(essay: UpsertEssayInput): Promise<UpsertEssayR
   return { ok: true, skipped: false, imageUrl };
 }
 
-export function getEssaysByTeacher(teacherId: string, opts: { cursor?: string; limit?: number }): ReturnType<typeof findEssaysByTeacher> {
+export async function getEssaysByTeacher(
+  teacherId: string,
+  opts: { cursor?: string; limit?: number },
+): ReturnType<typeof findEssaysByTeacher> {
   return findEssaysByTeacher(teacherId, opts);
 }
 
-export function getEssayById(id: string): ReturnType<typeof findEssayById> {
+export async function getEssayById(id: string): ReturnType<typeof findEssayById> {
   return findEssayById(id);
 }
 
-export function getEssayImagePath(id: string): string | null {
+export async function getEssayImagePath(id: string): Promise<string | null> {
   return findEssayImagePath(id);
 }
 
-export function updateTeacherEval(id: string, teacherScore: number | null, teacherNote: string | null): { ok: boolean } {
-  updateEssayTeacherEval(id, teacherScore, teacherNote);
+export async function updateTeacherEval(
+  id: string,
+  teacherScore: number | null,
+  teacherNote: string | null,
+): Promise<{ ok: boolean }> {
+  await updateEssayTeacherEval(id, teacherScore, teacherNote);
   return { ok: true };
 }
 
-export function upsertTurma(data: Parameters<typeof upsertTurmaRow>[0]): { ok: boolean } {
-  upsertTurmaRow(data);
+export async function upsertTurma(
+  data: Parameters<typeof upsertTurmaRow>[0],
+): Promise<{ ok: boolean }> {
+  await upsertTurmaRow(data);
   return { ok: true };
 }
 
-export function getTurmaByCode(joinCode: string): ReturnType<typeof findTurmaByCode> {
+export async function getTurmaByCode(joinCode: string): ReturnType<typeof findTurmaByCode> {
   return findTurmaByCode(joinCode);
 }
 

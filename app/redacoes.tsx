@@ -24,6 +24,12 @@ export default function RedacoesScreen() {
   const students = useAppStore((state) => state.students);
   const essays = useAppStore((state) => state.essays);
   const deleteEssay = useAppStore((state) => state.deleteEssay);
+  const fetchStudentEssaysFromBackend = useAppStore((state) => state.fetchStudentEssaysFromBackend);
+  const [refreshing, setRefreshing] = useState(false);
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try { await fetchStudentEssaysFromBackend(); } finally { setRefreshing(false); }
+  }, [fetchStudentEssaysFromBackend]);
   const { colors } = useAppTheme();
 
   const [filter, setFilter] = useState<FilterStatus>('todas');
@@ -110,7 +116,7 @@ export default function RedacoesScreen() {
 
   return (
     <ProtectedRoute>
-      <ScreenContainer showBack showNav>
+      <ScreenContainer showBack showNav onRefresh={handleRefresh} refreshing={refreshing}>
         <AppHeader
           eyebrow="Correção com IA"
           title="Redações"

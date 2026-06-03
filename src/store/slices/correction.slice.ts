@@ -10,7 +10,7 @@ import type { AppState, CorrectionSlice } from '../store.types';
 import * as Sentry from '@sentry/react-native';
 import * as Notifications from 'expo-notifications';
 
-async function notifyCorrectionDone(studentName: string, score: number) {
+async function notifyCorrectionDone(essayId: string, studentName: string, score: number) {
   try {
     const { status } = await Notifications.getPermissionsAsync();
     if (status !== 'granted') return;
@@ -19,9 +19,9 @@ async function notifyCorrectionDone(studentName: string, score: number) {
         title: 'Redação corrigida! ✅',
         body: `${studentName} — ${score} pts`,
         sound: true,
-        data: {},
+        data: { essayId },
       },
-      trigger: null, // immediate
+      trigger: null,
     });
   } catch {
     // Notification failure is non-fatal
@@ -163,9 +163,9 @@ export const createCorrectionSlice: StateCreator<AppState, [['zustand/persist', 
           ),
         }));
 
-        // Lock screen notification with score
+        // Lock screen notification with deep link back to result screen
         const studentForNotif = get().students.find((s) => s.id === essay.studentId);
-        notifyCorrectionDone(studentForNotif?.name ?? 'Aluno', result.totalScore);
+        notifyCorrectionDone(essayId, studentForNotif?.name ?? 'Aluno', result.totalScore);
 
         // Fire-and-forget: research + backend sync
         const student = get().students.find((s) => s.id === essay.studentId);

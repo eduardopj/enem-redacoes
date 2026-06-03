@@ -1,4 +1,4 @@
-import db from '../services/database.js';
+import { execute, query, queryOne, transaction } from '../services/db-client.js';
 
 interface Teacher {
   teacherId: string;
@@ -49,71 +49,103 @@ interface CreateTeacherParams {
   passwordHash: string | null;
 }
 
-export function findTeacherById(teacherId: string): Teacher | null {
-  return (db.prepare('SELECT * FROM teachers WHERE teacherId = ?').get(teacherId) as Teacher | undefined) ?? null;
+export async function findTeacherById(teacherId: string): Promise<Teacher | null> {
+  return queryOne<Teacher>('SELECT * FROM teachers WHERE teacherId = ?', [teacherId]);
 }
 
-export function findTeacherByEmail(teacherEmail: string): TeacherByEmail | null {
-  return (db.prepare(
-    'SELECT teacherId, token, expiresAt, passwordHash, revokedAt FROM teachers WHERE LOWER(teacherEmail) = LOWER(?)'
-  ).get(teacherEmail.trim()) as TeacherByEmail | undefined) ?? null;
+export async function findTeacherByEmail(teacherEmail: string): Promise<TeacherByEmail | null> {
+  return queryOne<TeacherByEmail>(
+    'SELECT teacherId, token, expiresAt, passwordHash, revokedAt FROM teachers WHERE LOWER(teacherEmail) = LOWER(?)',
+    [teacherEmail.trim()],
+  );
 }
 
-export function findTeacherByToken(token: string): TeacherByToken | null {
-  return (db.prepare(
-    'SELECT teacherId, teacherEmail, expiresAt, revokedAt FROM teachers WHERE token = ?'
-  ).get(token) as TeacherByToken | undefined) ?? null;
+export async function findTeacherByToken(token: string): Promise<TeacherByToken | null> {
+  return queryOne<TeacherByToken>(
+    'SELECT teacherId, teacherEmail, expiresAt, revokedAt FROM teachers WHERE token = ?',
+    [token],
+  );
 }
 
-export function findTeacherTokenInfo(teacherId: string): TeacherTokenInfo | null {
-  return (db.prepare('SELECT token, expiresAt, passwordHash FROM teachers WHERE teacherId = ?')
-    .get(teacherId) as TeacherTokenInfo | undefined) ?? null;
+export async function findTeacherTokenInfo(teacherId: string): Promise<TeacherTokenInfo | null> {
+  return queryOne<TeacherTokenInfo>(
+    'SELECT token, expiresAt, passwordHash FROM teachers WHERE teacherId = ?',
+    [teacherId],
+  );
 }
 
-export function findTeacherResetInfo(teacherId: string): TeacherResetInfo | null {
-  return (db.prepare('SELECT resetToken, resetTokenExpiresAt FROM teachers WHERE teacherId = ?')
-    .get(teacherId) as TeacherResetInfo | undefined) ?? null;
+export async function findTeacherResetInfo(teacherId: string): Promise<TeacherResetInfo | null> {
+  return queryOne<TeacherResetInfo>(
+    'SELECT resetToken, resetTokenExpiresAt FROM teachers WHERE teacherId = ?',
+    [teacherId],
+  );
 }
 
-export function createTeacher({ teacherId, teacherEmail, teacherName, token, expiresAt, passwordHash }: CreateTeacherParams): void {
-  db.prepare(
-    'INSERT INTO teachers (teacherId, teacherEmail, teacherName, token, expiresAt, passwordHash) VALUES (?, ?, ?, ?, ?, ?)'
-  ).run(teacherId, teacherEmail ?? '', teacherName ?? '', token, expiresAt, passwordHash ?? null);
+export async function createTeacher({
+  teacherId,
+  teacherEmail,
+  teacherName,
+  token,
+  expiresAt,
+  passwordHash,
+}: CreateTeacherParams): Promise<void> {
+  await execute(
+    'INSERT INTO teachers (teacherId, teacherEmail, teacherName, token, expiresAt, passwordHash) VALUES (?, ?, ?, ?, ?, ?)',
+    [teacherId, teacherEmail ?? '', teacherName ?? '', token, expiresAt, passwordHash ?? null],
+  );
 }
 
-export function updateTeacherToken(teacherId: string, token: string, expiresAt: string): void {
-  db.prepare('UPDATE teachers SET token = ?, expiresAt = ?, revokedAt = NULL WHERE teacherId = ?')
-    .run(token, expiresAt, teacherId);
+export async function updateTeacherToken(teacherId: string, token: string, expiresAt: string): Promise<void> {
+  await execute(
+    'UPDATE teachers SET token = ?, expiresAt = ?, revokedAt = NULL WHERE teacherId = ?',
+    [token, expiresAt, teacherId],
+  );
 }
 
-export function updateTeacherPasswordHash(teacherId: string, passwordHash: string): void {
-  db.prepare('UPDATE teachers SET passwordHash = ? WHERE teacherId = ?')
-    .run(passwordHash, teacherId);
+export async function updateTeacherPasswordHash(teacherId: string, passwordHash: string): Promise<void> {
+  await execute(
+    'UPDATE teachers SET passwordHash = ? WHERE teacherId = ?',
+    [passwordHash, teacherId],
+  );
 }
 
-export function updateTeacherResetToken(teacherId: string, codeHash: string, expiresAt: string): void {
-  db.prepare('UPDATE teachers SET resetToken = ?, resetTokenExpiresAt = ? WHERE teacherId = ?')
-    .run(codeHash, expiresAt, teacherId);
+export async function updateTeacherResetToken(
+  teacherId: string,
+  codeHash: string,
+  expiresAt: string,
+): Promise<void> {
+  await execute(
+    'UPDATE teachers SET resetToken = ?, resetTokenExpiresAt = ? WHERE teacherId = ?',
+    [codeHash, expiresAt, teacherId],
+  );
 }
 
-export function clearTeacherResetToken(teacherId: string, passwordHash: string): void {
-  db.prepare(
-    'UPDATE teachers SET passwordHash = ?, resetToken = NULL, resetTokenExpiresAt = NULL WHERE teacherId = ?'
-  ).run(passwordHash, teacherId);
+export async function clearTeacherResetToken(teacherId: string, passwordHash: string): Promise<void> {
+  await execute(
+    'UPDATE teachers SET passwordHash = ?, resetToken = NULL, resetTokenExpiresAt = NULL WHERE teacherId = ?',
+    [passwordHash, teacherId],
+  );
 }
 
-export function revokeTeacherToken(token: string): void {
-  db.prepare('UPDATE teachers SET revokedAt = ? WHERE token = ?')
-    .run(new Date().toISOString(), token);
+export async function revokeTeacherToken(token: string): Promise<void> {
+  await execute(
+    'UPDATE teachers SET revokedAt = ? WHERE token = ?',
+    [new Date().toISOString(), token],
+  );
 }
 
-export function saveTeacherPushToken(teacherId: string, pushToken: string | null): void {
-  db.prepare('UPDATE teachers SET pushToken = ? WHERE teacherId = ?')
-    .run(pushToken ?? null, teacherId);
+export async function saveTeacherPushToken(teacherId: string, pushToken: string | null): Promise<void> {
+  await execute(
+    'UPDATE teachers SET pushToken = ? WHERE teacherId = ?',
+    [pushToken ?? null, teacherId],
+  );
 }
 
-export function getTeacherPushTokenById(teacherId: string): string | null {
-  const row = db.prepare('SELECT pushToken FROM teachers WHERE teacherId = ?').get(teacherId) as { pushToken: string | null } | undefined;
+export async function getTeacherPushTokenById(teacherId: string): Promise<string | null> {
+  const row = await queryOne<{ pushToken: string | null }>(
+    'SELECT pushToken FROM teachers WHERE teacherId = ?',
+    [teacherId],
+  );
   return row?.pushToken ?? null;
 }
 
@@ -121,16 +153,18 @@ export function getTeacherPushTokenById(teacherId: string): string | null {
  * Atomically deletes teacher + essays + turmas in a single transaction.
  * Returns the imagePaths that were in essays (so the caller can clean up files).
  */
-export function deleteTeacherCascade(teacherId: string): string[] {
-  const imagePaths = (db.prepare(
-    'SELECT imagePath FROM essays WHERE teacherId = ? AND imagePath IS NOT NULL'
-  ).all(teacherId) as { imagePath: string }[]).map((r) => r.imagePath);
+export async function deleteTeacherCascade(teacherId: string): Promise<string[]> {
+  const rows = await query<{ imagePath: string }>(
+    'SELECT imagePath FROM essays WHERE teacherId = ? AND imagePath IS NOT NULL',
+    [teacherId],
+  );
+  const imagePaths = rows.map((r) => r.imagePath);
 
-  db.transaction(() => {
-    db.prepare('DELETE FROM essays WHERE teacherId = ?').run(teacherId);
-    db.prepare('DELETE FROM turmas WHERE teacherId = ?').run(teacherId);
-    db.prepare('DELETE FROM teachers WHERE teacherId = ?').run(teacherId);
-  })();
+  await transaction([
+    ['DELETE FROM essays WHERE teacherId = ?', [teacherId]],
+    ['DELETE FROM turmas WHERE teacherId = ?', [teacherId]],
+    ['DELETE FROM teachers WHERE teacherId = ?', [teacherId]],
+  ]);
 
   return imagePaths;
 }

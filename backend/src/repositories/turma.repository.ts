@@ -1,4 +1,4 @@
-import db from '../services/database.js';
+import { execute, queryOne } from '../services/db-client.js';
 
 interface TurmaRow {
   joinCode: string;
@@ -19,17 +19,25 @@ interface UpsertTurmaParams {
   turmaName: string;
 }
 
-export function upsertTurmaRow({ joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName }: UpsertTurmaParams): void {
-  db.prepare(`
-    INSERT OR REPLACE INTO turmas (joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName);
+export async function upsertTurmaRow({
+  joinCode,
+  teacherId,
+  teacherName,
+  teacherEmail,
+  turmaId,
+  turmaName,
+}: UpsertTurmaParams): Promise<void> {
+  await execute(
+    `INSERT OR REPLACE INTO turmas (joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName],
+  );
 }
 
-export function findTurmaByCode(joinCode: string): TurmaRow | null {
-  return (db.prepare('SELECT * FROM turmas WHERE joinCode = ?').get(joinCode) as TurmaRow | undefined) ?? null;
+export async function findTurmaByCode(joinCode: string): Promise<TurmaRow | null> {
+  return queryOne<TurmaRow>('SELECT * FROM turmas WHERE joinCode = ?', [joinCode]);
 }
 
-export function deleteTurmasByTeacher(teacherId: string): void {
-  db.prepare('DELETE FROM turmas WHERE teacherId = ?').run(teacherId);
+export async function deleteTurmasByTeacher(teacherId: string): Promise<void> {
+  await execute('DELETE FROM turmas WHERE teacherId = ?', [teacherId]);
 }

@@ -12,16 +12,22 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   }
 
   const token = header.slice(7).trim();
-  const teacher = validateToken(token);
-  if (!teacher) {
-    res.status(401).json({
-      success: false,
-      error: { code: 'INVALID_TOKEN', message: 'Token inválido. Faça login novamente.' },
-    });
-    return;
-  }
+  validateToken(token).then((teacher) => {
+    if (!teacher) {
+      res.status(401).json({
+        success: false,
+        error: { code: 'INVALID_TOKEN', message: 'Token inválido. Faça login novamente.' },
+      });
+      return;
+    }
 
-  req.teacherId = teacher.teacherId;
-  req.teacherEmail = teacher.teacherEmail;
-  next();
+    req.teacherId = teacher.teacherId;
+    req.teacherEmail = teacher.teacherEmail;
+    next();
+  }).catch(() => {
+    res.status(500).json({
+      success: false,
+      error: { code: 'AUTH_ERROR', message: 'Erro ao validar token.' },
+    });
+  });
 }
