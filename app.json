@@ -17,14 +17,7 @@
         "NSPhotoLibraryUsageDescription": "O app precisa acessar sua galeria para você escolher a foto da redação.",
         "NSPhotoLibraryAddUsageDescription": "O app pode salvar fotos da redação na sua galeria.",
         "NSMicrophoneUsageDescription": "O app pode precisar do microfone ao usar a câmera para fotografar redações.",
-        "NSAppTransportSecurity": {
-          "NSExceptionDomains": {
-            "146.190.47.67": {
-              "NSExceptionAllowsInsecureHTTPLoads": true,
-              "NSIncludesSubdomains": false
-            }
-          }
-        }
+        "NSCameraUsageDescription": "O app usa a câmera para fotografar redações escritas à mão."
       }
     },
     "android": {
@@ -39,9 +32,7 @@
       },
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_MEDIA_IMAGES",
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE",
         "android.permission.POST_NOTIFICATIONS"
@@ -77,7 +68,8 @@
         {
           "uploadSourceMaps": false
         }
-      ]
+      ],
+      "expo-quick-actions"
     ],
     "experiments": {
       "typedRoutes": true
