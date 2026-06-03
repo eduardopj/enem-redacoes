@@ -1,0 +1,66 @@
+import PQueue from 'p-queue';
+import pRetry from 'p-retry';
+import { writeLog } from './logger.js';
+import { trackCorrectionDuration, trackRetry } from './sentry.js';
+
+const CONCURRENCY = Number(process.env.OPENAI_QUEUE_CONCURRENCY ?? 3);
+const MAX_RETRIES = Number(process.env.OPENAI_MAX_RETRIES ?? 3);
+const MAX_QUEUE_SIZE = Number(process.env.OPENAI_MAX_QUEUE_SIZE ?? 20);
+
+export const correctionQueue = new PQueue({ concurrency: CONCURRENCY });
+
+interface RetryError extends Error {
+  status?: number;
+  httpStatus?: number;
+}
+
+/**
+ * Enqueue an OpenAI correction call with concurrency control and retry.
+ * Retries on 429 (rate limit) and 5xx errors with exponential backoff.
+ * Rejects immediately if queue is full.
+ */
+export async function enqueueCorrection<T>(requestId: string, fn: () => Promise<T>): Promise<T | undefined> {
+  if (correctionQueue.size >= MAX_QUEUE_SIZE) {
+    throw Object.assign(
+      new Error('Muitas correções em andamento. Aguarde alguns instantes e tente novamente.'),
+      { code: 'QUEUE_FULL', httpStatus: 503 }
+    );
+  }
+
+  const startedAt = Date.now();
+
+  return correctionQueue.add(() =>
+    pRetry(fn, {
+      retries: MAX_RETRIES,
+      factor: 2,
+      minTimeout: 2_000,
+      maxTimeout: 30_000,
+      randomize: true,
+      shouldRetry({ error }: { error: RetryError }) {
+        const status = error.status ?? error.httpStatus;
+        return !status || status === 429 || status >= 500;
+      },
+      onFailedAttempt({ error, attemptNumber, retriesLeft }: { error: RetryError; attemptNumber: number; retriesLeft: number }) {
+        trackRetry(requestId);
+        writeLog('warn', 'correction_retry', {
+          requestId,
+          attempt: attemptNumber,
+          retriesLeft,
+          status: error.status,
+          error: error.message,
+        });
+      },
+    }).then((result: T) => {
+      trackCorrectionDuration(Date.now() - startedAt);
+      return result;
+    })
+  );
+}
+
+export function getQueueStats(): { waiting: number; running: number; concurrency: number } {
+  return {
+    waiting: correctionQueue.size,
+    running: correctionQueue.pending,
+    concurrency: CONCURRENCY,
+  };
+}
