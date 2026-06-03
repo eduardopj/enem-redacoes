@@ -96,6 +96,24 @@ export const createAuthSlice: StateCreator<AppState, [['zustand/persist', unknow
       const backendResult = await loginWithBackend(normalizedEmail, clientHash);
 
       if (backendResult === 'wrong_credentials') {
+        // Server has no account for this email yet — check if local data exists.
+        // If yes, auto-register on the backend with the local teacherId + this password
+        // so the account is created server-side and login succeeds.
+        const localUser = get().users.find((u) => u.email.toLowerCase() === normalizedEmail);
+        if (localUser) {
+          const token = await registerWithBackend(localUser.id, normalizedEmail, localUser.name ?? normalizedEmail.split('@')[0], clientHash);
+          if (token) {
+            set((state) => ({
+              users: state.users.map((u) =>
+                u.email.toLowerCase() === normalizedEmail ? { ...u, passwordHash: clientHash } : u
+              ),
+              currentTeacher: { id: localUser.id, name: localUser.name, email: normalizedEmail },
+              backendToken: token,
+            }));
+            registerPushToken(token);
+            return { success: true };
+          }
+        }
         return { success: false, error: 'E-mail ou senha incorretos.' };
       }
 
