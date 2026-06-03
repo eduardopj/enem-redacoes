@@ -8,6 +8,25 @@ import { StateCreator } from 'zustand';
 import { isNetworkError, isRetriableError } from '../utils/essay-helpers';
 import type { AppState, CorrectionSlice } from '../store.types';
 import * as Sentry from '@sentry/react-native';
+import * as Notifications from 'expo-notifications';
+
+async function notifyCorrectionDone(studentName: string, score: number) {
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') return;
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Redação corrigida! ✅',
+        body: `${studentName} — ${score} pts`,
+        sound: true,
+        data: {},
+      },
+      trigger: null, // immediate
+    });
+  } catch {
+    // Notification failure is non-fatal
+  }
+}
 
 // Tentativa 1 falhou → aguarda 8s; tentativa 2 → 20s; depois desiste
 const RETRY_DELAYS = [8_000, 20_000];
@@ -143,6 +162,10 @@ export const createCorrectionSlice: StateCreator<AppState, [['zustand/persist', 
               : item
           ),
         }));
+
+        // Lock screen notification with score
+        const studentForNotif = get().students.find((s) => s.id === essay.studentId);
+        notifyCorrectionDone(studentForNotif?.name ?? 'Aluno', result.totalScore);
 
         // Fire-and-forget: research + backend sync
         const student = get().students.find((s) => s.id === essay.studentId);

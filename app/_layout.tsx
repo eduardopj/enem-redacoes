@@ -1,6 +1,8 @@
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
+import QuickActions from 'expo-quick-actions';
+import { useQuickActionCallback } from 'expo-quick-actions/hooks';
 import { ToastProvider } from '@/components/ui/Toast';
 import { setUnauthorizedHandler } from '@/services/api';
 import { useAppStore } from '@/store/app-store';
@@ -26,11 +28,9 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Animated, {
   Easing,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withSequence,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
@@ -49,13 +49,10 @@ function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
   useEffect(() => {
     opacity.value = withSpring(1, { damping: 14, stiffness: 120 });
     scale.value = withSpring(1, { damping: 14, stiffness: 120 });
-
-    containerOpacity.value = withDelay(
-      700,
-      withTiming(0, { duration: 320, easing: Easing.out(Easing.ease) }, (done) => {
-        if (done) runOnJS(onFinish)();
-      })
-    );
+    containerOpacity.value = withDelay(700, withTiming(0, { duration: 320, easing: Easing.out(Easing.ease) }));
+    // 700ms hold + 320ms fade-out
+    const t = setTimeout(onFinish, 1020);
+    return () => clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const logoStyle = useAnimatedStyle(() => ({
@@ -134,9 +131,47 @@ LogBox.ignoreLogs([
   'ExpoKeepAwake',
 ]);
 
+// Show notifications as banners even when app is in foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 function ThemedStack() {
   const { colors, isDark } = useAppTheme();
   const { isOnline } = useOfflineSync();
+  const currentTeacher = useAppStore((s) => s.currentTeacher);
+
+  // Register home screen shortcuts once the teacher is logged in
+  useEffect(() => {
+    if (!currentTeacher) return;
+    QuickActions.setItems([
+      {
+        id: 'nova-redacao',
+        title: 'Nova Redação',
+        subtitle: 'Corrigir com IA',
+        icon: 'compose',
+        params: { href: '/nova-redacao' },
+      },
+      {
+        id: 'redacoes',
+        title: 'Últimas Correções',
+        subtitle: 'Ver histórico',
+        icon: 'search',
+        params: { href: '/redacoes' },
+      },
+    ]);
+  }, [currentTeacher]);
+
+  // Navigate when app is opened via a shortcut
+  useQuickActionCallback((action) => {
+    const href = action?.params?.href as string | undefined;
+    if (href) router.push(href as any);
+  });
+
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} translucent={false} />
