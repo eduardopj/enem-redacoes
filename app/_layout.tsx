@@ -26,15 +26,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
-import { Alert, LogBox, StyleSheet, Text, View } from 'react-native';
+import { Alert, Animated, Easing, LogBox, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
@@ -42,31 +34,26 @@ import Constants from 'expo-constants';
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
-  const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.82);
-  const containerOpacity = useSharedValue(1);
+  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.82)).current;
+  const containerOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    opacity.value = withSpring(1, { damping: 14, stiffness: 120 });
-    scale.value = withSpring(1, { damping: 14, stiffness: 120 });
-    containerOpacity.value = withDelay(700, withTiming(0, { duration: 320, easing: Easing.out(Easing.ease) }));
-    // 700ms hold + 320ms fade-out
-    const t = setTimeout(onFinish, 1020);
+    Animated.parallel([
+      Animated.spring(opacity, { toValue: 1, damping: 14, stiffness: 120, useNativeDriver: true }),
+      Animated.spring(scale,   { toValue: 1, damping: 14, stiffness: 120, useNativeDriver: true }),
+    ]).start();
+    const t = setTimeout(() => {
+      Animated.timing(containerOpacity, {
+        toValue: 0, duration: 320, easing: Easing.out(Easing.ease), useNativeDriver: true,
+      }).start(onFinish);
+    }, 700);
     return () => clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const logoStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ scale: scale.value }],
-  }));
-
-  const containerStyle = useAnimatedStyle(() => ({
-    opacity: containerOpacity.value,
-  }));
-
   return (
-    <Animated.View style={[splashStyles.container, containerStyle]}>
-      <Animated.View style={[splashStyles.inner, logoStyle]}>
+    <Animated.View style={[splashStyles.container, { opacity: containerOpacity }]}>
+      <Animated.View style={[splashStyles.inner, { opacity, transform: [{ scale }] }]}>
         <View style={splashStyles.iconBox}>
           <Text style={splashStyles.iconEmoji}>✏️</Text>
         </View>
@@ -148,22 +135,12 @@ function ThemedStack() {
   // Register home screen shortcuts once the teacher is logged in
   useEffect(() => {
     if (!currentTeacher) return;
-    QuickActions.setItems([
-      {
-        id: 'nova-redacao',
-        title: 'Nova Redação',
-        subtitle: 'Corrigir com IA',
-        icon: 'compose',
-        params: { href: '/nova-redacao' },
-      },
-      {
-        id: 'redacoes',
-        title: 'Últimas Correções',
-        subtitle: 'Ver histórico',
-        icon: 'search',
-        params: { href: '/redacoes' },
-      },
-    ]);
+    try {
+      QuickActions.setItems([
+        { id: 'nova-redacao', title: 'Nova Redação', subtitle: 'Corrigir com IA', icon: 'compose', params: { href: '/nova-redacao' } },
+        { id: 'redacoes', title: 'Últimas Correções', subtitle: 'Ver histórico', icon: 'search', params: { href: '/redacoes' } },
+      ]);
+    } catch { /* expo-quick-actions não disponível no Expo Go */ }
   }, [currentTeacher]);
 
   // Navigate when app is opened via a shortcut

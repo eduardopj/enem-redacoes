@@ -1,12 +1,7 @@
 import { useAppTheme } from '@/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect } from 'react';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
-import { StyleSheet, Text } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = { visible: boolean };
@@ -14,22 +9,22 @@ type Props = { visible: boolean };
 export function OfflineBanner({ visible }: Props) {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
-  const translateY = useSharedValue(-60);
+  const translateY = useRef(new Animated.Value(-60)).current;
 
   useEffect(() => {
-    translateY.value = withTiming(visible ? 0 : -60, { duration: 280 });
+    Animated.timing(translateY, {
+      toValue: visible ? 0 : -60,
+      duration: 280,
+      useNativeDriver: true,
+    }).start();
   }, [visible, translateY]);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
 
   return (
     <Animated.View
       style={[
         styles.banner,
         { top: insets.top, backgroundColor: colors.danger },
-        animStyle,
+        { transform: [{ translateY }] },
       ]}
     >
       <Ionicons name="cloud-offline-outline" size={16} color="#fff" />
