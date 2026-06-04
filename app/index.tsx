@@ -17,16 +17,18 @@ export default function IndexScreen() {
   const { colors } = useAppTheme();
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
+    // accentSoft como background do SafeAreaView faz o safe-area inferior
+    // (e a barra de navegação nativa do Android) herdarem a tinta roxa suave
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.accentSoft }]}>
       <View style={styles.topRight}>
         <ThemeToggle />
       </View>
 
-      <View style={styles.container}>
+      {/* Área de conteúdo principal — fundo branco */}
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
 
         {/* Hero */}
         <View style={styles.hero}>
-          {/* Logo mark */}
           <View style={[styles.logoWrap, { backgroundColor: colors.accent }]}>
             <Ionicons name="school" size={32} color="#fff" />
           </View>
@@ -71,11 +73,16 @@ export default function IndexScreen() {
           />
         </View>
 
+      </View>
+
+      {/* Rodapé — zona de transição para o chrome nativo */}
+      {/* borderTop cria um delimitador hairline sutil entre conteúdo e rodapé */}
+      <View style={[styles.footerArea, { borderTopColor: colors.accent + '28' }]}>
         <Text style={[styles.footer, { color: colors.mutedText }]}>
           Ferramenta educacional com IA · ENEM
         </Text>
-
       </View>
+
     </SafeAreaView>
   );
 }
@@ -164,7 +171,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 28,
+    paddingBottom: 24,
     justifyContent: 'space-between',
   },
 
@@ -262,6 +269,13 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
 
+  // Zona de rodapé — herda accentSoft do SafeAreaView
+  footerArea: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
   footer: {
     fontSize: 11,
     fontWeight: '500',
