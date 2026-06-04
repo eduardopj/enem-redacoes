@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENEM IA — Manual do Usuário</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --purple: #7C3AED;
+    --purple-soft: #F3E8FF;
+    --purple-dark: #5B21B6;
+    --text: #1C1C1C;
+    --muted: #6B7280;
+    --border: #E5E7EB;
+    --bg: #FFFFFF;
+    --surface: #F9FAFB;
+    --success: #16A34A;
+    --warning: #D97706;
+    --danger: #DC2626;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.6;
+    font-size: 14px;
+  }
+
+  /* ── Cover page ── */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+    color: white;
+    text-align: center;
+    padding: 60px 40px;
+    page-break-after: always;
+  }
+  .cover-logo {
+    width: 96px; height: 96px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 28px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px;
+    margin-bottom: 32px;
+  }
+  .cover h1 { font-size: 48px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+  .cover .subtitle { font-size: 20px; opacity: 0.85; margin-bottom: 40px; }
+  .cover .badge {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 999px;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .cover .meta { font-size: 13px; opacity: 0.65; margin-top: 48px; }
+
+  /* ── Layout ── */
+  .page { max-width: 800px; margin: 0 auto; padding: 48px 40px; }
+
+  @media print {
+    .page { padding: 32px; max-width: 100%; }
+    .page-break { page-break-before: always; }
+  }
+
+  /* ── Typography ── */
+  h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; color: var(--purple-dark); }
+  h2 { font-size: 22px; font-weight: 700; margin: 40px 0 16px; color: var(--text); border-bottom: 2px solid var(--purple-soft); padding-bottom: 8px; }
+  h3 { font-size: 17px; font-weight: 700; margin: 28px 0 10px; color: var(--text); }
+  h4 { font-size: 14px; font-weight: 700; margin: 20px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; }
+
+  /* ── Section header ── */
+  .section-header {
+    background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%);
+    color: white;
+    padding: 32px 40px;
+    margin: 0 -40px 32px;
+    border-radius: 0;
+  }
+  .section-header h1 { color: white; font-size: 28px; }
+  .section-number { font-size: 12px; font-weight: 700; opacity: 0.7; letter-spacing: 2px; margin-bottom: 8px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .card.purple {
+    background: var(--purple-soft);
+    border-color: #DDD6FE;
+  }
+  .card.green { background: #F0FDF4; border-color: #BBF7D0; }
+  .card.yellow { background: #FFFBEB; border-color: #FDE68A; }
+  .card.red { background: #FEF2F2; border-color: #FECACA; }
+
+  /* ── Step boxes ── */
+  .steps { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .step-num {
+    width: 32px; height: 32px;
+    background: var(--purple);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .step-content h4 { margin: 0 0 4px; font-size: 14px; }
+  .step-content p { margin: 0; color: var(--muted); font-size: 13px; }
+
+  /* ── Tip / Note ── */
+  .tip {
+    display: flex;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin: 16px 0;
+    font-size: 13px;
+    border: 1px solid;
+  }
+  .tip.info { background: #EFF6FF; border-color: #BFDBFE; color: #1E40AF; }
+  .tip.success { background: #F0FDF4; border-color: #BBF7D0; color: #15803D; }
+  .tip.warning { background: #FFFBEB; border-color: #FDE68A; color: #92400E; }
+  .tip-icon { font-size: 18px; flex-shrink: 0; }
+
+  /* ── Screen mockup ── */
+  .screen-box {
+    background: #1C1C1C;
+    border-radius: 20px;
+    padding: 20px;
+    margin: 16px 0;
+    color: #F5F5F5;
+    font-size: 12px;
+    font-family: monospace;
+    position: relative;
+  }
+  .screen-box .screen-label {
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: var(--purple);
+    color: white;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ── Competency pills ── */
+  .competencies { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .comp {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .comp.c1 { background: #EDE9FE; color: #7C3AED; }
+  .comp.c2 { background: #E0F2FE; color: #0369A1; }
+  .comp.c3 { background: #DCFCE7; color: #15803D; }
+  .comp.c4 { background: #FEF9C3; color: #A16207; }
+  .comp.c5 { background: #FCE7F3; color: #BE185D; }
+
+  /* ── Score display ── */
+  .score-display {
+    text-align: center;
+    padding: 24px;
+    background: linear-gradient(135deg, var(--purple-soft), white);
+    border-radius: 16px;
+    border: 1px solid #DDD6FE;
+    margin: 16px 0;
+  }
+  .score-value { font-size: 64px; font-weight: 800; color: var(--purple); line-height: 1; }
+  .score-max { font-size: 20px; color: var(--muted); }
+  .score-label { font-size: 14px; color: var(--muted); margin-top: 8px; }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+  th { background: var(--purple); color: white; padding: 10px 14px; text-align: left; font-weight: 700; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  tr:nth-child(even) td { background: var(--surface); }
+  th:first-child { border-radius: 8px 0 0 0; }
+  th:last-child { border-radius: 0 8px 0 0; }
+
+  /* ── TOC ── */
+  .toc { background: var(--surface); border-radius: 16px; padding: 28px 32px; margin: 32px 0; }
+  .toc h3 { margin: 0 0 16px; font-size: 16px; color: var(--purple-dark); }
+  .toc-section { margin-bottom: 8px; }
+  .toc-section a { color: var(--purple); text-decoration: none; font-weight: 600; font-size: 14px; }
+  .toc-sub { padding-left: 16px; margin-top: 4px; }
+  .toc-sub a { color: var(--muted); font-weight: 400; font-size: 13px; }
+
+  /* ── Icon label ── */
+  .icon-label { display: flex; align-items: center; gap: 8px; }
+
+  /* ── Divider ── */
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  /* ── Print ── */
+  @media print {
+    body { font-size: 12px; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 18px; }
+    .section-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════ CAPA ══ -->
+<div class="cover">
+  <div class="cover-logo">🎓</div>
+  <h1>ENEM IA</h1>
+  <p class="subtitle">Manual Completo do Usuário</p>
+  <div>
+    <div class="badge">📱 Professor</div>
+    <div class="badge">🎓 Aluno</div>
+  </div>
+  <p class="meta">Versão 1.0 · Junho 2026<br>Correção de redações com Inteligência Artificial</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ PÁGINA PRINCIPAL ══ -->
+<div class="page">
+
+<!-- ÍNDICE -->
+<div class="toc">
+  <h3>📋 Índice</h3>
+  <div class="toc-section"><a href="#intro">1. Introdução ao ENEM IA</a></div>
+  <div class="toc-section"><a href="#professor-inicio">2. Primeiros passos — Professor</a></div>
+  <div class="toc-section"><a href="#professor-fluxos">3. Fluxos do Professor</a></div>
+  <div class="toc-sub">
+    <div><a href="#nova-redacao">3.1 Enviar nova redação</a></div>
+    <div><a href="#resultado">3.2 Ver resultado da correção</a></div>
+    <div><a href="#alunos">3.3 Gerenciar alunos</a></div>
+    <div><a href="#turmas">3.4 Gerenciar turmas</a></div>
+    <div><a href="#temas">3.5 Gerenciar temas</a></div>
+    <div><a href="#ranking">3.6 Ranking e análise</a></div>
+    <div><a href="#dashboard">3.7 Dashboard pedagógico</a></div>
+  </div>
+  <div class="toc-section"><a href="#aluno-inicio">4. Primeiros passos — Aluno</a></div>
+  <div class="toc-section"><a href="#aluno-fluxos">5. Fluxos do Aluno</a></div>
+  <div class="toc-section"><a href="#notificacoes">6. Notificações</a></div>
+  <div class="toc-section"><a href="#offline">7. Uso offline</a></div>
+  <div class="toc-section"><a href="#faq">8. Perguntas frequentes</a></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ SEÇÃO 1 ══ -->
+<div class="section-header">
+  <div class="section-number">SEÇÃO 1</div>
+  <h1>Introdução ao ENEM IA</h1>
+</div>
+
+<h2 id="intro">O que é o ENEM IA?</h2>
+<p>O <strong>ENEM IA</strong> é uma plataforma de correção de redações do ENEM com Inteligência Artificial. O professor tira uma foto da redação manuscrita do aluno diretamente pelo celular, e a IA corrige em 30 a 60 segundos, avaliando as <strong>5 competências oficiais</strong> do ENEM e gerando feedback detalhado.</p>
+
+<div class="card purple">
+  <strong>🎯 Para quem é?</strong><br>
+  Professores de redação de qualquer escola que queiram corrigir mais rápido, dar feedback mais rico e acompanhar a evolução individual de cada aluno.
+</div>
+
+<h3>As 5 Competências do ENEM</h3>
+<p>O ENEM avalia a redação em 5 competências, cada uma valendo até 200 pontos. Total máximo: <strong>1000 pontos</strong>.</p>
+
+<div class="competencies">
+  <span class="comp c1">C1 · Norma Culta</span>
+  <span class="comp c2">C2 · Compreensão do Tema</span>
+  <span class="comp c3">C3 · Argumentação</span>
+  <span class="comp c4">C4 · Coesão Textual</span>
+  <span class="comp c5">C5 · Proposta de Intervenção</span>
+</div>
+
+<table>
+  <tr><th>Competência</th><th>O que avalia</th><th>Nota máx.</th></tr>
+  <tr><td><strong>C1 — Norma Culta</strong></td><td>Domínio da modalidade escrita formal: gramática, ortografia, concordância, pontuação</td><td>200</td></tr>
+  <tr><td><strong>C2 — Compreensão do Tema</strong></td><td>Compreensão da proposta e aplicação dos conceitos das áreas do conhecimento</td><td>200</td></tr>
+  <tr><td><strong>C3 — Argumentação</strong></td><td>Seleção, relacionamento e organização de informações, fatos e opiniões</td><td>200</td></tr>
+  <tr><td><strong>C4 — Coesão Textual</strong></td><td>Conhecimento dos mecanismos linguísticos de coesão e coerência</td><td>200</td></tr>
+  <tr><td><strong>C5 — Proposta de Intervenção</strong></td><td>Elaboração de proposta de intervenção respeitando os direitos humanos</td><td>200</td></tr>
+</table>
+
+<h3>O que a IA entrega em cada correção?</h3>
+<ul>
+  <li>Nota de cada competência (0, 40, 80, 120, 160 ou 200 pts)</li>
+  <li>Feedback específico por competência</li>
+  <li>Pontos fortes da redação</li>
+  <li>Pontos a melhorar</li>
+  <li>Sugestões concretas de melhoria</li>
+  <li>Transcrição da redação manuscrita</li>
+  <li>Adequação ao tema e nível de legibilidade</li>
+  <li>Score de confiabilidade da correção (alta/média/baixa)</li>
+</ul>
+
+<!-- ══════════════════════════════════════════════════════ SEÇÃO 2 ══ -->
+<div class="section-header page-break">
+  <div class="section-number">SEÇÃO 2</div>
+  <h1>Primeiros Passos — Professor</h1>
+</div>
+
+<h2 id="professor-inicio">Configuração inicial</h2>
+
+<h3>Criar conta de professor</h3>
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <h4>Abra o ENEM IA e toque em "Sou professor"</h4>
+      <p>Na tela inicial, toque no botão roxo "Sou professor".</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <h4>Toque em "Criar conta"</h4>
+      <p>Na tela de login, toque no link "Criar conta" na parte inferior.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-content">
+      <h4>Preencha seus dados</h4>
+      <p>Nome completo, e-mail e senha (mínimo 6 caracteres). Confirme a senha.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-content">
+      <h4>Toque em "Criar conta"</h4>
+      <p>Você será redirecionado automaticamente para o Dashboard.</p>
+    </div>
+  </div>
+</div>
+
+<div class="tip info">
+  <span class="tip-icon">ℹ️</span>
+  <span>Sua conta já fica salva automaticamente. Se reinstalar o app, faça login com o mesmo e-mail e senha para recuperar todos os dados.</span>
+</div>
+
+<h3>Configuração em 3 passos</h3>
+<p>Após criar a conta, o Dashboard mostra um guia de 3 passos:</p>
+
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <h4>Cadastre um aluno</h4>
+      <p>Vá em Alunos → toque no "+" e preencha nome, turma e estado.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <h4>Cadastre um tema</h4>
+      <p>Vá em Temas → toque no "+" e escreva o título do tema. Ou use "Tema Livre" — a IA identifica automaticamente.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-content">
+      <h4>Envie a primeira redação</h4>
+      <p>Toque em "Nova Redação", selecione aluno e tema, tire a foto e aguarde a correção.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ SEÇÃO 3 ══ -->
+<div class="section-header page-break">
+  <div class="section-number">SEÇÃO 3</div>
+  <h1>Fluxos do Professor</h1>
+</div>
+
+<h2 id="nova-redacao">3.1 Enviar nova redação</h2>
+<p>Este é o fluxo principal. Siga os 4 passos do wizard:</p>
+
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <h4>Selecione o aluno</h4>
+      <p>Toque no nome do aluno na lista. Use o filtro de turma para encontrar mais rápido. O botão "Próximo" aparece ao selecionar.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <h4>Selecione o tema</h4>
+      <p>Escolha um tema da lista ou selecione "Tema Livre" (a IA identifica o tema da redação automaticamente).</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-content">
+      <h4>Adicione o arquivo da redação</h4>
+      <p>Toque em <strong>"Tirar foto"</strong> para fotografar a redação agora, ou em <strong>"Escolher da galeria"</strong> para usar uma foto existente. Uma prévia aparece após selecionar.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-content">
+      <h4>Revisar e enviar</h4>
+      <p>Confirme os dados (aluno, tema, arquivo). A opção "Auto-correção com IA" fica ativada por padrão. Toque em <strong>"Enviar e corrigir"</strong>.</p>
+    </div>
+  </div>
+</div>
+
+<div class="tip warning">
+  <span class="tip-icon">⚠️</span>
+  <span><strong>Qualidade da foto:</strong> fotografe a redação com boa iluminação, sem reflexos ou sombras. O papel deve estar plano e todo o texto visível. Fotos de baixa qualidade podem reduzir a precisão da correção.</span>
+</div>
+
+<h4>Durante a correção</h4>
+<p>A tela de progresso mostra 4 etapas em tempo real:</p>
+<ul>
+  <li>📷 <strong>Etapa 1/4</strong> — Lendo a imagem</li>
+  <li>✏️ <strong>Etapa 2/4</strong> — Transcrevendo o texto</li>
+  <li>🧠 <strong>Etapa 3/4</strong> — Avaliando as competências</li>
+  <li>💬 <strong>Etapa 4/4</strong> — Gerando o feedback</li>
+</ul>
+
+<div class="tip success">
+  <span class="tip-icon">✅</span>
+  <span>Ao terminar, você recebe uma notificação na tela de bloqueio com a nota. Toque nela para ir direto ao resultado.</span>
+</div>
+
+<hr>
+
+<h2 id="resultado">3.2 Ver resultado da correção</h2>
+
+<div class="score-display">
+  <div class="score-value">760</div>
+  <div class="score-max">/1000</div>
+  <div class="score-label">Nota total · Muito Bom</div>
+</div>
+
+<p>A tela de resultado mostra:</p>
+
+<h4>Notas por competência</h4>
+<div class="competencies">
+  <span class="comp c1">C1: 160 pts</span>
+  <span class="comp c2">C2: 160 pts</span>
+  <span class="comp c3">C3: 120 pts</span>
+  <span class="comp c4">C4: 160 pts</span>
+  <span class="comp c5">C5: 160 pts</span>
+</div>
+
+<h4>Seções do resultado</h4>
+<ul>
+  <li><strong>Resumo executivo</strong> — nota total, classificação e observação geral</li>
+  <li><strong>Competências</strong> — nota e feedback detalhado de cada C1–C5</li>
+  <li><strong>Pontos fortes</strong> — o que o aluno fez bem</li>
+  <li><strong>Pontos a melhorar</strong> — problemas identificados</li>
+  <li><strong>Sugestões</strong> — orientações concretas para a próxima redação</li>
+  <li><strong>Transcrição</strong> — texto extraído da redação manuscrita</li>
+  <li><strong>Confiabilidade</strong> — indica se a IA teve dificuldade de leitura</li>
+</ul>
+
+<h4>Avaliação do professor</h4>
+<p>Você pode adicionar sua própria nota e observação: role até o final e toque em <strong>"Adicionar avaliação"</strong>. Isso não substitui a nota da IA — aparece como complemento.</p>
+
+<h4>Compartilhar com o aluno</h4>
+<p>Se o aluno tiver código de acesso ao app, ele poderá ver o próprio resultado na área do aluno assim que você salvar a redação.</p>
+
+<hr>
+
+<h2 id="alunos">3.3 Gerenciar alunos</h2>
+
+<h3>Cadastrar aluno</h3>
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <h4>Vá em Alunos (ícone de pessoas na nav bar)</h4>
+      <p>Ou acesse via Dashboard → "Ver todos" na seção Top Alunos.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <h4>Toque no "+" no canto superior</h4>
+      <p>Abre o formulário de cadastro.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-content">
+      <h4>Preencha os dados</h4>
+      <p>Nome completo, turma (ex: 3A, 2B), e estado (ex: SP, MG). A turma e o estado são usados no ranking.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-content">
+      <h4>Toque em "Salvar"</h4>
+      <p>O aluno aparece imediatamente na lista.</p>
+    </div>
+  </div>
+</div>
+
+<h3>Gerar código de acesso</h3>
+<p>Para que o aluno acesse o app e veja seus próprios resultados:</p>
+<ol>
+  <li>Abra o perfil do aluno (toque no nome na lista)</li>
+  <li>Role até "Código de acesso"</li>
+  <li>Toque em <strong>"Gerar código"</strong></li>
+  <li>Compartilhe o código gerado com o aluno (via WhatsApp, e-mail, etc.)</li>
+</ol>
+
+<div class="tip info">
+  <span class="tip-icon">ℹ️</span>
+  <span>O código tem 6 caracteres. O aluno usa junto com o e-mail do professor para acessar o app.</span>
+</div>
+
+<hr>
+
+<h2 id="turmas">3.4 Gerenciar turmas</h2>
+
+<h3>Criar turma</h3>
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <h4>Vá em Turmas</h4>
+      <p>Acessível pelo menu lateral ou pela tela de Alunos.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <h4>Toque em "Nova turma"</h4>
+      <p>Dê um nome (ex: "3A — Manhã", "Reforço 2B") e um código de acesso (gerado automaticamente ou personalizado).</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-content">
+      <h4>Compartilhe o código com os alunos</h4>
+      <p>Os alunos usam o código da turma para se conectar via QR Code ou digitando no app.</p>
+    </div>
+  </div>
+</div>
+
+<h3>Código QR da turma</h3>
+<p>Cada turma tem um QR Code exclusivo. Para exibir:</p>
+<ol>
+  <li>Abra a turma</li>
+  <li>Toque em <strong>"QR Code"</strong></li>
+  <li>Projete ou mostre a tela para os alunos escanearem</li>
+</ol>
+
+<hr>
+
+<h2 id="temas">3.5 Gerenciar temas</h2>
+
+<h3>Cadastrar tema</h3>
+<ol>
+  <li>Vá em <strong>Temas</strong> (ícone de livro na nav bar)</li>
+  <li>Toque em <strong>"Novo tema"</strong></li>
+  <li>Digite o título do tema (ex: "A democratização do acesso à cultura no Brasil")</li>
+  <li>Opcional: adicione categoria e texto de apoio</li>
+  <li>Toque em <strong>"Salvar"</strong></li>
+</ol>
+
+<div class="card yellow">
+  <strong>💡 Dica: Tema Livre</strong><br>
+  Se o tema da redação ainda não está cadastrado, use <strong>"Tema Livre"</strong> ao enviar a redação. A IA identifica o tema automaticamente pela leitura do texto e atualiza o registro.
+</div>
+
+<hr>
+
+<h2 id="ranking">3.6 Ranking e análise</h2>
+
+<h3>Ranking de alunos</h3>
+<p>Acesse pelo ícone de troféu na nav bar ou pelo Dashboard.</p>
+<ul>
+  <li><strong>Aba Alunos</strong> — ranking por nota média, com pódio para os 3 primeiros. Filtre por turma.</li>
+  <li><strong>Aba Turmas</strong> — comparativo entre turmas (média, melhor nota, % acima de 700 pts)</li>
+</ul>
+
+<h3>Analytics detalhado</h3>
+<p>Acesse pela aba <strong>"Análise"</strong> na nav bar:</p>
+<ul>
+  <li>Evolução histórica da turma (gráfico de linha)</li>
+  <li>Distribuição de notas por faixa</li>
+  <li>Médias por competência (C1–C5)</li>
+  <li>Temas com mais redações e melhor desempenho</li>
+  <li>Competência mais fraca e mais forte da turma</li>
+</ul>
+
+<hr>
+
+<h2 id="dashboard">3.7 Dashboard pedagógico</h2>
+<p>A tela inicial (<strong>Início</strong>) é o centro de controle da turma:</p>
+
+<table>
+  <tr><th>Card</th><th>O que mostra</th></tr>
+  <tr><td>Ação contextual</td><td>O próximo passo mais urgente (ex: "3 redações aguardando correção")</td></tr>
+  <tr><td>Inbox de revisão</td><td>Redações enviadas por alunos que precisam da sua revisão</td></tr>
+  <tr><td>KPIs</td><td>Total de alunos, temas, pendentes e corrigidas</td></tr>
+  <tr><td>Painel pedagógico</td><td>Alunos precisando de atenção, melhorando e correções de baixa confiança</td></tr>
+  <tr><td>Desempenho da turma</td><td>Gráfico de evolução + competência mais fraca com dica pedagógica</td></tr>
+  <tr><td>Top alunos</td><td>Os 3 com maior média</td></tr>
+  <tr><td>Notas recentes</td><td>Mini gráfico das últimas correções</td></tr>
+  <tr><td>Minhas turmas</td><td>Resumo de cada turma (alunos, média)</td></tr>
+</table>
+
+<div class="tip success">
+  <span class="tip-icon">💡</span>
+  <span><strong>Foco da semana:</strong> o Dashboard mostra a competência mais fraca da turma com uma dica pedagógica específica para focar na próxima aula.</span>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ SEÇÃO 4 ══ -->
+<div class="section-header page-break">
+  <div class="section-number">SEÇÃO 4</div>
+  <h1>Primeiros Passos — Aluno</h1>
+</div>
+
+<h2 id="aluno-inicio">Como o aluno acessa</h2>
+<p>O aluno não cria uma conta própria. O professor é quem habilita o acesso. Existem 3 formas:</p>
+
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <h4>QR Code da turma</h4>
+      <p>O professor exibe o QR Code da turma. O aluno abre o app, toca em "Sou aluno" → "Escanear QR Code" e aponta a câmera.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <h4>Código da turma</h4>
+      <p>O professor compartilha o código de 6 caracteres. O aluno toca em "Código da turma" e digita o código junto com seu nome.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-content">
+      <h4>Código pessoal</h4>
+      <p>O professor gera um código individual no perfil do aluno. O aluno usa o e-mail do professor + código pessoal para entrar.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ SEÇÃO 5 ══ -->
+<div class="section-header page-break">
+  <div class="section-number">SEÇÃO 5</div>
+  <h1>Fluxos do Aluno</h1>
+</div>
+
+<h2 id="aluno-fluxos">5.1 Dashboard do aluno</h2>
+<p>Após acessar, o aluno vê seu dashboard pessoal:</p>
+<ul>
+  <li><strong>Hero card</strong> — nota mais recente, porcentagem de melhora, nível atual</li>
+  <li><strong>Gráfico de evolução</strong> — sparkline com as últimas redações</li>
+  <li><strong>Foco da semana</strong> — a competência mais fraca com uma dica concreta</li>
+  <li><strong>Estatísticas</strong> — total de redações, média geral, melhor nota</li>
+</ul>
+
+<h2>5.2 Ver redações e resultados</h2>
+<ol>
+  <li>Toque em <strong>"Redações"</strong> na nav bar inferior</li>
+  <li>Veja a lista de todas as suas redações corrigidas</li>
+  <li>Toque em qualquer redação para ver o resultado completo (nota por competência, feedback, transcrição)</li>
+</ol>
+
+<h2>5.3 Acompanhar evolução</h2>
+<ol>
+  <li>Toque em <strong>"Evolução"</strong> na nav bar</li>
+  <li>Veja o gráfico de evolução histórica de todas as notas</li>
+  <li>Compare C1–C5 ao longo do tempo</li>
+  <li>Identifique qual competência está crescendo e qual precisa de foco</li>
+</ol>
+
+<h2>5.4 Ranking da turma</h2>
+<ol>
+  <li>Toque em <strong>"Ranking"</strong> na nav bar</li>
+  <li>Veja sua posição entre os alunos da turma</li>
+  <li>Compare sua média com a média da turma</li>
+</ol>
+
+<h2>5.5 Enviar redação (pelo aluno)</h2>
+<p>O aluno também pode enviar redações diretamente:</p>
+<ol>
+  <li>Toque no botão central "Redação" na nav bar</li>
+  <li>Selecione o tema</li>
+  <li>Tire a foto ou escolha da galeria</li>
+  <li>Toque em "Enviar"</li>
+</ol>
+<div class="tip info">
+  <span class="tip-icon">ℹ️</span>
+  <span>Redações enviadas pelo aluno aparecem no inbox do professor para revisão antes de ficarem visíveis no resultado do aluno.</span>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ SEÇÃO 6 ══ -->
+<div class="section-header page-break">
+  <div class="section-number">SEÇÃO 6</div>
+  <h1>Notificações</h1>
+</div>
+
+<h2 id="notificacoes">Tipos de notificação</h2>
+
+<table>
+  <tr><th>Tipo</th><th>Quem recebe</th><th>Quando</th></tr>
+  <tr><td>🔔 Lock screen</td><td>Professor</td><td>Ao término de cada correção pela IA</td></tr>
+  <tr><td>📱 Push notification</td><td>Professor</td><td>Quando aluno envia redação pelo app</td></tr>
+  <tr><td>🔗 Deep link</td><td>Professor</td><td>Toque na notificação → vai direto ao resultado</td></tr>
+</table>
+
+<h3>Ativar notificações</h3>
+<p>Na primeira correção, o app solicita permissão de notificação. Toque em <strong>"Permitir"</strong>. Você pode desativar a qualquer momento nas Configurações do celular.</p>
+
+<h3>App Shortcuts (Android)</h3>
+<p>Pressione e segure o ícone do ENEM IA na tela inicial para acessar atalhos rápidos:</p>
+<ul>
+  <li><strong>"Nova Redação"</strong> — vai direto para o wizard de envio</li>
+  <li><strong>"Últimas Correções"</strong> — vai para a lista de redações</li>
+</ul>
+
+<!-- ══════════════════════════════════════════════════════ SEÇÃO 7 ══ -->
+<div class="section-header page-break">
+  <div class="section-number">SEÇÃO 7</div>
+  <h1>Uso Offline</h1>
+</div>
+
+<h2 id="offline">O que funciona sem internet?</h2>
+
+<table>
+  <tr><th>Função</th><th>Online</th><th>Offline</th></tr>
+  <tr><td>Ver redações já corrigidas</td><td>✅</td><td>✅</td></tr>
+  <tr><td>Ver resultados e feedbacks</td><td>✅</td><td>✅</td></tr>
+  <tr><td>Ver alunos, turmas e temas</td><td>✅</td><td>✅</td></tr>
+  <tr><td>Cadastrar aluno/tema</td><td>✅</td><td>✅</td></tr>
+  <tr><td>Iniciar nova redação</td><td>✅</td><td>✅ (fica pendente)</td></tr>
+  <tr><td>Correção com IA</td><td>✅</td><td>❌ (requer internet)</td></tr>
+  <tr><td>Enviar para o servidor</td><td>✅</td><td>❌ (requer internet)</td></tr>
+</table>
+
+<h3>Fila offline</h3>
+<p>Se você iniciar uma correção sem internet, a redação fica na <strong>fila de retry</strong>. O banner laranja "Sem conexão" aparece no topo da tela.</p>
+<p>Quando a internet retornar, o app detecta automaticamente e processa todas as correções pendentes. Você não precisa fazer nada.</p>
+
+<div class="tip warning">
+  <span class="tip-icon">⚠️</span>
+  <span>Se você fechar o app com correções pendentes, elas serão retomadas automaticamente na próxima abertura do app.</span>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ SEÇÃO 8 ══ -->
+<div class="section-header page-break">
+  <div class="section-number">SEÇÃO 8</div>
+  <h1>Perguntas Frequentes</h1>
+</div>
+
+<h2 id="faq">Problemas e respostas</h2>
+
+<h3>A correção está demorando muito</h3>
+<div class="card">
+  <p>O tempo normal é 30–60 segundos. Se passar de 2 minutos, pode ser instabilidade na API da OpenAI. O app tenta automaticamente mais 2 vezes (depois de 8s e 20s). Se falhar nas 3 tentativas, a redação fica como "Pendente" e você pode tentar manualmente tocando nela.</p>
+</div>
+
+<h3>A nota pareceu incorreta ou muito baixa</h3>
+<div class="card">
+  <p>Isso pode acontecer com fotos de baixa qualidade ou caligrafia muito irregular. O app indica o nível de confiabilidade da correção. Se for "baixa confiança", considere refotografar com melhor iluminação e adicionar sua avaliação manual.</p>
+</div>
+
+<h3>O aluno não consegue entrar no app</h3>
+<div class="card">
+  <p>Verifique se o código da turma ou pessoal está correto (sem espaços, maiúsculas). O e-mail do professor deve ser digitado exatamente como cadastrado. Se o problema persistir, gere um novo código de acesso no perfil do aluno.</p>
+</div>
+
+<h3>Perdi o celular — meus dados sumiram?</h3>
+<div class="card">
+  <p>Faça login com o mesmo e-mail e senha no novo celular. Os dados são sincronizados com o servidor. Redações antigas (antes de serem corrigidas) ficam salvas localmente — se não foram sincronizadas, podem não estar disponíveis.</p>
+</div>
+
+<h3>Posso usar o app em mais de um celular?</h3>
+<div class="card">
+  <p>Sim. Faça login com a mesma conta em qualquer dispositivo. Os dados se sincronizam automaticamente. Porém, mudanças feitas offline em dois dispositivos ao mesmo tempo podem não se mesclar perfeitamente.</p>
+</div>
+
+<h3>Como cancelar ou excluir minha conta?</h3>
+<div class="card">
+  <p>Vá em Perfil → "Excluir conta". Isso remove todos os seus dados do servidor. Os dados no dispositivo são removidos ao fazer logout. A ação é irreversível.</p>
+</div>
+
+<h3>A foto foi rejeitada por ser "muito pesada"</h3>
+<div class="card">
+  <p>O limite é de 10MB por imagem. Tire uma nova foto com menor zoom ou resolução. A câmera do app já aplica compressão automática (68% de qualidade), então fotos tiradas diretamente costumam ter tamanho adequado.</p>
+</div>
+
+<h3>Como recuperar a senha?</h3>
+<div class="card">
+  <p>Na tela de login, toque em "Esqueci a senha". Digite o e-mail cadastrado. Você receberá um e-mail com um código de 6 dígitos. Digite o código no app e crie uma nova senha.</p>
+</div>
+
+<hr>
+
+<div class="card purple" style="text-align:center; margin-top: 48px;">
+  <div style="font-size: 32px; margin-bottom: 8px;">🎓</div>
+  <strong style="font-size: 18px;">ENEM IA</strong><br>
+  <span style="color: #6B7280; font-size: 13px;">Correção inteligente de redações · Versão 1.0</span><br><br>
+  <span style="font-size: 13px;">Dúvidas? Fale com seu professor ou com o suporte técnico.</span>
+</div>
+
+</div><!-- .page -->
+</body>
+</html>
