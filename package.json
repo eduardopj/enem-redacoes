@@ -84,15 +84,33 @@
       "**/*.test.tsx"
     ],
     "testPathIgnorePatterns": [
-      "<rootDir>/node_modules/",
-      "<rootDir>/src/utils/analytics.test.ts"
+      "<rootDir>/node_modules/"
     ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
     },
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/.*)"
-    ]
+    ],
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/store/slices/auth.slice.ts",
+      "src/store/slices/essays.slice.ts",
+      "src/store/slices/correction.slice.ts",
+      "src/utils/id.ts",
+      "src/utils/crypto.ts",
+      "src/utils/analytics.ts",
+      "src/components/ui/EssayCard.tsx",
+      "src/components/ui/StudentCard.tsx",
+      "src/components/ui/StatusBadge.tsx",
+      "src/components/ui/ThemeCard.tsx"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 70
+      }
+    }
   },
   "private": true,
   "expo": {

@@ -2,8 +2,14 @@ import db from '../services/database.js';
 
 export function upsertTurmaRow({ joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName }) {
   db.prepare(`
-    INSERT OR REPLACE INTO turmas (joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName)
+    INSERT INTO turmas (joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName)
     VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(joinCode) DO UPDATE SET
+      teacherId    = excluded.teacherId,
+      teacherName  = excluded.teacherName,
+      teacherEmail = excluded.teacherEmail,
+      turmaId      = excluded.turmaId,
+      turmaName    = excluded.turmaName
   `).run(joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName);
 }
 

@@ -28,8 +28,14 @@ export async function upsertTurmaRow({
   turmaName,
 }: UpsertTurmaParams): Promise<void> {
   await execute(
-    `INSERT OR REPLACE INTO turmas (joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO turmas (joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(joinCode) DO UPDATE SET
+       teacherId    = excluded.teacherId,
+       teacherName  = excluded.teacherName,
+       teacherEmail = excluded.teacherEmail,
+       turmaId      = excluded.turmaId,
+       turmaName    = excluded.turmaName`,
     [joinCode, teacherId, teacherName, teacherEmail, turmaId, turmaName],
   );
 }

@@ -5,16 +5,21 @@
 
 import {
   formatRelativeDate,
+  getClassStats,
+  getLowConfidenceCorrections,
   getScoreColor,
   getScoreLabel,
   getScoreTier,
   getStudentStats,
+  getThemePerformance,
+  getTopImprovingStudents,
+  getStudentsNeedingAttention,
   getTrend,
   getTrendColor,
   getTrendIcon,
   isCorrectedEssay,
 } from '@/utils/analytics';
-import type { Essay } from '@/types/app';
+import type { Essay, Student } from '@/types/app';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -144,6 +149,16 @@ describe('formatRelativeDate', () => {
   });
 });
 
+function makeStudent(overrides: Partial<Student> = {}): Student {
+  return {
+    id: `s-${Math.random()}`,
+    teacherId: 't1',
+    name: 'Aluno Teste',
+    className: '3A',
+    ...overrides,
+  };
+}
+
 // ─── getStudentStats ──────────────────────────────────────────────────────────
 
 describe('getStudentStats', () => {
@@ -186,5 +201,225 @@ describe('getStudentStats', () => {
     expect(stats.averageScore).toBe(700);
     expect(stats.correctedEssays).toBe(1);
     expect(stats.pendingEssays).toBe(1);
+  });
+});
+
+// ─── getClassStats ────────────────────────────────────────────────────────────
+
+describe('getClassStats', () => {
+  it('retorna nulls com lista vazia', () => {
+    const stats = getClassStats([], []);
+    expect(stats.classAverage).toBeNull();
+    expect(stats.classHighest).toBeNull();
+    expect(stats.classLowest).toBeNull();
+    expect(stats.totalEssays).toBe(0);
+    expect(stats.totalStudents).toBe(0);
+  });
+
+  it('calcula média da turma corretamente', () => {
+    const essays = [
+      makeEssay({ studentId: 's1', totalScore: 600 }),
+      makeEssay({ studentId: 's2', totalScore: 800 }),
+    ];
+    const stats = getClassStats(essays, [makeStudent({ id: 's1' }), makeStudent({ id: 's2' })]);
+    expect(stats.classAverage).toBe(700);
+    expect(stats.classHighest).toBe(800);
+    expect(stats.classLowest).toBe(600);
+    expect(stats.correctedEssays).toBe(2);
+    expect(stats.totalStudents).toBe(2);
+  });
+
+  it('distribui redações nas bandas de pontuação', () => {
+    const essays = [
+      makeEssay({ totalScore: 200 }),  // 0–299
+      makeEssay({ totalScore: 650 }),  // 600–749
+      makeEssay({ totalScore: 950 }),  // 900–1000
+    ];
+    const stats = getClassStats(essays, []);
+    const band0 = stats.distributionBands.find((b) => b.label === '0–299')!;
+    const band600 = stats.distributionBands.find((b) => b.label === '600–749')!;
+    const band900 = stats.distributionBands.find((b) => b.label === '900–1000')!;
+    expect(band0.count).toBe(1);
+    expect(band600.count).toBe(1);
+    expect(band900.count).toBe(1);
+  });
+
+  it('identifica competência mais fraca da turma', () => {
+    const essays = [
+      makeEssay({ competencies: { c1: 200, c2: 160, c3: 180, c4: 180, c5: 180 } }),
+    ];
+    const stats = getClassStats(essays, []);
+    expect(stats.weakestClassCompetency).toBe('c2');
+    expect(stats.strongestClassCompetency).toBe('c1');
+  });
+
+  it('lista top alunos por média', () => {
+    const s1 = makeStudent({ id: 's1' });
+    const s2 = makeStudent({ id: 's2' });
+    const essays = [
+      makeEssay({ studentId: 's1', totalScore: 800 }),
+      makeEssay({ studentId: 's2', totalScore: 600 }),
+    ];
+    const stats = getClassStats(essays, [s1, s2]);
+    expect(stats.topStudents[0].studentId).toBe('s1');
+    expect(stats.topStudents[0].averageScore).toBe(800);
+  });
+});
+
+// ─── getLowConfidenceCorrections ──────────────────────────────────────────────
+
+describe('getLowConfidenceCorrections', () => {
+  it('retorna vazio sem redações de baixa confiança', () => {
+    expect(getLowConfidenceCorrections([makeEssay()])).toHaveLength(0);
+  });
+
+  it('captura status baixa_confiabilidade', () => {
+    const essay = makeEssay({ status: 'baixa_confiabilidade' });
+    expect(getLowConfidenceCorrections([essay])).toContain(essay);
+  });
+
+  it('captura reviewRequired = true', () => {
+    const essay = makeEssay({ reviewRequired: true });
+    expect(getLowConfidenceCorrections([essay])).toContain(essay);
+  });
+
+  it('captura confidenceLevel baixa', () => {
+    const essay = makeEssay({ confidenceLevel: 'baixa' } as any);
+    expect(getLowConfidenceCorrections([essay])).toContain(essay);
+  });
+
+  it('captura transcriptionConfidence baixa', () => {
+    const essay = makeEssay({ transcriptionConfidence: 'baixa' } as any);
+    expect(getLowConfidenceCorrections([essay])).toContain(essay);
+  });
+
+  it('não captura redação normal corrigida', () => {
+    const essay = makeEssay({ status: 'corrigida', reviewRequired: false });
+    expect(getLowConfidenceCorrections([essay])).toHaveLength(0);
+  });
+});
+
+// ─── getTopImprovingStudents ──────────────────────────────────────────────────
+
+describe('getTopImprovingStudents', () => {
+  it('retorna vazio quando nenhum aluno melhorou', () => {
+    const student = makeStudent({ id: 's1' });
+    const essays = [makeEssay({ studentId: 's1', totalScore: 700 })];
+    expect(getTopImprovingStudents([student], essays)).toHaveLength(0);
+  });
+
+  it('ordena por delta decrescente', () => {
+    const s1 = makeStudent({ id: 's1' });
+    const s2 = makeStudent({ id: 's2' });
+    const base = '2025-01-01T00:00:00.000Z';
+    const later = '2025-02-01T00:00:00.000Z';
+    const essays = [
+      makeEssay({ studentId: 's1', totalScore: 500, correctedAt: base }),
+      makeEssay({ studentId: 's1', totalScore: 700, correctedAt: later }), // delta +200
+      makeEssay({ studentId: 's2', totalScore: 400, correctedAt: base }),
+      makeEssay({ studentId: 's2', totalScore: 500, correctedAt: later }), // delta +100
+    ];
+    const result = getTopImprovingStudents([s1, s2], essays, 3);
+    expect(result[0].student.id).toBe('s1');
+    expect(result[1].student.id).toBe('s2');
+  });
+
+  it('respeita o limite', () => {
+    const students = [makeStudent({ id: 's1' }), makeStudent({ id: 's2' }), makeStudent({ id: 's3' })];
+    const base = '2025-01-01T00:00:00.000Z';
+    const later = '2025-06-01T00:00:00.000Z';
+    const essays = students.flatMap((s) => [
+      makeEssay({ studentId: s.id, totalScore: 400, correctedAt: base }),
+      makeEssay({ studentId: s.id, totalScore: 600, correctedAt: later }),
+    ]);
+    expect(getTopImprovingStudents(students, essays, 2)).toHaveLength(2);
+  });
+});
+
+// ─── getStudentsNeedingAttention ──────────────────────────────────────────────
+
+describe('getStudentsNeedingAttention', () => {
+  it('inclui aluno sem redações', () => {
+    const student = makeStudent({ id: 's1' });
+    const result = getStudentsNeedingAttention([student], []);
+    expect(result.some((r) => r.student.id === 's1')).toBe(true);
+  });
+
+  it('inclui aluno com média < 500', () => {
+    const student = makeStudent({ id: 's1' });
+    const essays = [makeEssay({ studentId: 's1', totalScore: 400 })];
+    const result = getStudentsNeedingAttention([student], essays);
+    expect(result.some((r) => r.student.id === 's1')).toBe(true);
+  });
+
+  it('inclui aluno com tendência de queda', () => {
+    const student = makeStudent({ id: 's1' });
+    const base = '2025-01-01T00:00:00.000Z';
+    const later = '2025-06-01T00:00:00.000Z';
+    const essays = [
+      makeEssay({ studentId: 's1', totalScore: 700, correctedAt: base }),
+      makeEssay({ studentId: 's1', totalScore: 600, correctedAt: later }),
+    ];
+    const result = getStudentsNeedingAttention([student], essays);
+    expect(result.some((r) => r.student.id === 's1')).toBe(true);
+  });
+
+  it('não inclui aluno com boa performance', () => {
+    const student = makeStudent({ id: 's1' });
+    const base = '2025-01-01T00:00:00.000Z';
+    const later = '2025-06-01T00:00:00.000Z';
+    const essays = [
+      makeEssay({ studentId: 's1', totalScore: 600, correctedAt: base }),
+      makeEssay({ studentId: 's1', totalScore: 700, correctedAt: later }),
+    ];
+    const result = getStudentsNeedingAttention([student], essays);
+    expect(result.some((r) => r.student.id === 's1')).toBe(false);
+  });
+});
+
+// ─── getThemePerformance ──────────────────────────────────────────────────────
+
+describe('getThemePerformance', () => {
+  it('retorna vazio sem redações', () => {
+    expect(getThemePerformance([])).toHaveLength(0);
+  });
+
+  it('agrupa redações pelo tema', () => {
+    const essays = [
+      makeEssay({ themeTitle: 'Tema A', totalScore: 600 }),
+      makeEssay({ themeTitle: 'Tema A', totalScore: 800 }),
+      makeEssay({ themeTitle: 'Tema B', totalScore: 700 }),
+    ];
+    const result = getThemePerformance(essays);
+    const temaA = result.find((r) => r.themeTitle === 'Tema A')!;
+    const temaB = result.find((r) => r.themeTitle === 'Tema B')!;
+    expect(temaA.count).toBe(2);
+    expect(temaA.averageScore).toBe(700);
+    expect(temaB.count).toBe(1);
+  });
+
+  it('ordena por count decrescente', () => {
+    const essays = [
+      makeEssay({ themeTitle: 'Pouco Usado' }),
+      makeEssay({ themeTitle: 'Mais Usado' }),
+      makeEssay({ themeTitle: 'Mais Usado' }),
+    ];
+    const result = getThemePerformance(essays);
+    expect(result[0].themeTitle).toBe('Mais Usado');
+  });
+
+  it('conta redações de baixa confiança por tema', () => {
+    const essays = [
+      makeEssay({ themeTitle: 'Tema X', status: 'baixa_confiabilidade' }),
+      makeEssay({ themeTitle: 'Tema X', totalScore: 700 }),
+    ];
+    const result = getThemePerformance(essays);
+    expect(result[0].lowConfidence).toBe(1);
+  });
+
+  it('trata themeTitle null como Tema Livre', () => {
+    const essays = [makeEssay({ themeTitle: undefined as any })];
+    const result = getThemePerformance(essays);
+    expect(result[0].themeTitle).toBe('Tema Livre');
   });
 });
