@@ -1,7 +1,7 @@
 import { OPENAI_CONFIG } from '@/constants/openai';
 import type { BackendEssay } from '@/types/api';
 import { Essay } from '@/types/app';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export type { BackendEssay };
 

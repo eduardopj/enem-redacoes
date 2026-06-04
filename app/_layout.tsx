@@ -121,7 +121,8 @@ LogBox.ignoreLogs([
 // Show notifications as banners even when app is in foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
@@ -264,5 +265,6 @@ try {
   if (_store.getState().sentryConsent === true) initSentryIfNeeded();
 } catch (_) { /* store not ready yet — deferred init via useEffect will handle it */ }
 
-// Sentry.wrap adds the native crash handler; is a no-op when Sentry is not initialized
-export default Sentry.wrap(RootLayout);
+// Only wrap with Sentry if it was already initialized at module load.
+// Calling Sentry.wrap before Sentry.init emits a harmless but noisy warning.
+export default sentryInitialized ? Sentry.wrap(RootLayout) : RootLayout;
