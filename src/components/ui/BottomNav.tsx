@@ -93,26 +93,30 @@ export function BottomNav() {
   const safeBottom = Math.max(insets.bottom, Platform.OS === 'android' ? ANDROID_BOTTOM_GUARD : 8);
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-          paddingBottom: safeBottom,
-          height: BOTTOM_NAV_HEIGHT + safeBottom,
-        },
-      ]}
-    >
-      {TABS.map((tab) => {
-        const isFab = tab.icon === 'add';
-        const isActive = !isFab && (
-          pathname === tab.route ||
-          (tab.route === '/dashboard' && pathname === '/') ||
-          pathname.startsWith(tab.route + '/')
-        );
-        return <NavItem key={tab.route} tab={tab} isActive={isActive} isFab={isFab} />;
-      })}
+    // Outer View: accentSoft preenche a zona de segurança inferior
+    // (home indicator no iOS, barra de navegação no Android edge-to-edge)
+    <View style={{ backgroundColor: colors.accentSoft }}>
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: colors.surface,
+            borderTopColor: colors.border,
+          },
+        ]}
+      >
+        {TABS.map((tab) => {
+          const isFab = tab.icon === 'add';
+          const isActive = !isFab && (
+            pathname === tab.route ||
+            (tab.route === '/dashboard' && pathname === '/') ||
+            pathname.startsWith(tab.route + '/')
+          );
+          return <NavItem key={tab.route} tab={tab} isActive={isActive} isFab={isFab} />;
+        })}
+      </View>
+      {/* Zona colorida abaixo dos ícones — preenche o safe area */}
+      <View style={{ height: safeBottom }} />
     </View>
   );
 }

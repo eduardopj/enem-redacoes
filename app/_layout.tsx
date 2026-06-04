@@ -3,6 +3,7 @@ import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import QuickActions from 'expo-quick-actions';
 import { useQuickActionCallback } from 'expo-quick-actions/hooks';
+import * as NavigationBar from 'expo-navigation-bar';
 import { ToastProvider } from '@/components/ui/Toast';
 import { setUnauthorizedHandler } from '@/services/api';
 import { useAppStore } from '@/store/app-store';
@@ -26,7 +27,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Easing, LogBox, StyleSheet, Text, View } from 'react-native';
+import { Alert, Animated, Easing, LogBox, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
@@ -132,6 +133,14 @@ function ThemedStack() {
   const { colors, isDark } = useAppTheme();
   const { isOnline } = useOfflineSync();
   const currentTeacher = useAppStore((s) => s.currentTeacher);
+
+  // Sincroniza a cor da barra de navegação nativa do Android com o tema do app.
+  // Garante consistência visual em todas as telas (mesmo efeito que accentSoft nos navbars).
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    NavigationBar.setBackgroundColorAsync(colors.accentSoft);
+    NavigationBar.setButtonStyleAsync(isDark ? 'light' : 'dark');
+  }, [colors.accentSoft, isDark]);
 
   // Register home screen shortcuts once the teacher is logged in
   useEffect(() => {

@@ -35,12 +35,12 @@ export function AppFooter() {
 
   if (isMainScreen) {
     return (
+      <View style={{ backgroundColor: colors.accentSoft }}>
       <View
         style={[
           styles.navContainer,
           {
             backgroundColor: colors.surface,
-            paddingBottom: safeBottom,
             borderTopColor: colors.border,
             shadowColor: '#09090B',
           },
@@ -86,28 +86,32 @@ export function AppFooter() {
           );
         })}
       </View>
+      <View style={{ height: safeBottom }} />
+      </View>
     );
   }
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-          paddingBottom: safeBottom,
-        },
-      ]}
-    >
-      <View style={styles.footerRow}>
-        <View style={[styles.footerLogo, { backgroundColor: colors.accent }]}>
-          <Ionicons name="school" size={10} color="#fff" />
+    <View style={{ backgroundColor: colors.accentSoft }}>
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: colors.surface,
+            borderTopColor: colors.border,
+          },
+        ]}
+      >
+        <View style={styles.footerRow}>
+          <View style={[styles.footerLogo, { backgroundColor: colors.accent }]}>
+            <Ionicons name="school" size={10} color="#fff" />
+          </View>
+          <Text style={[styles.text, { color: colors.mutedText }]}>
+            ENEM IA · v{version}
+          </Text>
         </View>
-        <Text style={[styles.text, { color: colors.mutedText }]}>
-          ENEM IA · v{version}
-        </Text>
       </View>
+      <View style={{ height: safeBottom }} />
     </View>
   );
 }
