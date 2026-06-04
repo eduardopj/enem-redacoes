@@ -903,6 +903,15 @@ Fila de correção (BullMQ + Redis):
 
 ---
 
+## Documentação complementar
+
+| Documento | Conteúdo |
+|---|---|
+| [docs/uml-e-padroes.md](docs/uml-e-padroes.md) | Diagramas UML completos (casos de uso, classes, sequência, estados, ER, componentes, deploy, atividades) + 10 padrões de projeto explicados |
+| [docs/manual-usuario.html](docs/manual-usuario.html) | Manual completo do usuário (abrir no browser → Ctrl+P → PDF) |
+
+---
+
 ## Contato e Referências
 
 - **Repositório**: github.com/eduardopj/enem-redacoes
