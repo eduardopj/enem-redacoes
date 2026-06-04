@@ -195,12 +195,12 @@ export default function StudentLoginScreen() {
   }
 
   return (
-    <SafeAreaView style={[s.safe, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[s.safe, { backgroundColor: colors.accentSoft }]}>
       <Modal visible={showQR} animationType="slide" statusBarTranslucent>
         <QRScanner onScan={handleQRScan} onClose={() => setShowQR(false)} />
       </Modal>
 
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={[{ flex: 1 }, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
 
           {/* Back button */}
@@ -331,11 +331,15 @@ export default function StudentLoginScreen() {
             )}
           </Animated.View>
 
-          <Text style={[s.footer, { color: colors.mutedText }]}>
-            Enem IA · Área exclusiva para alunos
-          </Text>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Rodapé fixo — zona de transição para o chrome nativo */}
+      <View style={[s.footerArea, { borderTopColor: colors.accent + '28' }]}>
+        <Text style={[s.footer, { color: colors.mutedText }]}>
+          Enem IA · Área exclusiva para alunos
+        </Text>
+      </View>
     </SafeAreaView>
   );
 }
@@ -464,5 +468,6 @@ const s = StyleSheet.create({
   actionBtnText: { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: 0.2 },
   qrBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 },
   qrBtnText: { fontSize: 14, fontWeight: '600' },
-  footer: { fontSize: 11, textAlign: 'center', marginTop: 32, fontWeight: '500' },
+  footerArea: { borderTopWidth: StyleSheet.hairlineWidth, paddingVertical: 14, paddingHorizontal: 24, alignItems: 'center' },
+  footer: { fontSize: 11, textAlign: 'center', fontWeight: '500' },
 });
